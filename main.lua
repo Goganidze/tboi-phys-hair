@@ -56,7 +56,24 @@ mod.HasPhysHair = {
 --[1] = CordSprite, [2] = TailCount, [3] = RenderLayers, [4] = CotumeNullpos, [5] = BackSprite
 local HasPhysHair = mod.HasPhysHair
 
+mod.HairLib = include("physhair")
+---@type hairlib
+mod.HairLib = mod.HairLib(mod)
+mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
+        CordSpr = cordSpr,
+        TailCount = 2,
+        RenderLayers = headDirToRender,
+        CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
 
+    })
+mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
+        CordSpr = cordSprB,
+        TailCount = 2,
+        RenderLayers = headDirToRender,
+        CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
+        HeadBackSpr = BethBBackHair,
+        Scretch = scretch * 1.2,
+    })
 
 local function sign(val)
     return val>0 and 1 or val<0 and -1 or 0
@@ -72,7 +89,7 @@ local function ScreenToWorld(vec)
     return  (vec-worldToScreen1(Vector(0,0))) * Wtr
 end
 
-local function physhair(HairData, StartPos, scale, headpos)
+--[[local function physhair(HairData, StartPos, scale, headpos)
     local cdat = HairData
     local tail1 = HairData
     local plpos1 = StartPos
@@ -136,9 +153,9 @@ local function physhair(HairData, StartPos, scale, headpos)
             --print(cur[1],"|", prep, "|", (prep-lpos), "|", cur[1]:Distance(prep))
         end
     end
-end 
+end ]]
 
-function mod.playerUpdate(_, player)
+--[[function mod.playerUpdate(_, player)
     if not HasPhysHair[player:GetPlayerType()] then
         return
     end
@@ -269,7 +286,7 @@ function mod.HairPostRender(_, player, offset)
                 else
                     hap1 = playerPos+hairPos  + Vector(0,1)
                 end
-                local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*taildata.scretch*.16) + game.ScreenShakeOffset
+                local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*cdat.scretch*.16) + game.ScreenShakeOffset
                 cord:Add(hap1 + off, player.SpriteScale.X*.95, 5 , playerCol)
                 
                 for i=0, maxcoord-1 do
@@ -312,7 +329,7 @@ function mod.HairPostRender(_, player, offset)
                 cord:Add(pos,player.SpriteScale.X,cur[3]+2 , playerCol)
             end
             cord:Render()
-        end]]
+        end] ]
 
         --local p1, p2 = worldToScreen(cdat.tail1[0][1]),  worldToScreen(cdat.tail2[0][1])
         --Isaac.DrawLine(p1, p2,KColor(1,1,1,1),KColor(1,1,1,1),1)
@@ -406,10 +423,10 @@ function mod.HairPreRender(_, player, offset)
                 cordSpr:Add(pos,player.SpriteScale.X,cur[3]+2, playerCol)
             end
             cordSpr:Render()
-        end]]
+        end] ]
     end
 end
-mod:AddPriorityCallback(ModCallbacks.MC_PRE_RENDER_PLAYER_HEAD, 10, mod.HairPreRender)
+mod:AddPriorityCallback(ModCallbacks.MC_PRE_RENDER_PLAYER_HEAD, 10, mod.HairPreRender)]]
 
 
 
