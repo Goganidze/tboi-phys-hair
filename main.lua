@@ -47,6 +47,18 @@ local headDirToRender = {
     [1] = {3,3}, --3 << 1,
     [2] = {3,2}, --1 << 1
 }
+local headDirToRender1 = {
+    [3] = 3, -- 3 << 1,
+    [0] = 2, --2 << 1,
+    [1] = 3, --3 << 1,
+    [2] = 3, --1 << 1
+}
+local headDirToRender2 = {
+    [3] = 3, -- 3 << 1,
+    [0] = 3, --2 << 1,
+    [1] = 3, --3 << 1,
+    [2] = 2, --1 << 1
+}
 
 
 mod.HasPhysHair = {
@@ -60,19 +72,42 @@ mod.HairLib = include("physhair")
 ---@type hairlib
 mod.HairLib = mod.HairLib(mod)
 mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
-        CordSpr = cordSpr,
-        TailCount = 2,
-        RenderLayers = headDirToRender,
-        CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
-
+        --CordSpr = cordSpr,
+        --TailCount = 2,
+        --RenderLayers = headDirToRender,
+        --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
+        [1] = {
+            CordSpr = cordSpr,
+            RenderLayers = headDirToRender1,
+            CostumeNullpos = "bethshair_cord1",
+            Length = 30,
+        },
+        [2] = {
+            CordSpr = cordSpr,
+            RenderLayers = headDirToRender2,
+            CostumeNullpos = "bethshair_cord2",
+            Length = 30,
+        },
     })
 mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
-        CordSpr = cordSprB,
-        TailCount = 2,
-        RenderLayers = headDirToRender,
-        CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
+        --CordSpr = cordSprB,
+        --TailCount = 2,
+        --RenderLayers = headDirToRender,
+        --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         HeadBackSpr = BethBBackHair,
-        Scretch = scretch * 1.2,
+        --Scretch = scretch * 1.2,
+        [1] = {
+            Scretch = scretch * 1.2,
+            CordSpr = cordSprB,
+            RenderLayers = headDirToRender1,
+            CostumeNullpos = "bethshair_cord1",
+        },
+        [2] = {
+            Scretch = scretch * 1.2,
+            CordSpr = cordSprB,
+            RenderLayers = headDirToRender2,
+            CostumeNullpos = "bethshair_cord2",
+        },
     })
 
 local function sign(val)
