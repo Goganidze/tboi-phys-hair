@@ -196,10 +196,22 @@ return function (mod)
         local data = player:GetData()
         local playerPos = player.Position + player:GetFlyingOffset() * Wtr -- (Isaac.WorldToRenderPosition(player.Position) + player:GetFlyingOffset())
         local listdecap = Isaac.FindByType(3, FamiliarVariant.DECAP_ATTACK)
+        local Headent = player
         if #listdecap > 0 then
             for i=1,#listdecap do
                 local ent = listdecap[i]
                 if ent:ToFamiliar().Player.Index == player.Index then
+                    Headent = ent
+                    playerPos = data._BethsHairCord and ScreenToWorld(data._BethsHairCord.RealHeadPos) or ent.Position -- Isaac.WorldToRenderPosition(ent.Position)
+                end
+            end
+        end
+        local listScis = Isaac.FindByType(3, FamiliarVariant.SCISSORS)
+        if #listScis > 0 then
+            for i=1,#listScis do
+                local ent = listScis[i]
+                if ent:ToFamiliar().Player.Index == player.Index then
+                    Headent = ent
                     playerPos = data._BethsHairCord and ScreenToWorld(data._BethsHairCord.RealHeadPos) or ent.Position -- Isaac.WorldToRenderPosition(ent.Position)
                 end
             end
@@ -235,8 +247,8 @@ return function (mod)
         else
             local cdat = data._BethsHairCord
             
-            if player.FrameCount - data._BethsHairCord.HeadPosCheckFrame <= 0 then
-                playerPos = cdat.RealHeadPos and ScreenToWorld(cdat.RealHeadPos + player.Velocity) or playerPos
+            if player.FrameCount - data._BethsHairCord.HeadPosCheckFrame <= 1 then
+                playerPos = cdat.RealHeadPos and ScreenToWorld(cdat.RealHeadPos + Headent.Velocity/2) or playerPos
             end
     
             --local tail1 = cdat.tail1
@@ -305,6 +317,7 @@ return function (mod)
                         end
                     end
                 end
+                BackSpr.Color = playerCol
                 BackSpr:SetFrame(spr:GetOverlayAnimation(), spr:GetOverlayFrame())
                 if isreflect then
                     BackSpr:Render(playerPos + offset)
@@ -447,7 +460,7 @@ return function (mod)
     function _HairCordData.PreRoomHairFix()
         for i = 0, game:GetNumPlayers()-1 do
             local player = Isaac.GetPlayer(i)
-            if PlayerData[player:GetPlayerType()] then
+            if PlayerData[player:GetPlayerType()] and player:GetData()._BethsHairCord then
                 player:GetData()._BethsHairCord.RealHeadPos = worldToScreen(player.Position)
             end
         end
