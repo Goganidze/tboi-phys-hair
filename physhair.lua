@@ -1,5 +1,4 @@
 return function (mod)
-    
     ---@class hairlib
     ---@field SetHairData fun(playertype:PlayerType, data:PlayerHairDataIn)
 
@@ -13,6 +12,21 @@ return function (mod)
     local scretch = math.ceil(5* Wtr)-- 30/(maxcoord+1)
     local defscretch = scretch
     local headsize = 20* Wtr
+
+    if not REPENTOGON then
+        
+        local font = Font()
+        font:Load("font/pftempestasevencondensed.fnt")
+
+        mod:AddCallback(ModCallbacks.MC_POST_RENDER, function()
+            local text = "REPENTOGON is missing"
+            local text2 = "check repentogon.com"
+            font:DrawStringScaledUTF8(text, Isaac.GetScreenWidth()/1.1 - font:GetStringWidthUTF8(text)/2, Isaac.GetScreenHeight()/1.2, 1, 1, KColor(2,.5,.5,1), 1, true )
+            font:DrawStringScaledUTF8(text2, Isaac.GetScreenWidth()/1.1 - font:GetStringWidthUTF8(text2)/2, Isaac.GetScreenHeight()/1.2 + 8, 1, 1, KColor(2,.5,.5,1), 1, true )
+        end)
+
+        return
+    end
 
 
     local ExampleRenderLayers = { -- first bit = visible, second bit = layer

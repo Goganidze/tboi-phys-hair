@@ -1,8 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <metadata>
-	<name>physhair</name>
-	<directory>bethhair</directory>
-	<description/>
-	<version>1.0</version>
-	<visibility/>
-</metadata>
+    <name>Hair With Physics [RGON only]</name>
+    <directory>bethhair</directory>
+    <id>3127377427</id>
+    <description>[h2]This mod requires REPENTOGON to work[/h2]
 
+Check the link [url=https://repentogon.com][/url]
+[hr][/hr]
+This mod replaces the [i]static[/i] sprite of Bethany's tails with a dynamic one, BLESSED BY THE POWER OF REPENTOGON</description>
+    <version>1.2</version>
+    <visibility>Private</visibility>
+    <tag id="Lua"/>
+</metadata>
