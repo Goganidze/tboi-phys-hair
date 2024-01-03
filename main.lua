@@ -55,6 +55,30 @@ BethBBackHair:Load("gfx/characters/bethanyHair_back.anm2", true)
 BethBBackHair:Play(BethBBackHair:GetDefaultAnimation())
 
 
+mod.JudasFexCordSpr = Sprite()
+local JudasFexCordSpr = mod.JudasFexCordSpr
+--HairCordSpr:Load("gfx/893.000_ball and chain.anm2", true)
+JudasFexCordSpr:Load("gfx/characters/costumes/judasFez_cord.anm2", true)
+--JudasFexCordSpr:ReplaceSpritesheet(0, "gfx/characters/costumes/judas_cord.png")
+JudasFexCordSpr:LoadGraphics()
+JudasFexCordSpr:PlayOverlay("cord")
+JudasFexCordSpr:Play("cord")
+JudasFexCordSpr.Scale.X = 1.5
+mod.JudasFexCord = Beam(JudasFexCordSpr, "body", true, false, 3)
+local JudasFexCord = mod.JudasFexCord
+
+mod.JudasFexCordSprB = Sprite()
+local JudasFexCordSprB = mod.JudasFexCordSprB
+--HairCordSpr:Load("gfx/893.000_ball and chain.anm2", true)
+JudasFexCordSprB:Load("gfx/characters/costumes/judasFez_cord.anm2", true)
+JudasFexCordSprB:ReplaceSpritesheet(0, "gfx/characters/costumes/judas_cord_shadow.png")
+JudasFexCordSprB:LoadGraphics()
+JudasFexCordSprB:PlayOverlay("cord")
+JudasFexCordSprB:Play("cord")
+JudasFexCordSprB.Scale.X = 1.5
+mod.JudasFexCordB = Beam(JudasFexCordSprB, "body", true, false, 3)
+local JudasFexCordB = mod.JudasFexCordB
+
 
 local headDirToRender = {
     [3] = {3,3}, -- 3 << 1,
@@ -84,13 +108,15 @@ mod.HasPhysHair = {
 local HasPhysHair = mod.HasPhysHair
 
 mod.HairLib = include("physhair")
----@type hairlib
+---@type _HairCordData
 mod.HairLib = mod.HairLib(mod)
 mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
         --CordSpr = cordSpr,
         --TailCount = 2,
         --RenderLayers = headDirToRender,
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
+        TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_001x_bethshair_notails.png",
         [1] = {
             CordSpr = cordSpr,
             RenderLayers = headDirToRender1,
@@ -110,7 +136,8 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
         --RenderLayers = headDirToRender,
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         HeadBackSpr = BethBBackHair,
-        --Scretch = scretch * 1.2,
+        TargetCostume = {ID = NullItemID.ID_BETHANY_B, Type = ItemType.ITEM_NULL},
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_018b_bethshair_notails.png",
         [1] = {
             Scretch = scretch * 1.2,
             CordSpr = cordSprB,
@@ -125,7 +152,61 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
         },
     })
 
-local function sign(val)
+    local JudasFezheadDirToRender = {
+        [3] = 3, -- 3 << 1,
+        [0] = 3, --2 << 1,
+        [1] = 3, --3 << 1,
+        [2] = 2, --1 << 1
+    }
+    mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS, {
+        TargetCostume = {ID = NullItemID.ID_JUDAS, Type = ItemType.ITEM_NULL},
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_004_judasfez_notails.png",
+        [1] = {
+            DotCount = 3,
+            Scretch = scretch*.75,
+            Length = 13,
+            CordSpr = JudasFexCord,
+            RenderLayers = JudasFezheadDirToRender,
+            CostumeNullpos = "judasfez_cord",
+            Mass = 6,
+            --sprScale = Vector(1,2),
+        },
+    })
+    mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS_B, {
+        TargetCostume = {ID = NullItemID.ID_JUDAS_B, Type = ItemType.ITEM_NULL},
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_004b_judasfez_notails.png",
+        [1] = {
+            DotCount = 3,
+            Scretch = scretch*.75,
+            Length = 13,
+            CordSpr = JudasFexCordB,
+            RenderLayers = JudasFezheadDirToRender,
+            CostumeNullpos = "judasfez_cord",
+            Mass = 6,
+            --sprScale = Vector(1,2),
+        },
+    })
+
+
+    mod:AddCallback(mod.HairLib.Callbacks.HAIR_POST_INIT, function (_, player, hairdata)
+        local plaType = player:GetPlayerType()
+        if plaType == PlayerType.PLAYER_JUDAS or plaType == PlayerType.PLAYER_JUDAS_B then
+            for tail = 1, #hairdata do
+                local taildata = hairdata[tail]
+                for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
+                    local k = i+1
+                    hairdata[tail][i][3] = taildata.Length/taildata.DotCount*k-k*2+5
+                end
+                hairdata[1][taildata.DotCount-2][3] = 10
+                hairdata[1][taildata.DotCount-1][3] = 13
+            end
+        end
+    end)
+
+
+
+
+--[[local function sign(val)
     return val>0 and 1 or val<0 and -1 or 0
 end
 
@@ -137,7 +218,7 @@ end
 
 local function ScreenToWorld(vec)
     return  (vec-worldToScreen1(Vector(0,0))) * Wtr
-end
+end]]
 
 --[[local function physhair(HairData, StartPos, scale, headpos)
     local cdat = HairData
