@@ -171,13 +171,13 @@ return function (mod)
             if prep then
                 local bttdis = lpos:Distance(prep)
                 
-                if bttdis > scretch*2 then
-                    cur[1] = prep-(prep-lpos):Resized(scretch*2*scale)
-                    lpos = cur[1]
+                if bttdis > scretch*3 then
+                    cur[1] = prep-(prep-lpos):Resized(scretch*3*scale)
+                    --lpos = cur[1]
                     --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
                 end
     
-                --local velic = Vector(1,0):Rotated( (nextpos - data.SWkishki.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data.SWkishki.pos[i])-Stretch)*0.10) ) --0.07
+                --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
                 local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch))
                 
                 local lerp = 1 - (.12 * mass )
@@ -187,10 +187,10 @@ return function (mod)
             if nextp then
                 --local bttdis = lpos:Distance(nextp)
     
-                --local velic = Vector(1,0):Rotated( (nextpos - data.SWkishki.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data.SWkishki.pos[i])-Stretch)*0.10) ) --0.07
+                --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
                 --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
                 --cur[2] = (cur[2] + vel)* .68
-                --cur[2] = cur[2]  + vel * .2 
+                --cur[2] = cur[2]  + vel * .1
             end
     
             if headpos then
@@ -359,10 +359,12 @@ return function (mod)
     
             for tail = 1, #cdat do
                 local taildata = cdat[tail]
-                local hairPos = player:GetCostumeNullPos(taildata.Null, true, Vector(0,0))
-                
-                --physhair(taildata, playerPos + hairPos* Wtr, scale, headpos)
-                taildata.PhysFunc(taildata, playerPos + hairPos* Wtr, scale, headpos)
+                if #taildata > 0 then
+                    local hairPos = player:GetCostumeNullPos(taildata.Null, true, Vector(0,0))
+                    
+                    --physhair(taildata, playerPos + hairPos* Wtr, scale, headpos)
+                    taildata.PhysFunc(taildata, playerPos + hairPos* Wtr, scale, headpos)
+                end
             end
         end
     end
@@ -436,46 +438,49 @@ return function (mod)
             for tail=1, #cdat do
                 ---@type HairData
                 local taildata = cdat[tail]
-                local cord = taildata.Cord
-                local cordspr = cord:GetSprite()
 
-                --local hairPos = player:GetCostumeNullPos(cdat.NullPoses[tail], true, Vector(0,0))
-                local hairPos = player:GetCostumeNullPos(taildata.Null, true, Vector(0,0))
-    
-                local rlt = taildata.RL[hdir]
-                
-                if rlt & 2 == 2 and rlt & 1 == 1 then
-                    local tail1 = taildata
-                    local hap1 --= playerPos+hairPos1 --(Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
-                    if isreflect then
-                        hap1 = playerPos+Vector(hairPos.X,-hairPos.Y)+offset
-                        if cdat.reflectOffset then
-                            hap1 = hap1 - cdat.reflectOffset
-                            if not pause then
-                                hap1 = hap1 + player.Velocity * Wtr
-                            end
-                        end
-                    else
-                        hap1 = playerPos+hairPos  + Vector(0,1)
-                    end
-                    local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*taildata.Scretch*.16) + game.ScreenShakeOffset
-                    cord:Add(hap1 + off, player.SpriteScale.X*.95*cordspr.Scale.X, 5 , playerCol)
+                if #taildata > 0 then
+                    local cord = taildata.Cord
+                    local cordspr = cord:GetSprite()
+
+                    --local hairPos = player:GetCostumeNullPos(cdat.NullPoses[tail], true, Vector(0,0))
+                    local hairPos = player:GetCostumeNullPos(taildata.Null, true, Vector(0,0))
+        
+                    local rlt = taildata.RL[hdir]
                     
-                    for i=0, #tail1 do
-                        local cur = tail1[i]
-                        local pos = worldToScreen(cur[1]) --+ hairPos1
+                    if rlt & 2 == 2 and rlt & 1 == 1 then
+                        local tail1 = taildata
+                        local hap1 --= playerPos+hairPos1 --(Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
                         if isreflect then
-                            local yof = realplayerPos.Y-pos.Y
-                            pos = pos + offset
-                            pos.Y = pos.Y + yof*2
+                            hap1 = playerPos+Vector(hairPos.X,-hairPos.Y)+offset
                             if cdat.reflectOffset then
-                                pos = pos - cdat.reflectOffset
+                                hap1 = hap1 - cdat.reflectOffset
+                                if not pause then
+                                    hap1 = hap1 + player.Velocity * Wtr
+                                end
                             end
+                        else
+                            hap1 = playerPos+hairPos  + Vector(0,1)
                         end
+                        local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*taildata.Scretch*.16) + game.ScreenShakeOffset
+                        cord:Add(hap1 + off, player.SpriteScale.X*.95*cordspr.Scale.X, 5 , playerCol)
                         
-                        cord:Add(pos,player.SpriteScale.X*cordspr.Scale.X,cur[3]+2 , playerCol)
+                        for i=0, #tail1 do
+                            local cur = tail1[i]
+                            local pos = worldToScreen(cur[1]) --+ hairPos1
+                            if isreflect then
+                                local yof = realplayerPos.Y-pos.Y
+                                pos = pos + offset
+                                pos.Y = pos.Y + yof*2
+                                if cdat.reflectOffset then
+                                    pos = pos - cdat.reflectOffset
+                                end
+                            end
+                            
+                            cord:Add(pos,player.SpriteScale.X*cordspr.Scale.X,cur[3]+2 , playerCol)
+                        end
+                        cord:Render()
                     end
-                    cord:Render()
                 end
             end
     
@@ -548,26 +553,29 @@ return function (mod)
             for tail = 1, #cdat do
                 ---@type HairData
                 local taildata = cdat[tail]
-                local cord = taildata.Cord
-                local cordSpr = cord:GetSprite()
-               
-                local hairPos = player:GetCostumeNullPos(taildata.Null, true, Vector(0,0))
-    
-                local rl = taildata.RL
-                local rlt = rl[hdir] --[tail] 
-    
-                if rlt & 2 == 2 and rlt & 1 == 0 then
-                    local tail1 = taildata
-                    local hap1 = playerPos+hairPos
-                    local off = Vector(0,0) -- (hap1-tail1[0][1]):Resized(player.SpriteScale.X*scretch*.3)
-                    cord:Add(hap1+off,player.SpriteScale.X*.95*cordSpr.Scale.X,5, playerCol)
-                    for i=0, #tail1 do
-                        local cur = tail1[i]
-                        local pos = worldToScreen(cur[1]) --+ hairPos1
-                        
-                        cord:Add(pos,player.SpriteScale.X*cordSpr.Scale.X,cur[3]+2, playerCol)
+
+                if #taildata > 0 then
+                    local cord = taildata.Cord
+                    local cordSpr = cord:GetSprite()
+                
+                    local hairPos = player:GetCostumeNullPos(taildata.Null, true, Vector(0,0))
+        
+                    local rl = taildata.RL
+                    local rlt = rl[hdir] --[tail] 
+        
+                    if rlt & 2 == 2 and rlt & 1 == 0 then
+                        local tail1 = taildata
+                        local hap1 = playerPos+hairPos
+                        local off = Vector(0,0) -- (hap1-tail1[0][1]):Resized(player.SpriteScale.X*scretch*.3)
+                        cord:Add(hap1+off,player.SpriteScale.X*.95*cordSpr.Scale.X,5, playerCol)
+                        for i=0, #tail1 do
+                            local cur = tail1[i]
+                            local pos = worldToScreen(cur[1]) --+ hairPos1
+                            
+                            cord:Add(pos,player.SpriteScale.X*cordSpr.Scale.X,cur[3]+2, playerCol)
+                        end
+                        cord:Render()
                     end
-                    cord:Render()
                 end
             end
         end

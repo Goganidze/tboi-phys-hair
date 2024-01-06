@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata>
-    <name>Hair With Physics [RGON]</name>
+    <name>Hair (and Fez) With Physics [RGON]</name>
     <directory>bethhair</directory>
     <id>3127377427</id>
     <description>[h2]This mod requires REPENTOGON to work[/h2]
 
 Check the link [url=https://repentogon.com][/url]
 [hr][/hr]
-This mod replaces the [i]static[/i] sprite of Bethany's tails with a dynamic one, BLESSED BY THE POWER OF REPENTOGON</description>
-    <version>1.6</version>
-    <visibility>Private</visibility>
+This mod replaces the [i]static[/i] sprite of Bethany's tails (and Judas' fez) with a dynamic one, BLESSED BY THE POWER OF REPENTOGON</description>
+    <version>1.7</version>
+    <visibility>Public</visibility>
     <tag id="Lua"/>
 </metadata>
