@@ -2,6 +2,7 @@ BethHair = RegisterMod("Vifaniia s fisikoi", 1)
 
 
 local mod = BethHair
+mod.BlockedChar = {}
 local Isaac = Isaac
 local game = Game()
 local Room 
@@ -37,7 +38,7 @@ local HairCordSpr = mod.HairCordSpr
 HairCordSpr:Load("gfx/characters/costumes/bethhair_cord.anm2", true)
 HairCordSpr:PlayOverlay("cord")
 HairCordSpr:Play("cord")
-mod.HairCord = Beam(HairCordSpr, "body", true, false, 3)
+mod.HairCord = Beam(HairCordSpr, "body", false, false, 3)
 local cordSpr = mod.HairCord
 
 mod.HairCordSprB = Sprite()
@@ -64,7 +65,7 @@ JudasFexCordSpr:LoadGraphics()
 JudasFexCordSpr:PlayOverlay("cord")
 JudasFexCordSpr:Play("cord")
 JudasFexCordSpr.Scale.X = 1.5
-mod.JudasFexCord = Beam(JudasFexCordSpr, "body", true, false, 3)
+mod.JudasFexCord = Beam(JudasFexCordSpr, "body", false, false, 3)
 local JudasFexCord = mod.JudasFexCord
 
 mod.JudasFexCordSprB = Sprite()
@@ -76,8 +77,22 @@ JudasFexCordSprB:LoadGraphics()
 JudasFexCordSprB:PlayOverlay("cord")
 JudasFexCordSprB:Play("cord")
 JudasFexCordSprB.Scale.X = 1.5
-mod.JudasFexCordB = Beam(JudasFexCordSprB, "body", true, false, 3)
+mod.JudasFexCordB = Beam(JudasFexCordSprB, "body", false, false, 3)
 local JudasFexCordB = mod.JudasFexCordB
+
+
+
+--[[local sprite = Sprite()
+sprite:Load("gfx/893.000_ball and chain.anm2", true)
+local chain = Beam(sprite, "chain", true, false)
+
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_RENDER, function(_, player)
+    chain:GetSprite():PlayOverlay("Chain", false)
+    local center = game:GetLevel():GetCurrentRoom():GetCenterPos()
+    chain:Add(Isaac.WorldToScreen(center), 1)
+    chain:Add(Isaac.WorldToScreen(player.Position), 40, 1)
+    chain:Render()
+end)]]
 
 
 local headDirToRender = {
@@ -100,12 +115,12 @@ local headDirToRender2 = {
 }
 
 
-mod.HasPhysHair = {
-    [PlayerType.PLAYER_BETHANY] = {cordSpr, 2, headDirToRender, {"bethshair_cord1","bethshair_cord2"}, nil},
-    [PlayerType.PLAYER_BETHANY_B] = {cordSprB, 2, headDirToRender, {"bethshair_cord1","bethshair_cord2"}, BethBBackHair},
-}
+--mod.HasPhysHair = {
+--    [PlayerType.PLAYER_BETHANY] = {cordSpr, 2, headDirToRender, {"bethshair_cord1","bethshair_cord2"}, nil},
+--    [PlayerType.PLAYER_BETHANY_B] = {cordSprB, 2, headDirToRender, {"bethshair_cord1","bethshair_cord2"}, BethBBackHair},
+--}
 --[1] = CordSprite, [2] = TailCount, [3] = RenderLayers, [4] = CotumeNullpos, [5] = BackSprite
-local HasPhysHair = mod.HasPhysHair
+--local HasPhysHair = mod.HasPhysHair
 
 mod.HairLib = include("physhair")
 ---@type _HairCordData
@@ -116,7 +131,7 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
         --RenderLayers = headDirToRender,
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSheep = "gfx/characters/costumes/character_001x_bethshair_notails.png",
+        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_001x_bethshair_notails.png",
         [1] = {
             CordSpr = cordSpr,
             RenderLayers = headDirToRender1,
@@ -137,7 +152,7 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_BETHANY_B, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSheep = "gfx/characters/costumes/character_018b_bethshair_notails.png",
+        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_018b_bethshair_notails.png",
         [1] = {
             Scretch = scretch * 1.2,
             CordSpr = cordSprB,
@@ -178,6 +193,12 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
     local EveheadDirToRender2 = {
         [3] = 3, -- 3 << 1,
         [0] = 3, --2 << 1,
+        [1] = 1, --3 << 1,
+        [2] = 3, --1 << 1
+    }
+    local EveheadDirToRender3 = {
+        [3] = 3, -- 3 << 1,
+        [0] = 2, --2 << 1,
         [1] = 3, --3 << 1,
         [2] = 3, --1 << 1
     }
@@ -189,23 +210,54 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSheep = "gfx/characters/costumes/character_005_evehead_notails.png",
-        [1] = {
+        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_005_evehead_notails.png",
+        SyncWithCostumeBodyColor = true,
+        [2] = {
             Scretch = scretch * 1.5,
+            DotCount = 4,
             CordSpr = EveHairCord,
             RenderLayers = EveheadDirToRender,
             CostumeNullpos = "evehair_cord1",
-            Mass = 5000,
+            Mass = 10,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
         },
-        [2] = {
-            Scretch = scretch * 1.5,
+        [3] = {
+            Scretch = scretch * 0.8 ,
             CordSpr = EveHairCord2,
             RenderLayers = EveheadDirToRender2,
             CostumeNullpos = "evehair_cord2",
+            DotCount = 2,
+            Length = 7,
+            StartHeight = 3,
+            Mass = 25,
+        },
+        [1] = {
+            Scretch = scretch * 1.2,
+            CordSpr = EveHairCord,
+            RenderLayers = EveheadDirToRender3,
+            CostumeNullpos = "evehair_cord3",
+            Mass = 20,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
         },
     })
 
+    mod:AddCallback(mod.HairLib.Callbacks.HAIR_POST_INIT, function (_, player, hairdata)
+        local plaType = player:GetPlayerType()
+        if plaType == PlayerType.PLAYER_EVE then
+            --for tail = 1, #hairdata do
+                local taildata = hairdata[2]
+                --for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
+                --    local k = i+1
+                --    hairdata[2][i][3] = taildata.Length/taildata.DotCount*k-k*2+5
+                --end
+                hairdata[1][0][3] = 11
 
+                hairdata[3][1][3] = 13
+                hairdata[3][0][3] = 8
+                hairdata[3][1][3] = 13
+            --end
+        end
+    end)
 
 
 
@@ -223,7 +275,7 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
 
     mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS, {
         TargetCostume = {ID = NullItemID.ID_JUDAS, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSheep = "gfx/characters/costumes/character_004_judasfez_notails.png",
+        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_004_judasfez_notails.png",
         --[[[1] = {
             DotCount = 3,
             Scretch = scretch*.75,
@@ -374,6 +426,85 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
     end
     mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_RENDER, mod.JudasJunkPreRender)
 
+    local json = require("json")
+    local function updateSaveData()
+        local data = {
+            OdangoMode = mod.OdangoMode,
+            Beth = mod.BlockedChar[PlayerType.PLAYER_BETHANY] and 1 or 0,
+            BethB = mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] and 1 or 0,
+            Judas = mod.BlockedChar[PlayerType.PLAYER_JUDAS] and 1 or 0,
+            JudasB = mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] and 1 or 0,
+            Eve = mod.BlockedChar[PlayerType.PLAYER_EVE] and 1 or 0,
+        }
+       
+        mod:SaveData( json.encode(data) )
+    end
+
+    local strings = {
+        ["Bethany Odango Mode"] = {en = "Bethany Odango Mode", ru = "Режим Оданго для Вифании"},
+        ["physfor"] = {en = "Physics for", ru = "Физика для"},
+    }
+    local function GetStr(str)
+        return strings[str] and (strings[str][Options.Language] or strings[str].en) or str
+    end
+
+    local upmenuid = "ModsSettingMenu"
+    local menuID = "PhysHairMenu"
+    if not ImGui.ElementExists(upmenuid) then
+        ImGui.CreateMenu(upmenuid, "Mods Setting")
+    end
+    if ImGui.ElementExists(menuID) then
+        ImGui.RemoveWindow(menuID)
+    end
+    if ImGui.ElementExists("BethOdangoMode") then
+        ImGui.RemoveElement("BethOdangoMode")
+    end
+    if ImGui.ElementExists("PhysHairMenuEntry") then
+        ImGui.RemoveElement("PhysHairMenuEntry")
+    end
+    ImGui.AddElement(upmenuid, "PhysHairMenuEntry", ImGuiElement.MenuItem, "Hair With Physics")
+
+    ImGui.CreateWindow(menuID, "Hair With Physics")
+    ImGui.LinkWindowToElement(menuID, "PhysHairMenuEntry")
+    ImGui.AddCheckbox (menuID, "BethOdangoMode", GetStr("Bethany Odango Mode"), function(a) mod.OdangoMode = a updateSaveData() end, false )
+    ImGui.AddText(menuID, "")
+    ImGui.AddText(menuID, GetStr("physfor"))
+    ImGui.AddCheckbox (menuID, "PhysHair_BethPhys","Bethany", function(a) mod.BlockedChar[PlayerType.PLAYER_BETHANY] = not a updateSaveData() end, true )
+    ImGui.AddCheckbox (menuID, "PhysHair_BethBPhys","T. Bethany", function(a) mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = not a  updateSaveData() end, true )
+    ImGui.AddCheckbox (menuID, "PhysHair_JudasPhys","Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS] = not a  updateSaveData() end, true )
+    ImGui.AddCheckbox (menuID, "PhysHair_JudasBPhys","T. Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = not a  updateSaveData() end, true )
+    ImGui.AddCheckbox (menuID, "PhysHair_EveBPhys","Eve", function(a) mod.BlockedChar[PlayerType.PLAYER_EVE] = not a updateSaveData() end, true )
+
+    mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, function(_, saveslot, isslotselected, rawslot)
+        if mod:HasData() then
+            local savedata = json.decode(mod:LoadData())
+            mod.OdangoMode = savedata.OdangoMode
+            mod.BlockedChar[PlayerType.PLAYER_BETHANY] = savedata.Beth == 1
+            mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = savedata.BethB == 1
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS] = savedata.Judas == 1
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = savedata.JudasB == 1
+            mod.BlockedChar[PlayerType.PLAYER_EVE] = savedata.Eve == 1
+
+            ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
+            ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
+            ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
+            ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
+            ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+        else
+            --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true
+            mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = true
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS] = true
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = true
+            mod.BlockedChar[PlayerType.PLAYER_EVE] = true]]
+
+            ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
+            ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
+            ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
+            ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
+            ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+        end
+        
+    end)
 
 
 if Isaac.GetPlayer() then

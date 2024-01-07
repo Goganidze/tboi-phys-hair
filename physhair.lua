@@ -63,6 +63,7 @@ return function (mod)
     ---@field BackSpr Sprite?
     ---@field TargetCostume TargetCostume?
     ---@field ReplaceCostumeSheep string|string[]?
+    ---@field SyncBColor boolean?
 
     ---@class HairData
     ---@field Cord Sprite|Beam|any
@@ -73,6 +74,7 @@ return function (mod)
     ---@field Null string
     ---@field Length number
     ---@field Mass number?
+    ---@field STH number?
 
     ---@class HairDataIn
     ---@field CordSpr Sprite|Beam|any
@@ -83,6 +85,7 @@ return function (mod)
     ---@field CostumeNullpos string
     ---@field Length number?
     ---@field Mass number?
+    ---@field StartHeight number?
 
     ---@class TargetCostume
     ---@field ID integer
@@ -93,6 +96,8 @@ return function (mod)
     ---@field HeadBackSpr Sprite?
     ---@field TargetCostume TargetCostume?
     ---@field ReplaceCostumeSheep string|string[]?
+    ---@field ReplaceCostumeSuffix string|string[]?
+    ---@field SyncWithCostumeBodyColor boolean?
     ---@field [integer] HairDataIn
 
     ---@param data SetHairDataParam
@@ -108,6 +113,8 @@ return function (mod)
                 BackSpr = data.HeadBackSpr,
                 TargetCostume = data.TargetCostume,
                 ReplaceCostumeSheep = data.ReplaceCostumeSheep,
+                ReplaceCostumeSuffix = data.ReplaceCostumeSuffix,
+                SyncBColor = data.SyncWithCostumeBodyColor,
             }
             for i = 1, #data do
                 ---@type HairData
@@ -120,6 +127,7 @@ return function (mod)
                     Null = data[i].CostumeNullpos,
                     Length = data[i].Length or 32,
                     Mass = data[i].Mass or 10,
+                    STH = data[i].StartHeight or 5.
                 }
             end
 
@@ -127,6 +135,17 @@ return function (mod)
     end
 
 
+    local bodycolor = {
+        [0] = "",
+        [SkinColor.SKIN_BLACK] = "_black",
+        [SkinColor.SKIN_BLUE] = "_blue",
+        [SkinColor.SKIN_GREEN] = "_green",
+        [SkinColor.SKIN_GREY] = "_grey",
+        [SkinColor.SKIN_PINK] = "",
+        [SkinColor.SKIN_RED] = "_red",
+        [SkinColor.SKIN_SHADOW] = "_shadow",
+        [SkinColor.SKIN_WHITE] = "_white",
+    }
 
     local function sign(val)
         return val>0 and 1 or val<0 and -1 or 0
@@ -139,10 +158,10 @@ return function (mod)
     end
     
     local function ScreenToWorld(vec)
-        return  (vec-worldToScreen1(Vector(0,0))) * Wtr
+        return  (vec-worldToScreen1(z)) * Wtr
     end
     
-    local function physhair(HairData, StartPos, scale, headpos)
+    local function physhair(player, HairData, StartPos, scale, headpos)
         local cdat = HairData
         local tail1 = HairData
         local plpos1 = StartPos
@@ -167,7 +186,7 @@ return function (mod)
             --    nextp = tail1[i+1][1]
             --end
     
-            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch))
+            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * (cdat.Mass/10))
             if prep then
                 local bttdis = lpos:Distance(prep)
                 
@@ -244,13 +263,16 @@ return function (mod)
         
         --local hairPos1 = player:GetCostumeNullPos("bethshair_cord1", true, Vector(0,0)) * Wtr
         --local hairPos2 = player:GetCostumeNullPos("bethshair_cord2", true, Vector(0,0)) * Wtr
-        
-        if not data._BethsHairCord then
-            local datattab = PlayerData[player:GetPlayerType()]
+        local ptype = player:GetPlayerType()
+        if not data._BethsHairCord and not mod.BlockedChar[ptype] then
+            
+            local datattab = PlayerData[ptype]
             data._BethsHairCord = {
                 BackSpr = datattab.BackSpr,
                 TargetCostume = datattab.TargetCostume,
                 ReplaceCostumeSheep = datattab.ReplaceCostumeSheep,
+                ReplaceCostumeSuffix = datattab.ReplaceCostumeSuffix,
+                SyncBColor = datattab.SyncBColor,
             }
             local cdat = data._BethsHairCord
 
@@ -261,10 +283,12 @@ return function (mod)
                 end
             end]]
             for tail = 1, #datattab do
+                ---@type HairData
                 local tld = datattab[tail]
                 ---@type HairData
                 cdat[tail] = { Cord = tld.Cord, PhysFunc = tld.PhysFunc or physhair,
-                    RL = tld.RL, Null = tld.Null, Scretch = tld.Scretch, DotCount = tld.DotCount, Length = tld.Length, Mass = tld.Mass }
+                    RL = tld.RL, Null = tld.Null, Scretch = tld.Scretch, DotCount = tld.DotCount, Length = tld.Length, Mass = tld.Mass,
+                    STH = tld.STH }
                 
                 local taildata = cdat[tail]
                 for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
@@ -273,7 +297,7 @@ return function (mod)
             end
 
             Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_POST_INIT, player:GetPlayerType(), player, cdat)
-        else
+        elseif data._BethsHairCord then
             local cdat = data._BethsHairCord
             
             if cdat.HeadPosCheckFrame and (player.FrameCount - cdat.HeadPosCheckFrame <= 1) then
@@ -282,6 +306,66 @@ return function (mod)
 
             local tarcost = cdat.TargetCostume
             if tarcost then
+
+                local bodcol = player:GetBodyColor()
+                if cdat.SyncBColor and cdat.BodyColorCheck ~= bodcol then
+                    cdat.CostumeReplaced = false
+                    local refsting = ""
+
+                    local pos = 0
+                    for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+                        local conf = csd:GetItemConfig()
+                        if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
+                            if not tarcost.pos or tarcost.pos == pos then
+                                local cspr = csd:GetSprite()
+                                for id=0, cspr:GetLayerCount()-1 do
+                                    local str = cspr:GetLayer(id):GetSpritesheetPath()
+                                    for j=1, #bodycolor do
+                                        local colstr = bodycolor[j]
+                                        if str:find(colstr) then
+                                            refsting = colstr
+                                            break
+                                        end
+                                    end
+                                end
+                            else
+                                if tarcost.pos > pos then
+                                    pos = pos + 1
+                                end
+                            end
+                        end
+                    end
+
+                    if refsting then
+                        local cache = {}
+                        for tail = 1, #cdat do
+                            local taildata = cdat[tail]
+
+                            if taildata.Cord and not cache[taildata.Cord]  then
+                                cache[taildata.Cord] = true
+                            end
+                        end
+                        for cord, k in pairs(cache) do
+                            cdat.OrigCordSheep = cdat.OrigCordSheep or {}
+                            cdat.OrigCordSheep[cord] = cdat.OrigCordSheep[cord] or {}
+                            local OrigCordSheep = cdat.OrigCordSheep[cord]
+                            ---@type Sprite
+                            local spr = cord:GetSprite()
+                            for layer = 0, spr:GetLayerCount()-1 do
+                                local shep = spr:GetLayer(layer):GetSpritesheetPath()
+                                if not OrigCordSheep[layer] then
+                                    OrigCordSheep[layer] = shep
+                                else
+                                    shep = OrigCordSheep[layer]
+                                end
+                                spr:ReplaceSpritesheet(layer, shep:sub(0, shep:len()-4) .. refsting .. ".png")
+                            end
+                            spr:LoadGraphics()
+                        end
+                    end
+                end
+                cdat.BodyColorCheck = bodcol
+
                 if player:IsExtraAnimationFinished() and not cdat.CostumeReplaced then
                     cdat.CostumeReplaced = true
                     cdat.OrigCostume = {}
@@ -292,18 +376,30 @@ return function (mod)
                             if not tarcost.pos or tarcost.pos == pos then
                                 cdat.HairCostume = csd
                                 local cspr = csd:GetSprite()
-                                local rep = cdat.ReplaceCostumeSheep
-                                if rep then
-                                    if type(rep) == "table" then
-                                        for id, gfx in pairs(rep) do
-                                            cdat.OrigCostume[id] = cspr:GetLayer(id):GetSpritesheetPath()
-                                            cspr:ReplaceSpritesheet(id, gfx)
+                                local suffix = cdat.ReplaceCostumeSuffix
+                                local replacestr = cdat.ReplaceCostumeSheep
+                                local refsting
+                                if suffix or replacestr then
+                                    if type(suffix) == "table" then
+                                        for id, gfx in pairs(suffix) do
+                                            local orig =  cspr:GetLayer(id):GetSpritesheetPath()
+                                            cdat.OrigCostume[id] = orig
+                                            if replacestr then
+                                                orig = type(replacestr) == "table" and replacestr[id] or replacestr
+                                            end
+                                            refsting = orig:sub(0, orig:len()-4)
+                                            cspr:ReplaceSpritesheet(id, refsting .. gfx .. ".png")
                                         end
                                         cspr:LoadGraphics()
                                     else
                                         for id=0, cspr:GetLayerCount()-1 do
-                                            cdat.OrigCostume[id] = cspr:GetLayer(id):GetSpritesheetPath()
-                                            cspr:ReplaceSpritesheet(id, rep)
+                                            local orig = cspr:GetLayer(id):GetSpritesheetPath()
+                                            cdat.OrigCostume[id] = orig
+                                            if replacestr then
+                                                orig = type(replacestr) == "table" and replacestr[id] or replacestr
+                                            end
+                                            refsting = orig:sub(0, orig:len()-4)
+                                            cspr:ReplaceSpritesheet(id, refsting .. (suffix or "") .. ".png")-- rep)
                                         end
                                         cspr:LoadGraphics()
                                     end
@@ -350,6 +446,7 @@ return function (mod)
                     
                 end
             end
+
     
             --local tail1 = cdat.tail1
             --local plpos1 = playerPos + hairPos1
@@ -363,19 +460,30 @@ return function (mod)
                     local hairPos = player:GetCostumeNullPos(taildata.Null, true, Vector(0,0))
                     
                     --physhair(taildata, playerPos + hairPos* Wtr, scale, headpos)
-                    taildata.PhysFunc(taildata, playerPos + hairPos* Wtr, scale, headpos)
+                    taildata.PhysFunc(player, taildata, playerPos + hairPos* Wtr, scale, headpos)
                 end
             end
         end
     end
     mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, _HairCordData.playerUpdate)
     
+    --function _HairCordData.ColorChecker(_, player, flag)
+    --    if flag == CacheFlag.CACHE_COLOR then
+    --        player:GetData()._HairCordData.CostumeReplaced = false
+    --    end
+    --end
+    local isbeth = {
+        [PlayerType.PLAYER_BETHANY]=true,
+        [PlayerType.PLAYER_BETHANY_B]=true,
+    }
+
     ---@param player EntityPlayer
     function _HairCordData.HairPostRender(_, player, offset)
-        ---@type Room
-        if not PlayerData[player:GetPlayerType()] or not player:IsExtraAnimationFinished() then
+        local ptype = player:GetPlayerType()
+        if not PlayerData[ptype] or not player:IsExtraAnimationFinished() then
             return
         end
+        
         Room = Room or game:GetRoom()
         local data = player:GetData()
         if data._BethsHairCord then 
@@ -432,6 +540,10 @@ return function (mod)
                     BackSpr:Render(playerPos)
                 end
             end
+
+            if isbeth[ptype] and mod.OdangoMode then
+                return
+            end
     
             local pause = game:IsPaused()
             --for tail=1, cdat.tailCount do
@@ -462,8 +574,11 @@ return function (mod)
                         else
                             hap1 = playerPos+hairPos  + Vector(0,1)
                         end
+                        --local points = {}
                         local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*taildata.Scretch*.16) + game.ScreenShakeOffset
-                        cord:Add(hap1 + off, player.SpriteScale.X*.95*cordspr.Scale.X, 5 , playerCol)
+                        
+                        --cord:Add(hap1 + off, player.SpriteScale.X*.95*cordspr.Scale.X, 5 , playerCol)
+                        cord:Add(hap1 + off, taildata.STH or 5,  player.SpriteScale.X*.95*cordspr.Scale.X , playerCol)
                         
                         for i=0, #tail1 do
                             local cur = tail1[i]
@@ -477,8 +592,10 @@ return function (mod)
                                 end
                             end
                             
-                            cord:Add(pos,player.SpriteScale.X*cordspr.Scale.X,cur[3]+2 , playerCol)
+                            --cord:Add(pos,player.SpriteScale.X*cordspr.Scale.X,cur[3]+2 , playerCol)
+                            cord:Add(pos,cur[3]+2 ,player.SpriteScale.X*cordspr.Scale.X , playerCol)
                         end
+
                         cord:Render()
                     end
                 end
@@ -512,7 +629,8 @@ return function (mod)
     mod:AddPriorityCallback(ModCallbacks.MC_POST_PLAYER_RENDER, -10, _HairCordData.HairPostRender)
     
     function _HairCordData.HairPreRender(_, player, offset)
-        if not PlayerData[player:GetPlayerType()]  then
+        local ptype = player:GetPlayerType()
+        if not PlayerData[ptype]  then
             return
         end
         
@@ -521,6 +639,10 @@ return function (mod)
         if data._BethsHairCord and Room:GetRenderMode() ~= RenderMode.RENDER_WATER_REFLECT then
             data._BethsHairCord.RealHeadPos = offset -- Isaac.WorldToScreen(player.Position)
             data._BethsHairCord.HeadPosCheckFrame = player.FrameCount
+
+            if isbeth[ptype] and mod.OdangoMode then
+                return
+            end
 
             if not player:IsExtraAnimationFinished() then
                 return
@@ -567,12 +689,12 @@ return function (mod)
                         local tail1 = taildata
                         local hap1 = playerPos+hairPos
                         local off = Vector(0,0) -- (hap1-tail1[0][1]):Resized(player.SpriteScale.X*scretch*.3)
-                        cord:Add(hap1+off,player.SpriteScale.X*.95*cordSpr.Scale.X,5, playerCol)
+                        cord:Add(hap1+off, taildata.STH or 5, player.SpriteScale.X*.95*cordSpr.Scale.X, playerCol)
                         for i=0, #tail1 do
                             local cur = tail1[i]
                             local pos = worldToScreen(cur[1]) --+ hairPos1
                             
-                            cord:Add(pos,player.SpriteScale.X*cordSpr.Scale.X,cur[3]+2, playerCol)
+                            cord:Add(pos, cur[3]+2, player.SpriteScale.X*cordSpr.Scale.X, playerCol)
                         end
                         cord:Render()
                     end
@@ -591,6 +713,81 @@ return function (mod)
         end
     end
     mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, _HairCordData.PreRoomHairFix)
+
+
+
+    function _HairCordData.EveheavyHairPhys(player, HairData, StartPos, scale, headpos)
+        headpos = headpos + Vector(0,-15)
+        local cdat = HairData
+        local tail1 = HairData
+        local plpos1 = StartPos
+        local scretch = cdat.Scretch
+        local Mmass = 10 / cdat.Mass   --/ 10
+
+        local headdir = player:GetHeadDirection()
+        local headpospushpower = (headdir == 1 or headdir == 2) and .8 or 1.9
+    
+        for i=0, #tail1 do
+            local mass = Mmass * i --(#tail1 - i)
+            local prep, nextp
+            local cur = tail1[i]
+            local lpos = cur[1]
+
+            local srch = cur[3]
+            if i == 0 then
+                prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
+                --scretch = 0
+            else
+                prep = tail1[i-1][1]
+            end
+            --if i < maxcoord-1 then
+            --    nextp = tail1[i+1][1]
+            --end
+            local lerp = 1 - (.12 * mass )
+    
+            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( cdat.Mass/10 * lerp))
+            if prep then
+                local bttdis = lpos:Distance(prep)
+                
+                if bttdis > scretch*3 then
+                    cur[1] = prep-(prep-lpos):Resized(scretch*3*scale)
+                    --lpos = cur[1]
+                    --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+                end
+                
+                local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp))
+                
+                cur[2] = (cur[2]* lerp + vel * (1-lerp))
+                --cur[2] = cur[2] * 0.2 + vel * .8
+            end
+            if nextp then
+                --local bttdis = lpos:Distance(nextp)
+    
+                --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
+                --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
+                --cur[2] = (cur[2] + vel)* .68
+                --cur[2] = cur[2]  + vel * .1
+            end
+    
+            if headpos then
+                local lerp = (.3 * (#tail1 - i) )
+                local bttdis = lpos:Distance(headpos)/scale
+                
+                local vel = (lpos - headpos):Resized(math.max(0,headsize*0.6-bttdis)*.25)
+                cur[2] = cur[2] *.8 + vel* headpospushpower*lerp
+            end
+    
+            cur[1] = cur[1] + cur[2]
+    
+            local bttdis = cur[1]:Distance(prep)
+            if bttdis > scretch then
+                cur[1] = prep-(prep-cur[1]):Resized(scretch*scale)
+                --lpos = cur[1]
+                bttdis = scretch*scale
+            end
+        end
+    end 
+
 
     return _HairCordData
 end
