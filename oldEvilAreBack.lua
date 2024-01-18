@@ -509,5 +509,30 @@ return function()
         end
     end
 
+    local modpath
+    for i=1, XMLData.GetNumEntries(XMLNode.MOD) do
+		local conf = XMLData.GetEntryById(XMLNode.MOD, i)
+        if type(conf) == "table" then
+            if conf.name == "Hair (and Fez) With Physics [RGON]" then
+                modpath = conf.realdirectory
+            end
+        end
+    end
+
+
+
+    --почему то отражения ломаются и я не могу понять из за чего, ведь после luamod мод чиниться навсегда.
+    tab.MegaShitReflectFix = function()
+        if not PHYSHAIR_MEGASHITFIX then
+            PHYSHAIR_MEGASHITFIX = true
+            local room = game:GetRoom()
+            local rendermode = room:GetRenderMode()
+            if rendermode == RenderMode.RENDER_WATER_REFLECT and room:GetFrameCount() > 10 then
+                Isaac.ExecuteCommand("luamod " .. modpath)
+            end
+        end
+    end
+
+
     return tab
 end

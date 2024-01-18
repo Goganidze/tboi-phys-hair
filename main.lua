@@ -376,6 +376,7 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
             if judasFezSpr[ptype] ~= data._JudasFezFakeCord.anm2 then
                 data._JudasFezFakeCord.anm2 = judasFezSpr[ptype]
             end
+            stupidShit.MegaShitReflectFix()
 
 
             local cdat = data._BethsHairCord

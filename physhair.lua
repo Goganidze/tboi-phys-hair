@@ -136,12 +136,12 @@ return function (mod)
 
 
     local bodycolor = {
-        [0] = "",
+        --[0] = "",
         [SkinColor.SKIN_BLACK] = "_black",
         [SkinColor.SKIN_BLUE] = "_blue",
         [SkinColor.SKIN_GREEN] = "_green",
         [SkinColor.SKIN_GREY] = "_grey",
-        [SkinColor.SKIN_PINK] = "",
+        --[SkinColor.SKIN_PINK] = "",
         [SkinColor.SKIN_RED] = "_red",
         [SkinColor.SKIN_SHADOW] = "_shadow",
         [SkinColor.SKIN_WHITE] = "_white",
@@ -232,6 +232,8 @@ return function (mod)
         end
     end 
 
+    local cacheNoHairColor = {}
+
     ---@param player EntityPlayer
     function _HairCordData.playerUpdate(_, player)
         if not PlayerData[player:GetPlayerType()] then
@@ -310,10 +312,10 @@ return function (mod)
                 local bodcol = player:GetBodyColor()
                 if cdat.SyncBColor and cdat.BodyColorCheck ~= bodcol then
                     cdat.CostumeReplaced = false
-                    local refsting = ""
+                    local refsting =  bodycolor[bodcol]  or ""
 
-                    local pos = 0
-                    for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+                    --local pos = 0
+                    --[[for i, csd in pairs(player:GetCostumeSpriteDescs()) do
                         local conf = csd:GetItemConfig()
                         if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
                             if not tarcost.pos or tarcost.pos == pos then
@@ -334,7 +336,7 @@ return function (mod)
                                 end
                             end
                         end
-                    end
+                    end]]
 
                     if refsting then
                         local cache = {}
@@ -358,7 +360,20 @@ return function (mod)
                                 else
                                     shep = OrigCordSheep[layer]
                                 end
-                                spr:ReplaceSpritesheet(layer, shep:sub(0, shep:len()-4) .. refsting .. ".png")
+
+                                local finalpath = shep:sub(0, shep:len()-4) .. refsting .. ".png"
+                                local havecolorver = false
+                                if not cacheNoHairColor[finalpath] then
+                                    havecolorver = pcall(Renderer.LoadImage, finalpath)
+                                    cacheNoHairColor[finalpath] = havecolorver
+                                else
+                                    havecolorver = cacheNoHairColor[finalpath]
+                                end
+                                if not havecolorver then
+                                    finalpath = shep:sub(0, shep:len()-4) .. ".png"
+                                end
+
+                                spr:ReplaceSpritesheet(layer, finalpath ) --shep:sub(0, shep:len()-4) .. refsting .. ".png")
                             end
                             spr:LoadGraphics()
                         end
@@ -366,7 +381,7 @@ return function (mod)
                 end
                 cdat.BodyColorCheck = bodcol
 
-                if player:IsExtraAnimationFinished() and not cdat.CostumeReplaced then
+                if player:IsExtraAnimationFinished() and not cdat.CostumeReplaced then --что за хуйню я написал?
                     cdat.CostumeReplaced = true
                     cdat.OrigCostume = {}
                     local pos = 0
@@ -382,24 +397,70 @@ return function (mod)
                                 if suffix or replacestr then
                                     if type(suffix) == "table" then
                                         for id, gfx in pairs(suffix) do
-                                            local orig =  cspr:GetLayer(id):GetSpritesheetPath()
+                                            local orig =  cspr:GetLayer(id):GetDefaultSpritesheetPath()
                                             cdat.OrigCostume[id] = orig
                                             if replacestr then
                                                 orig = type(replacestr) == "table" and replacestr[id] or replacestr
                                             end
                                             refsting = orig:sub(0, orig:len()-4)
-                                            cspr:ReplaceSpritesheet(id, refsting .. gfx .. ".png")
+
+                                            local colorsuf = bodycolor[bodcol]  or ""
+                                            --[[local str = cspr:GetLayer(id):GetSpritesheetPath()
+
+                                            for j=1, #bodycolor do
+                                                local colstr = bodycolor[j]
+                                                if str:find(colstr) then
+                                                    colorsuf = colstr
+                                                    break
+                                                end
+                                            end]]
+                                            local finalpath = refsting .. colorsuf .. gfx .. ".png"
+                                            local havecolorver = false
+                                            if not cacheNoHairColor[finalpath] then
+                                                havecolorver = pcall(Renderer.LoadImage, finalpath)
+                                                cacheNoHairColor[finalpath] = havecolorver
+                                            else
+                                                havecolorver = cacheNoHairColor[finalpath]
+                                            end
+                                            if not havecolorver then
+                                                finalpath = refsting .. gfx .. ".png"
+                                            end
+
+                                            cspr:ReplaceSpritesheet(id, finalpath)
                                         end
                                         cspr:LoadGraphics()
                                     else
                                         for id=0, cspr:GetLayerCount()-1 do
-                                            local orig = cspr:GetLayer(id):GetSpritesheetPath()
+                                            local orig = cspr:GetLayer(id):GetDefaultSpritesheetPath()
                                             cdat.OrigCostume[id] = orig
                                             if replacestr then
                                                 orig = type(replacestr) == "table" and replacestr[id] or replacestr
                                             end
                                             refsting = orig:sub(0, orig:len()-4)
-                                            cspr:ReplaceSpritesheet(id, refsting .. (suffix or "") .. ".png")-- rep)
+
+                                            local colorsuf = bodycolor[bodcol] or ""
+                                            --[[local str = cspr:GetLayer(id):GetSpritesheetPath()
+
+                                            for j=1, #bodycolor do
+                                                local colstr = bodycolor[j]
+                                                if str:find(colstr) then
+                                                    colorsuf = colstr
+                                                    break
+                                                end
+                                            end]]
+                                            local finalpath = refsting .. colorsuf .. (suffix or "") .. ".png"
+                                            local havecolorver = false
+                                            if not cacheNoHairColor[finalpath] then
+                                                havecolorver = pcall(Renderer.LoadImage, finalpath)
+                                                cacheNoHairColor[finalpath] = havecolorver
+                                            else
+                                                havecolorver = cacheNoHairColor[finalpath]
+                                            end
+                                            if not havecolorver then
+                                                finalpath = refsting .. (suffix or "") .. ".png"
+                                            end
+
+                                            cspr:ReplaceSpritesheet(id, finalpath) -- refsting .. (suffix or "") .. ".png")  -- rep)
                                         end
                                         cspr:LoadGraphics()
                                     end
@@ -707,8 +768,11 @@ return function (mod)
     function _HairCordData.PreRoomHairFix()
         for i = 0, game:GetNumPlayers()-1 do
             local player = Isaac.GetPlayer(i)
-            if PlayerData[player:GetPlayerType()] and player:GetData()._BethsHairCord then
-                player:GetData()._BethsHairCord.RealHeadPos = worldToScreen(player.Position)
+            local data = player:GetData()
+            if PlayerData[player:GetPlayerType()] and data._BethsHairCord then
+                local cdat = data._BethsHairCord
+                cdat.RealHeadPos = worldToScreen(player.Position)
+                cdat.CostumeReplaced = false
             end
         end
     end

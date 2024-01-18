@@ -7,8 +7,10 @@
 
 Check the link [url=https://repentogon.com][/url]
 [hr][/hr]
-This mod replaces the [i]static[/i] sprite of Bethany's tails (and Judas' fez) with a dynamic one, BLESSED BY THE POWER OF REPENTOGON</description>
-    <version>1.7</version>
+This mod replaces the [i]static[/i] sprite of Bethany's tails with a dynamic one, BLESSED BY THE POWER OF REPENTOGON.
+
+The mod has the settings menu in imgui.</description>
+    <version>1.8</version>
     <visibility>Public</visibility>
     <tag id="Lua"/>
 </metadata>
