@@ -30,7 +30,40 @@ if not REPENTOGON then
     return
 end
 
+mod.HairLib = include("physhair")
+---@type _HairCordData
+mod.HairLib = mod.HairLib(mod)
+
+include("hair_styles")
+
 mod.DR = false
+
+mod.CordsSprites = {}
+local function BeamR(anm2, anim, layername, bool1, bool2, points)
+    local spr = Sprite()
+    mod.CordsSprites[anm2..anim] = spr
+    spr:Load(anm2, true)
+    spr:PlayOverlay(anim)
+    spr:Play(anim)
+    return Beam(spr, layername, bool1, bool2, points)
+end
+
+local function GenSprite(gfx, anim, frame)
+    if gfx then
+        local spr
+        spr = Sprite()
+        spr:Load(gfx, true)
+        if anim then
+            spr:Play(anim)
+        end
+        if frame then
+            spr:SetFrame(frame)
+        end
+        return spr
+    end
+end
+
+--#region cords
 
 mod.HairCordSpr = Sprite()
 local HairCordSpr = mod.HairCordSpr
@@ -51,7 +84,7 @@ mod.HairCordB = Beam(HairCordSprB, "body", true, false, 3)
 local cordSprB = mod.HairCordB
 
 mod.BethBBackHair = Sprite()
-BethBBackHair = mod.BethBBackHair
+local BethBBackHair = mod.BethBBackHair
 BethBBackHair:Load("gfx/characters/bethanyHair_back.anm2", true)
 BethBBackHair:Play(BethBBackHair:GetDefaultAnimation())
 
@@ -122,16 +155,23 @@ local headDirToRender2 = {
 --[1] = CordSprite, [2] = TailCount, [3] = RenderLayers, [4] = CotumeNullpos, [5] = BackSprite
 --local HasPhysHair = mod.HasPhysHair
 
-mod.HairLib = include("physhair")
----@type _HairCordData
-mod.HairLib = mod.HairLib(mod)
-mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
+--mod.HairLib = include("physhair")
+--mod.HairLib = mod.HairLib(mod)
+
+--#endregion
+
+--mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
+mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
         --CordSpr = cordSpr,
         --TailCount = 2,
         --RenderLayers = headDirToRender,
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_001x_bethshair_notails.png",
+        --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_001x_bethshair_notails.png",
+        SkinFolderSuffics = "gfx/characters/costumes/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_001x_bethshair_notails.png",
+        TailCostumeSheep = "gfx/characters/costumes/character_001x_bethshair.png",
+        NullposRefSpr = GenSprite("mods/physhair/resources/gfx/characters/character_001x_bethanyhead.anm2"),
         [1] = {
             CordSpr = cordSpr,
             RenderLayers = headDirToRender1,
@@ -145,7 +185,101 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
             Length = 30,
         },
     })
-mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
+
+mod.BethPonyTailCord = BeamR("gfx/characters/costumes/beth_styles/ponytail/bethhair_ponytail_cord.anm2", "cord", "body", false, false, 3)
+mod.BethPonyNullPos = Sprite()
+mod.BethPonyNullPos:Load("gfx/characters/costumes/beth_styles/ponytail/bethanyhead_ponytail.anm2", true)
+
+mod.HStyles.AddStyle("BethPonyTail", PlayerType.PLAYER_BETHANY, {
+    --CordSpr = cordSpr,
+    --TailCount = 2,
+    --RenderLayers = headDirToRender,
+    --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
+    TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
+    ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/ponytail/character_001x_bethshair_ponytail_notails.png",
+    TailCostumeSheep = "gfx/characters/costumes/beth_styles/ponytail/character_001x_bethshair_ponytail.png",
+    NullposRefSpr = mod.BethPonyNullPos,
+    SkinFolderSuffics = "gfx/characters/costumes/beth_styles/ponytail/",
+    [1] = {
+        CordSpr = mod.BethPonyTailCord,
+        RenderLayers = { [3] = 1, [0] = 3, [1] = 3, [2] = 3 },
+        CostumeNullpos = "bethshair_cord1",
+        Length = 30,
+        Scretch = scretch * 1.2,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+       --- Mass = 12,
+    },
+})
+
+mod.BethLowTailsCord = BeamR("gfx/characters/costumes/beth_styles/lowtwotail/bethhair_lowtails_cord.anm2", "cord", "body", false, false, 3)
+mod.BethLowTailsCord2 = BeamR("gfx/characters/costumes/beth_styles/lowtwotail/bethhair_lowtails_cord.anm2", "cord2", "body", false, false, 3)
+mod.BethLowTailsNullPos = Sprite()
+mod.BethLowTailsNullPos:Load("gfx/characters/costumes/beth_styles/lowtwotail/bethanyhead_lowtails.anm2", true)
+
+mod.BethBackHair_lowtails = Sprite()
+BethBackHair_lowtails = mod.BethBackHair_lowtails
+BethBackHair_lowtails:Load("gfx/characters/bethanyHair_back.anm2", true)
+BethBackHair_lowtails:Play(BethBackHair_lowtails:GetDefaultAnimation())
+BethBackHair_lowtails:ReplaceSpritesheet(0, "gfx/characters/costumes/beth_styles/lowtwotail/lowtails_notails_back.png", true)
+
+
+mod.HStyles.AddStyle("BethLowTails", PlayerType.PLAYER_BETHANY, {
+    --CordSpr = cordSpr,
+    --TailCount = 2,
+    --RenderLayers = headDirToRender,
+    --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
+    HeadBackSpr = BethBackHair_lowtails,
+    TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
+    ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/lowtwotail/character_001x_bethshair_lowtails_notails.png",
+    TailCostumeSheep = "gfx/characters/costumes/beth_styles/lowtwotail/character_001x_bethshair_lowtails.png",
+    NullposRefSpr = mod.BethLowTailsNullPos,
+    SkinFolderSuffics = "gfx/characters/costumes/beth_styles/lowtwotail/",
+    [1] = {
+        CordSpr = mod.BethLowTailsCord,
+        RenderLayers = { [3] = 2, [0] = 1, [1] = 3, [2] = 3 },
+        CostumeNullpos = "bethshair_cord1",
+        DotCount = 2,
+       -- Length = 15,
+        StartHeight = 5,
+        Scretch = scretch * 1.2,
+        --PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+       --- Mass = 12,
+        CS = {[0]=7,15}
+    },
+    [2] = {
+        CordSpr = mod.BethLowTailsCord2,
+        RenderLayers = { [3] = 2, [0] = 3, [1] = 3, [2] = 1 },
+        CostumeNullpos = "bethshair_cord2",
+        Length = 30,
+        Scretch = scretch * 1.2,
+        --PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        StartHeight = 5,
+        CS = {[0]=7,15}
+    },
+})
+
+
+function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, taildata)
+    local data = player:GetData()
+    local spr = player:GetSprite()
+    local HairStyle = data._PhysHair_HairStyle
+    if HairStyle then
+        if HairStyle == "BethPonyTail" then
+            local spranim = spr:GetOverlayAnimation()
+            local cordspr = mod.BethPonyTailCord:GetSprite()
+            if spranim == "HeadRight" then
+                cordspr.FlipX = true
+            else
+                cordspr.FlipX = false
+            end
+            cordspr:Play(spranim == "HeadLeft" and "cord3" or spranim == "HeadRight" and "cord2" or "cord")
+        end
+    end
+end
+mod:AddCallback(mod.HairLib.Callbacks.HAIRPHYS_PRE_UPDATE, mod.extraPhysFunc.BethHairStyles_PreUpdate, PlayerType.PLAYER_BETHANY)
+
+--mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY_B, {
+mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
         --CordSpr = cordSprB,
         --TailCount = 2,
         --RenderLayers = headDirToRender,

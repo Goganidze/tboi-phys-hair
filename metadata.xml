@@ -10,7 +10,7 @@ Check the link [url=https://repentogon.com][/url]
 This mod replaces the [i]static[/i] sprite of Bethany's tails with a dynamic one, BLESSED BY THE POWER OF REPENTOGON.
 
 The mod has the settings menu in imgui.</description>
-    <version>1.8</version>
-    <visibility>Public</visibility>
+    <version>1.9</version>
+    <visibility>Private</visibility>
     <tag id="Lua"/>
 </metadata>
