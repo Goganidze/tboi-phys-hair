@@ -116,7 +116,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                     cspr:Load(sheep:GetFilename(), true)
 
                     for i=0, cspr:GetLayerCount()-1 do
-                        print(cspr:GetLayer(i):GetSpritesheetPath())
+                        print(i, cspr:GetLayer(i):GetSpritesheetPath())
                     end
 
                     --break

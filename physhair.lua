@@ -406,6 +406,7 @@ return function (mod)
                     cdat.CostumeReplaced = true
                     cdat.OrigCostume = {}
                     local pos = 0
+                    
                     for i, csd in pairs(player:GetCostumeSpriteDescs()) do
                         local conf = csd:GetItemConfig()
                         if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
@@ -453,14 +454,12 @@ return function (mod)
                                     else
                                         for id=0, cspr:GetLayerCount()-1 do
                                             local orig = defSpriteSheep and defSpriteSheep[id] or cspr:GetLayer(id):GetDefaultSpritesheetPath()
-                                            print("orig1",orig)
+                                            
                                             cdat.OrigCostume[id] = orig
                                             if replacestr then
                                                 orig = type(replacestr) == "table" and replacestr[id] or replacestr
-                                                print("replace", replacestr)
                                             end
                                             refsting = orig:sub(0, orig:len()-4)
-                                            print("orig",orig)
                                             local colorsuf = bodycolor[bodcol] or ""
                                             --[[local str = cspr:GetLayer(id):GetSpritesheetPath()
 
@@ -482,7 +481,6 @@ return function (mod)
                                             if not havecolorver then
                                                 finalpath = refsting .. (suffix or "") .. ".png"
                                             end
-                                            print("orig",finalpath)
                                             cspr:ReplaceSpritesheet(id, finalpath) -- refsting .. (suffix or "") .. ".png")  -- rep)
                                         end
                                         cspr:LoadGraphics()

@@ -215,6 +215,12 @@ mod.BethLowTailsCord = BeamR("gfx/characters/costumes/beth_styles/lowtwotail/bet
 mod.BethLowTailsCord2 = BeamR("gfx/characters/costumes/beth_styles/lowtwotail/bethhair_lowtails_cord.anm2", "cord2", "body", false, false, 3)
 mod.BethLowTailsNullPos = Sprite()
 mod.BethLowTailsNullPos:Load("gfx/characters/costumes/beth_styles/lowtwotail/bethanyhead_lowtails.anm2", true)
+do
+    local l =  mod.BethLowTailsCord:GetSprite():GetLayer(0)
+    l:SetCropOffset(Vector(1,l:GetCropOffset().Y))
+end
+
+
 
 mod.BethBackHair_lowtails = Sprite()
 BethBackHair_lowtails = mod.BethBackHair_lowtails
@@ -236,7 +242,7 @@ mod.HStyles.AddStyle("BethLowTails", PlayerType.PLAYER_BETHANY, {
     SkinFolderSuffics = "gfx/characters/costumes/beth_styles/lowtwotail/",
     [1] = {
         CordSpr = mod.BethLowTailsCord,
-        RenderLayers = { [3] = 2, [0] = 1, [1] = 3, [2] = 3 },
+        RenderLayers = { [3] = 3, [0] = 1, [1] = 3, [2] = 3 },
         CostumeNullpos = "bethshair_cord1",
         DotCount = 2,
        -- Length = 15,
@@ -248,7 +254,7 @@ mod.HStyles.AddStyle("BethLowTails", PlayerType.PLAYER_BETHANY, {
     },
     [2] = {
         CordSpr = mod.BethLowTailsCord2,
-        RenderLayers = { [3] = 2, [0] = 3, [1] = 3, [2] = 1 },
+        RenderLayers = { [3] = 3, [0] = 3, [1] = 3, [2] = 1 },
         CostumeNullpos = "bethshair_cord2",
         Length = 30,
         Scretch = scretch * 1.2,
@@ -472,6 +478,24 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
         end
     end)]]
 
+
+    for i=1, 40 do
+        local tab = {
+            TargetCostume = {ID = NullItemID.ID_EDEN, Type = ItemType.ITEM_NULL},
+            TailCostumeSheep = "gfx/characters/costumes/character_009_edenhair" .. i .. ".png",
+            ReplaceCostumeSheep = "gfx/characters/costumes/character_009_edenhair" .. i .. ".png",
+            NullposRefSpr = GenSprite("gfx/characters/character_009_edenhair1.anm2")
+        }
+        tab.NullposRefSpr:ReplaceSpritesheet(0, tab.TailCostumeSheep)
+        tab.NullposRefSpr:LoadGraphics()
+        
+        mod.HStyles.AddStyle("edenstandarthair_"..i, PlayerType.PLAYER_EDEN, tab)
+
+    end
+
+
+
+
     local stupidShit = include("oldEvilAreBack")
     stupidShit = stupidShit()
 
@@ -647,3 +671,288 @@ if Isaac.GetPlayer() then
         Isaac.GetPlayer(i):GetData()._BethsHairCord = nil
     end
 end
+
+
+-----------------------------------------------------
+testvec = Vector(20, 20)
+local ms
+local spr1 = GenSprite("gfx/001.000_player.anm2", "WalkDown")
+if MultiSprite then
+    ms = MultiSprite()
+    ms:AddSprite(0, spr1, testvec )
+    --for i=1,120 do
+    --    ms:AddSprite(i, spr1, Vector(20+(i%30)*10-150, 20+math.floor(i/30)*20-40))
+    --end
+end
+SpriteBuffer = ms
+GenSprite1 = GenSprite
+
+
+
+---@type wga_menu
+BethHair.WGA = include("worst gui api")
+local wga = BethHair.WGA
+
+BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(200,240),
+    hairselectoffset = Vector(30,30), hairselectsize = Vector(150, 200),
+    hairbtnsoffset = 0
+}
+local smenu = BethHair.StyleMenu
+
+function BethHair.StyleMenu.HUDRender()
+    if ms and renderms then
+	local t = Isaac.GetTime()
+	local vec = Vector(Isaac.GetScreenWidth()/2,Isaac.GetScreenHeight()/2) Vector(60,60)
+	--for i=1,120*20 do
+	--	spr1:Render(vec)
+	--end
+	--print("fir", Isaac.GetTime()-t)
+	spr1:Update()
+	local t1 = Isaac.GetTime()
+	--for i=1,20 do
+		ms:Render(vec)
+	--end
+	print("sec", Isaac.GetTime()-t1)
+    end
+
+    local notpaused = not game:IsPaused()
+    if notpaused then
+        --wga.DetectMenuButtons(smenu.name)
+        wga.MousePos = Isaac.WorldToScreen(Input.GetMousePosition(true))-game.ScreenShakeOffset
+    end
+	--wga.RenderMenuButtons(smenu.name)
+
+    if notpaused then
+        wga.HandleWindowControl()
+
+        --window logic
+        if smenu.wind then
+            local wind = smenu.wind
+            if not wind.custinit then
+                wind.custinit = true
+                wind.pos = wind.pos + Vector(0, 400)
+            else
+                local targetpos = Vector(Isaac.GetScreenWidth()/2, Isaac.GetScreenHeight()/2) - smenu.size/2
+                wind.pos = wind.pos * 0.9 + targetpos * 0.1
+            end
+
+            if wind.Removed then
+                smenu.wind = nil
+            end
+        end
+
+        wga.DetectSelectedButtonActuale()
+    end
+			
+    wga.RenderWindows()
+
+    if wga.MouseHintText then
+        local pos = wga.MousePos
+        wga.RenderButtonHintText(wga.MouseHintText, pos+Vector(8,8))
+    end
+
+    wga.LastOrderRender()
+end
+
+function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
+    BethHair.StyleMenu.paperrender( pos+smenu.hairselectoffset, 
+        smenu.hairselectsize, 
+        Color.Default)
+end
+BethHair:AddCallback(wga.Callbacks.WINDOW_PRE_RENDER, BethHair.StyleMenu.PreWindowRender, smenu.name)
+
+
+smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"),
+    gragger1 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger1"),
+    gragger2 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger2"),
+    gragger3 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger3")}
+
+smenu.spr.scrollback.Offset = Vector(-2,-2)
+
+function BethHair.StyleMenu.GenWindowBtns(ptype)
+    local hspd = BethHair.HairStylesData.playerdata
+    local pstyles = hspd[ptype]
+    local hairsprOffset = Vector(32,44-5)
+    local v12 = Vector(-12,0)
+    local cropup = Vector(15,13)
+    local cropdown = Vector(15,17)
+    if pstyles then
+        local stylesdata = BethHair.HairStylesData.styles
+        for i=1, #pstyles do
+            local stylename = pstyles[i]
+            
+            local spr = GenSprite("gfx/editor/hairstyle_menu.anm2","button")
+            local hairgfx = stylesdata[stylename] and stylesdata[stylename].data and stylesdata[stylename].data.TailCostumeSheep
+            
+            local hairspr
+            if hairgfx then
+                hairspr = GenSprite("gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
+                for lr=0, hairspr:GetLayerCount()-1 do
+                    hairspr:ReplaceSpritesheet(lr,hairgfx)
+                end
+                hairspr:LoadGraphics()
+                hairspr.Offset = hairsprOffset
+            end
+
+            local pos = Vector(((i-1)%3+1)*42,42 * math.floor((i-1)/3+1))
+
+            local self
+            self = wga.AddButton(smenu.name, stylename, pos,
+             40, 40, spr,
+                function (button)
+                    local player = Isaac.GetPlayer()
+                    BethHair.HStyles.SetStyleToPlayer(player, stylename)
+                end, function (pos, visible)
+                    if hairspr then
+                        hairspr:Render(pos+v12,cropup,cropdown)
+                    else
+                         wga.DrawText(1,stylename, pos.X, pos.Y, .5, .5)
+                    end
+                        --wga.RenderCustomButton2(pos, self)
+                end)
+                self.posfunc = function ()
+                    self.posref.Y = pos.Y - smenu.hairbtnsoffset
+                end
+        end
+
+        if #pstyles > 12 then
+            local spr = smenu.spr
+            local self
+            self = wga.AddScrollBar(smenu.name, "hairs_scroooolbar", Vector(150+30,34), Vector(16,192),
+                Sprite(), Sprite(),
+                function(but, val)
+                    if but == 0 then
+                        smenu.hairbtnsoffset = val
+                    end
+                end, function (pos, visible)
+                    spr.scrollback:SetFrame(self.IsSelected and 1 or 0)
+
+                    spr.scrollback:Render(pos, nil, Vector(0,30))
+
+                    spr.scrollback.Scale = Vector(1, self.y/22)
+                    spr.scrollback:Render(pos+Vector(0,11 - self.y/22 *10), Vector(0,10), Vector(0,10))
+
+                    spr.scrollback.Scale = Vector(1,1)
+                    spr.scrollback:Render(pos + Vector(0,self.y-36), Vector(0,30))
+
+                end, 0, 0, math.ceil(#pstyles/3)*43 + 2 )
+
+            self.dragsprRenderFunc = function (self, pos, value, barSize)
+                local fr = self.dragSelected and 1 or 0
+                spr.gragger1:SetFrame(fr)
+                spr.gragger2:SetFrame(fr)
+                spr.gragger3:SetFrame(fr)
+
+                spr.gragger1:Render(pos)
+                
+                for i=1, barSize-1 do
+                    spr.gragger2:Render(pos+Vector(0, i * 2 ))
+                end
+                spr.gragger3:Render(pos+Vector(0, barSize*2 - 2 ))
+            end
+        
+        end
+    end
+end
+
+
+--[[
+local self
+self = wga.AddButton(smenu.name, "nil", Vector(40,40), 30, 30, Sprite(),
+    function (button)
+        smenu = wga.ShowWindow(smenu.name)
+        BethHair.StyleMenu.GenWindowBtns(ptype)
+    end, function (pos, visible)
+        wga.RenderCustomButton2(pos, self)
+    end)
+]]
+
+BethHair.StyleMenu.windowbackrender = wga.CreateCustomMenuBackRenderFunc("HairStyleMenu", {
+    tilesize = Vector(32,32),
+    scaling = false,
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back1")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back2")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back3")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back4")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back5")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back6")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back7")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back8")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","back9")},
+})
+
+BethHair.StyleMenu.paperrender = wga.CreateCustomMenuBackRenderFunc("HairStyleMenu_paper", {
+    tilesize = Vector(32,32),
+    scaling = false,
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper1")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper2")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper3")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper4")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper5")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper6")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper7")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper8")},
+    {spr = GenSprite("gfx/editor/hairstyle_menu.anm2","paper9")},
+})
+
+function BethHair.StyleMenu.ShowWindow()
+    local center = Vector(Isaac.GetScreenWidth()/2, Isaac.GetScreenHeight()/2)
+    smenu.wind = wga.ShowWindow(smenu.name, center-smenu.size/2, smenu.size)
+    smenu.wind.RenderCustomMenuBack = BethHair.StyleMenu.windowbackrender
+    smenu.wind.unuser = true
+    smenu.wind.backcolor = Color(1,1,1,1)
+    smenu.wind.backcolornfocus = Color(1,1,1,1)
+    BethHair.StyleMenu.GenWindowBtns(Isaac.GetPlayer():GetPlayerType())
+end
+
+
+
+
+
+
+
+
+
+
+
+BethHair:AddCallback(ModCallbacks.MC_HUD_RENDER, BethHair.StyleMenu.HUDRender)
+
+
+
+
+local debugmultiplayer = false
+
+if debugmultiplayer and WORSTDEBUGMENU then
+    local menu = WORSTDEBUGMENU.wma
+    local winset = {name = "physhair_debugmultiplayer", size=Vector(40,40), pos = Vector(10,10)}
+
+    BethHair.showwindow = function()
+        BethHair.dmp_wind = WORSTDEBUGMENU.wma.ShowWindow(winset.name, winset.pos, winset.size)
+    end
+
+    local self
+	self = menu.AddButton(winset.name, "test", Vector(12,12), 16, 16, WORSTDEBUGMENU.UIs.EmptyBtn(), function(button) 
+		if button ~= 0 then return end
+		
+	end, function (pos,vis)
+        if Input.IsMouseBtnPressed(0) then
+            local mousepos = Input.GetMousePosition(true)
+            local pl = game:GetNearestPlayer(mousepos)
+
+            local poof = Isaac.Spawn(1000,16,0,pl.Position,Vector(0,0), nil)
+            poof:GetSprite().Scale = Vector(.5, .5)
+            poof:GetSprite().PlaybackSpeed = 4
+            poof.DepthOffset = 100
+
+            for i=0, game:GetNumPlayers()-1 do
+                local player = Isaac.GetPlayer(i)
+                player:SetControllerIndex(1)
+            end
+            pl:SetControllerIndex(0)
+        end
+    end)
+end
+
+
+
+
