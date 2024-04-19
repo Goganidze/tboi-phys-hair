@@ -160,7 +160,7 @@ local ControlType = {
 ---@field DetectSelectedButtonActuale function
 ---@field ControlType ControlType
 local menuTab = RegisterMod("worst gui api: phys hair", 1)
-menuTab.Ver = 0.12
+menuTab.Ver = 0.13
 
 menuTab.Callbacks = {}
 local Callbacks = {
@@ -522,6 +522,11 @@ end)
 ---@field somethingPressed boolean
 ---@field Buttons table<string, EditorButton>
 ---@field CalledByWindow Window?
+---@field NavigationFunc fun(tab:wga_ManualSelectedButton, vec:Vector)?
+
+---@class wga_ManualSelectedButton
+---@field [1] EditorButton
+---@field [2] string --menuName
 
 ---@return EditorMenu?
 function menuTab.GetMenu(menuName)
@@ -2085,7 +2090,7 @@ end
 
 menuTab.input = {}
 function menuTab.input.IsActionTriggered(action)
-	local conind = Isaac.GetPlayer().ControllerIndex
+	local conind = menuTab.input.TargetControllerIndex or Isaac.GetPlayer().ControllerIndex
 	if action == ButtonAction.ACTION_MENUCONFIRM then
 		if menuTab.ControlType == ControlType.MOUSE then
 			menuTab.IsMouseBtnTriggered(0)
@@ -2100,8 +2105,9 @@ menuTab.input.preMoveVector = Vector(0,0)
 menuTab.input.moveVector = Vector(0,0)
 function menuTab.input.GetMoveVector()
 	local ret = Vector(0,0)
-	local p = Isaac.GetPlayer()
-	if p.ControllerIndex == 0 then
+	local p = menuTab.input.TargetPlayer or Isaac.GetPlayer()
+	local controllerIndex = menuTab.input.TargetControllerIndex or p.controllerIndex
+	if controllerIndex == 0 then
 		menuTab.input.moveVector = p:GetShootingJoystick()
 	else
 		menuTab.input.moveVector = p:GetMovementJoystick()
@@ -2123,6 +2129,25 @@ function menuTab.input.GetMoveVector()
 	menuTab.input.preMoveVector = menuTab.input.moveVector
 	return ret
 end
+function menuTab.input.GetRefMoveVector()
+	local p = menuTab.input.TargetPlayer or Isaac.GetPlayer()
+	if p.ControllerIndex == 0 then
+		return p:GetShootingJoystick()
+	else
+		return p:GetMovementJoystick()
+	end
+end
+
+function menuTab.SetControlType(ttype, targetplayer)
+	menuTab.ControlType = ttype
+	if type(targetplayer) == "number" then
+		menuTab.input.TargetControllerIndex = targetplayer
+	else
+		menuTab.input.TargetPlayer = targetplayer
+		menuTab.input.TargetControllerIndex = targetplayer.ControllerIndex
+	end
+end
+
 
 
 
@@ -2272,66 +2297,91 @@ function menuTab.KeyboardButtonDetect()
 
 	--------------------------------------
 
-	local moveVector = menuTab.input.GetMoveVector()
+	if not menuTab.ManualSelectedButton then return end
 
-	if moveVector:Length() > 0.2 then
-		local curbtn = menuTab.ManualSelectedButton[1]
-		local nangle = moveVector:GetAngleDegrees()
-		local maxdist = 100000000
-		local minangle = 45
-		local curPos = curbtn.pos + Vector(curbtn.x/2,curbtn.y/2)
-		local curbtnname = curbtn.name
-		local targetButton, targetMenu
-		for ahhoh = #DetectSelectedButtonBuffer, 1,-1 do
-			local list = DetectSelectedButtonBuffer[ahhoh]
-			local menu = list[1]   --DetectSelectedButtonBuffer[ahhoh]
-			local button = list[2]
-			--if type(menuTab.MenuData[menu]) == "table" then
-			if type(button) == "table" then
-	
-				local somethingPressed = false
-				---@param k EditorButton
-				for i, k in pairs(button) do
-					local rvec = (k.pos + Vector(k.x/2,k.y/2) ) - curPos
-					if k.name ~= "__blockplashka" and k.name ~= curbtnname then
-						local difangle = getAngleDiv( (rvec):GetAngleDegrees(), nangle )
-						local dda = getAngleDiv(difangle, minangle)
-						if difangle <= 45 then --minangle+5 then
-							minangle = difangle
-							--print( (curPos-k.pos):GetAngleDegrees(), nangle )
-							local dist = rvec:Length()
-							if maxdist > dist then
-								targetButton, targetMenu = k, menu
-								maxdist = dist
+	local menu = menuTab.ManualSelectedButton[2]
+	local mdata = menuTab.MenuData[menu]
+	if mdata and mdata.NavigationFunc then
+		local prebtn = menuTab.ManualSelectedButton[1]
+
+		mdata.NavigationFunc(menuTab.ManualSelectedButton, menuTab.input.GetMoveVector())
+
+		if prebtn ~= menuTab.ManualSelectedButton[1] then
+			if prebtn.IsSelected then
+				prebtn.IsSelected = nil
+				if prebtn.spr then
+					prebtn.spr:SetFrame(0)
+				end
+				if prebtn.dragspr then
+					prebtn.dragspr:SetFrame(0)
+				end
+			end
+		end
+	else
+
+		local moveVector = menuTab.input.GetMoveVector()
+
+		if moveVector:Length() > 0.2 then
+			local curbtn = menuTab.ManualSelectedButton[1]
+			local nangle = moveVector:GetAngleDegrees()
+			local maxdist = 100000000
+			local minangle = 45
+			local curPos = curbtn.pos + Vector(curbtn.x/2,curbtn.y/2)
+			local curbtnname = curbtn.name
+			local targetButton, targetMenu
+			for ahhoh = #DetectSelectedButtonBuffer, 1,-1 do
+				local list = DetectSelectedButtonBuffer[ahhoh]
+				local menu = list[1]   --DetectSelectedButtonBuffer[ahhoh]
+				local button = list[2]
+				--if type(menuTab.MenuData[menu]) == "table" then
+				if type(button) == "table" then
+		
+					local somethingPressed = false
+					---@param k EditorButton
+					for i, k in pairs(button) do
+						local rvec = (k.pos + Vector(k.x/2,k.y/2) ) - curPos
+						if k.name ~= "__blockplashka" and k.name ~= curbtnname then
+							local difangle = getAngleDiv( (rvec):GetAngleDegrees(), nangle )
+							local dda = getAngleDiv(difangle, minangle)
+							if difangle <= 45 then --minangle+5 then
+								minangle = difangle
+								--print( (curPos-k.pos):GetAngleDegrees(), nangle )
+								local dist = rvec:Length()
+								if maxdist > dist then
+									targetButton, targetMenu = k, menu
+									maxdist = dist
+								end
 							end
 						end
 					end
 				end
 			end
-		end
-		if targetButton then
-			local k = menuTab.ManualSelectedButton[1]
-			if k.IsSelected then
-				k.IsSelected = nil
-				if k.spr then
-					k.spr:SetFrame(0)
+			if targetButton then
+				local k = menuTab.ManualSelectedButton[1]
+				if k.IsSelected then
+					k.IsSelected = nil
+					if k.spr then
+						k.spr:SetFrame(0)
+					end
+					if k.dragspr then
+						k.dragspr:SetFrame(0)
+					end
 				end
-				if k.dragspr then
-					k.dragspr:SetFrame(0)
-				end
-			end
 
-			menuTab.ManualSelectedButton = {targetButton, targetMenu}
+				menuTab.ManualSelectedButton = {targetButton, targetMenu}
+			end
 		end
 	end
-
 
 
 	--------------------------------------
 
 	menuTab.OnFreePos = false
+
 	local k = menuTab.ManualSelectedButton[1]
 	local menu = menuTab.ManualSelectedButton[2]
+	if not k then return end
+	
 	if not k.IsSelected then
 		k.IsSelected = 0
 		if k.spr then
@@ -3140,6 +3190,42 @@ function menuTab.DrawText(fonttype, text, posX, posY, scaleX, scaleY, rot, color
 		rot == 1 and 0 or rot == 2 and 1, 
 		rot == 2 and true or false
 	)
+end
+
+---@param btn EditorButton
+function menuTab.DraggerSetValue(btn, value, callpress)
+	value = value or 0
+	if btn then
+		if btn.dragtype == 3 then
+			--print(btn.DragerSize, btn.ValueSize, btn.startValue, btn.endValue, btn.ishori)
+			if btn.ishori then
+				
+			else
+				--[[
+
+						local vs = k.y/math.abs(k.ValueSize)*k.y
+						local siL =(k.y-vs)
+						
+						k.dragCurPos.Y = k.dragPrePos.Y + mousePos.Y - k.dragPreMousePos.Y
+						k.dragCurPos.Y = math.min( siL, math.max( 0, k.dragCurPos.Y))
+
+						local proc = (k.dragCurPos.Y) / (siL) * (math.abs(k.ValueSize) - k.y)
+						
+						k.func(0, proc, k.dragPrePos.Y / k.y)
+
+				]]
+
+				local full = btn.y - btn.DragerSize
+				local proc = full * value
+				
+				local preval = btn.dragCurPos.Y / full
+				btn.dragCurPos.Y = proc -- btn.y * proc
+				if callpress then
+					btn.func(0, value * (math.abs(btn.ValueSize) - btn.y ), preval * btn.ValueSize)
+				end
+			end
+		end
+	end
 end
 
 menuTab.CustomMenuBack = {}

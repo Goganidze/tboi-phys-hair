@@ -1,0 +1,7 @@
+<entities anm2root="gfx/" version="5">
+
+    <entity anm2path="editor/parechmacher.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="10" collisionRadius="12" friction="1" id="6"  variant="211" name="Парихранитель" numGridCollisionPoints="16" shadowSize="15" stageHP="0">
+        <gibs amount="6" blood="1" bone="1" eye="1" gut="1" large="0" />
+    </entity>
+
+</entities>

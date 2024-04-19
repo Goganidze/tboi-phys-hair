@@ -1,5 +1,10 @@
 local mod = BethHair
 
+local Isaac = Isaac
+local game = Game()
+local Room 
+local Wtr = 20/13
+
 mod.HStyles = {}
 
 mod.HairStylesData = {
@@ -211,10 +216,73 @@ mod:AddCallback(mod.HairLib.Callbacks.PRE_COLOR_CHANGE, mod.HStyles.BodyColorTra
 
 
 
-local Isaac = Isaac
-local game = Game()
-local Room 
-local Wtr = 20/13
+
+
+
+
+
+----парихранитель
+
+mod.HStyles.HairKeeper = {ID = Isaac.GetEntityTypeByName("Парихранитель"), VAR = Isaac.GetEntityVariantByName("Парихранитель")}
+print(mod.HStyles.HairKeeper.ID, mod.HStyles.HairKeeper.VAR)
+
+---@param ent EntitySlot
+function mod.HStyles.HairKeeper.update(_, ent)
+    local data = ent:GetData()
+    if ent.FrameCount < 2 then
+        ent.TargetPosition = ent.Position
+    end
+
+    if ent.Target then
+        data.room = data.room or game:GetRoom()
+
+        if not data.removedwall then
+            data.removedwall = true
+            data.level = data.level or game:GetLevel()
+            local crds = data.level:GetCurrentRoomDesc()
+            if crds.Flags & RoomDescriptor.FLAG_NO_WALLS == 0 then
+                crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
+                data.removeFLAG_NO_WALLS = true
+            end
+        end
+        
+        local camera = data.room:GetCamera()
+        camera:SetFocusPosition(ent.Target.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0))
+        if not mod.StyleMenu.wind then
+            ent.Target = nil
+            data.removedwall = nil
+            if data.removeFLAG_NO_WALLS then
+                local crds = data.level:GetCurrentRoomDesc()
+                crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
+            end
+        end
+    end
+
+    ent.Velocity = (ent.TargetPosition - ent.Position) / 5
+end
+mod:AddCallback(ModCallbacks.MC_POST_SLOT_UPDATE, mod.HStyles.HairKeeper.update, mod.HStyles.HairKeeper.VAR)
+
+---@param ent EntitySlot
+function mod.HStyles.HairKeeper.coll(_, ent, col)
+    if not ent.Target and col.Type == EntityType.ENTITY_PLAYER then
+        local player = col:ToPlayer()
+        local ptype = player:GetPlayerType()
+        local bhpd = BethHair.HairStylesData.playerdata
+        if bhpd[ptype] then
+            ent.Target = player
+            BethHair.StyleMenu.TargetPlayer = player
+            BethHair.StyleMenu.TargetHairKeeper = ent
+            BethHair.StyleMenu.ShowWindow()
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, mod.HStyles.HairKeeper.coll, mod.HStyles.HairKeeper.VAR)
+
+
+
+
+
+
 
 local maxcoord = 4
 local scretch = math.ceil(5* Wtr)-- 30/(maxcoord+1)

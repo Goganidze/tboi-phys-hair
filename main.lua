@@ -613,7 +613,11 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
         ImGui.CreateMenu(upmenuid, "Mods Setting")
     end
     if ImGui.ElementExists(menuID) then
-        ImGui.RemoveWindow(menuID)
+        if BethHair_SecondLoad then
+            ImGui.RemoveWindow(menuID)
+        else
+            BethHair_SecondLoad = true
+        end
     end
     if ImGui.ElementExists("BethOdangoMode") then
         ImGui.RemoveElement("BethOdangoMode")
@@ -693,26 +697,27 @@ GenSprite1 = GenSprite
 BethHair.WGA = include("worst gui api")
 local wga = BethHair.WGA
 
-BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(200,240),
+BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240),
     hairselectoffset = Vector(30,30), hairselectsize = Vector(150, 200),
     hairbtnsoffset = 0
 }
 local smenu = BethHair.StyleMenu
+local preMousePos = Vector(0,0)
 
 function BethHair.StyleMenu.HUDRender()
     if ms and renderms then
-	local t = Isaac.GetTime()
-	local vec = Vector(Isaac.GetScreenWidth()/2,Isaac.GetScreenHeight()/2) Vector(60,60)
-	--for i=1,120*20 do
-	--	spr1:Render(vec)
-	--end
-	--print("fir", Isaac.GetTime()-t)
-	spr1:Update()
-	local t1 = Isaac.GetTime()
-	--for i=1,20 do
-		ms:Render(vec)
-	--end
-	print("sec", Isaac.GetTime()-t1)
+        local t = Isaac.GetTime()
+        local vec = Vector(Isaac.GetScreenWidth()/2,Isaac.GetScreenHeight()/2) Vector(60,60)
+        --for i=1,120*20 do
+        --	spr1:Render(vec)
+        --end
+        --print("fir", Isaac.GetTime()-t)
+        spr1:Update()
+        local t1 = Isaac.GetTime()
+        --for i=1,20 do
+            ms:Render(vec)
+        --end
+        print("sec", Isaac.GetTime()-t1)
     end
 
     local notpaused = not game:IsPaused()
@@ -723,18 +728,55 @@ function BethHair.StyleMenu.HUDRender()
 	--wga.RenderMenuButtons(smenu.name)
 
     if notpaused then
+
+        local pos = Isaac.WorldToScreen(Input.GetMousePosition(true))-Isaac_Tower.game.ScreenShakeOffset
+        if wga.ControlType == wga.enum.ControlType.CONTROLLER then
+            if pos:Distance(preMousePos) > 3 then
+                wga.ControlType = wga.enum.ControlType.MOUSE
+            end
+        else
+            local move = wga.input.GetRefMoveVector()
+            if move:Length() > .2 then
+                wga.ControlType = wga.enum.ControlType.CONTROLLER
+            end
+        end
+        preMousePos = pos
+
         wga.HandleWindowControl()
 
         --window logic
         if smenu.wind then
             local wind = smenu.wind
+            local player = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:ToPlayer()
+            local keeper = BethHair.StyleMenu.TargetHairKeeper
+
             if not wind.custinit then
                 wind.custinit = true
-                wind.pos = wind.pos + Vector(0, 400)
+                wind.pos = wind.pos + Vector(80, 400)
+                if player then
+                    player.Velocity = Vector(0, 0)
+                    player.Position = keeper.Position + Vector(-70, 0)
+                end
             else
-                local targetpos = Vector(Isaac.GetScreenWidth()/2, Isaac.GetScreenHeight()/2) - smenu.size/2
+                local targetpos = Vector(Isaac.GetScreenWidth()/2+80, Isaac.GetScreenHeight()/2) - smenu.size/2
                 wind.pos = wind.pos * 0.9 + targetpos * 0.1
+
+                if wga.ControlType == wga.enum.ControlType.CONTROLLER then
+                    local mdata = wga.GetMenu(smenu.name)
+                    local btn = wga.ManualSelectedButton[1]
+
+                    if mdata.CurCollum == 1 and btn and smenu.scrollbtn then
+                        
+                        wga.DraggerSetValue(smenu.scrollbtn, btn.row / (smenu.rowcount), true)
+                    end
+
+                end
             end
+            
+            if player then
+                player.ControlsCooldown = math.max(player.ControlsCooldown, 3)
+            end
+            
 
             if wind.Removed then
                 smenu.wind = nil
@@ -770,6 +812,11 @@ smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"
 smenu.spr.scrollback.Offset = Vector(-2,-2)
 
 function BethHair.StyleMenu.GenWindowBtns(ptype)
+    local mdata = wga.GetMenu(smenu.name)
+    local navmap = {}
+    mdata.navmap = navmap
+    navmap.collums = {}
+
     local hspd = BethHair.HairStylesData.playerdata
     local pstyles = hspd[ptype]
     local hairsprOffset = Vector(32,44-5)
@@ -777,7 +824,19 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
     local cropup = Vector(15,13)
     local cropdown = Vector(15,17)
     if pstyles then
+
         local stylesdata = BethHair.HairStylesData.styles
+        navmap.collums[1] = {{},{},{}}
+        local cl1 = navmap.collums[1]
+        local nilspr = Sprite()
+        local lastrow = 0
+
+        if smenu.hairscount then
+            for i=1, smenu.hairscount do
+                wga.RemoveButton(smenu.name, "style" .. i)
+            end
+        end
+
         for i=1, #pstyles do
             local stylename = pstyles[i]
             
@@ -795,27 +854,55 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             end
 
             local pos = Vector(((i-1)%3+1)*42,42 * math.floor((i-1)/3+1))
+            local xy = Vector( (i-1)%3+1, math.floor((i-1)/3) )
 
             local self
-            self = wga.AddButton(smenu.name, stylename, pos,
-             40, 40, spr,
+            self = wga.AddButton(smenu.name, "style" .. i, pos,
+             40, 40, nilspr,
                 function (button)
-                    local player = Isaac.GetPlayer()
+                    local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
                     BethHair.HStyles.SetStyleToPlayer(player, stylename)
                 end, function (pos, visible)
+                    spr:SetFrame(self.IsSelected and 1 or 0)
+                    local scroolupcrop = self.scrollupcrop
+                    local scrolldwoncrop = self.scrolldwoncrop
+
+                    spr:Render(pos, Vector(0, math.max(0, scroolupcrop)), 
+                        Vector(0,math.max(0, scrolldwoncrop) ) )
+
                     if hairspr then
-                        hairspr:Render(pos+v12,cropup,cropdown)
+                        hairspr:Render(pos+v12,Vector(cropup.X, math.max(cropup.X-2, cropup.X+scroolupcrop-4)),
+                        Vector(cropdown.X, math.max(cropdown.X+2, cropdown.X+scrolldwoncrop-2)) )    --cropdown)
                     else
                          wga.DrawText(1,stylename, pos.X, pos.Y, .5, .5)
                     end
                         --wga.RenderCustomButton2(pos, self)
                 end)
-                self.posfunc = function ()
-                    self.posref.Y = pos.Y - smenu.hairbtnsoffset
-                end
+            
+            self.row = xy.Y
+            self.posfunc = function ()
+                self.posref.Y = pos.Y - smenu.hairbtnsoffset
+                self.pos = smenu.wind.pos + self.posref
+                self.scrollupcrop = -self.posref.Y+40
+                self.scrolldwoncrop = self.posref.Y-180
+
+                self.canPressed = self.scrollupcrop < 32 and self.scrolldwoncrop < 40
+                
+                --if wga.ControlType ==  self.IsSelected then
+                --    print(xy.Y , #pstyles, xy.Y / #pstyles)
+                --    wga.DraggerSetValue(smenu.scrollbtn, xy.Y / #pstyles)
+                --end
+            end
+            
+            cl1[xy.X][xy.Y] = self
+            lastrow = xy.Y
         end
+        smenu.rowcount = lastrow
+        smenu.hairbtnsoffset = 0
 
         if #pstyles > 12 then
+            --navmap.collums[2] = {}
+
             local spr = smenu.spr
             local self
             self = wga.AddScrollBar(smenu.name, "hairs_scroooolbar", Vector(150+30,34), Vector(16,192),
@@ -825,6 +912,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                         smenu.hairbtnsoffset = val
                     end
                 end, function (pos, visible)
+                    --print(self.dragCurPos)
                     spr.scrollback:SetFrame(self.IsSelected and 1 or 0)
 
                     spr.scrollback:Render(pos, nil, Vector(0,30))
@@ -836,6 +924,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                     spr.scrollback:Render(pos + Vector(0,self.y-36), Vector(0,30))
 
                 end, 0, 0, math.ceil(#pstyles/3)*43 + 2 )
+            smenu.scrollbtn = self
 
             self.dragsprRenderFunc = function (self, pos, value, barSize)
                 local fr = self.dragSelected and 1 or 0
@@ -850,9 +939,111 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 end
                 spr.gragger3:Render(pos+Vector(0, barSize*2 - 2 ))
             end
-        
+            ---navmap.collums[2][1] = self
+        else
+            smenu.scrollbtn = nil
+            wga.RemoveButton(smenu.name, "hairs_scroooolbar")
         end
     end
+    smenu.hairscount = #pstyles
+
+    navmap.collums[2] = {}
+
+    BethHair.StyleMenu.closespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "disчёта-там")
+    BethHair.StyleMenu.acceptspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "accept")
+
+    local close
+    close = wga.AddButton(smenu.name, "disчё", Vector(200,200),
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
+        function (button)
+            BethHair.StyleMenu.CloseWindow()
+        end, function (pos, visible)
+            BethHair.StyleMenu.closespr:Render(pos)
+        end)
+    wga.ManualSelectedButton = { close, smenu.name }
+    mdata.CurCollum = 2
+    mdata.HairSelPos = Vector(3,2)
+
+    navmap.collums[2][1] = close
+
+    ---navigation
+
+    --local mdata = wga.GetMenu(smenu.name)
+    mdata.NavigationFunc = function (btn, vec)
+        local curbtn = btn[1]
+        local menu = btn[2]
+        
+        local x,y = vec.X, vec.Y
+
+        local ismove = vec:Length() > 0.1
+        local ishori = math.abs(x) > math.abs(y)
+        --print(mdata.CurCollum, btn[1].name)
+        if ismove then
+            
+            if mdata.CurCollum == 1 then
+                local navcol1 = navmap.collums[mdata.CurCollum]
+                if ishori then
+                    local add = x > 0 and 1 or -1
+                    local next = mdata.HairSelPos.X + add
+                    
+                    if next > 0 and next < 4 then
+                        if navcol1[mdata.HairSelPos.X + add] 
+                        and navcol1[mdata.HairSelPos.X + add][mdata.HairSelPos.Y] then
+                            mdata.HairSelPos.X = mdata.HairSelPos.X + add
+                            btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                        else
+                            if navmap.collums[mdata.CurCollum+add] then
+                                mdata.CurCollum = mdata.CurCollum+add
+                                btn[1] = navmap.collums[mdata.CurCollum][1]
+                            end
+                        end
+                    else
+                        if navmap.collums[mdata.CurCollum+add] then
+                            mdata.CurCollum = mdata.CurCollum+add
+                            btn[1] = navmap.collums[mdata.CurCollum][1]
+                        end
+                    end
+                else
+                    local add = y > 0 and 1 or -1
+                    local next = mdata.HairSelPos.Y + add
+                    if navcol1[mdata.HairSelPos.X][next] then
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    elseif navcol1[mdata.HairSelPos.X-1] and navcol1[mdata.HairSelPos.X-1][next] then
+                        mdata.HairSelPos.X = mdata.HairSelPos.X - 1
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    elseif navcol1[mdata.HairSelPos.X-2] and navcol1[mdata.HairSelPos.X-2][next] then
+                        mdata.HairSelPos.X = mdata.HairSelPos.X - 2
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    end
+                end
+
+
+            else
+                if ishori then
+                    local add = x > 0 and 1 or -1
+                    if navmap.collums[mdata.CurCollum+add] then
+                        mdata.CurCollum = mdata.CurCollum+add
+                        if mdata.CurCollum == 1 then
+                            btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                            if not btn[1] then
+                                btn[1] = navmap.collums[mdata.CurCollum][1][0]
+                                mdata.HairSelPos = Vector(1, 0)
+                            end
+                            --mdata.HairSelPos = Vector(3,2)
+                        else
+                            btn[1] = navmap.collums[mdata.CurCollum][1]
+                        end
+                    end
+                end
+            end
+
+        end
+    end
+
+
 end
 
 
@@ -902,7 +1093,19 @@ function BethHair.StyleMenu.ShowWindow()
     smenu.wind.unuser = true
     smenu.wind.backcolor = Color(1,1,1,1)
     smenu.wind.backcolornfocus = Color(1,1,1,1)
-    BethHair.StyleMenu.GenWindowBtns(Isaac.GetPlayer():GetPlayerType())
+
+    wga.SetControlType(wga.enum.ControlType.CONTROLLER, BethHair.StyleMenu.TargetPlayer )
+
+    local ptype = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:GetPlayerType()
+        or Isaac.GetPlayer():GetPlayerType()
+    BethHair.StyleMenu.GenWindowBtns(ptype)
+end
+
+function BethHair.StyleMenu.CloseWindow()
+    wga.CloseWindow(smenu.name)
+    smenu.wind = nil
+    BethHair.StyleMenu.TargetPlayer = nil
+    BethHair.StyleMenu.TargetHairKeeper = nil
 end
 
 
