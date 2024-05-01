@@ -30,6 +30,15 @@ if not REPENTOGON then
     return
 end
 
+for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
+    local node = XMLData.GetEntryById(XMLNode.MOD, i)
+    if node and node.id == "3127377427" then
+        mod.Foldername = node.realdirectory or node.directory
+        break
+    end
+end
+
+
 mod.HairLib = include("physhair")
 ---@type _HairCordData
 mod.HairLib = mod.HairLib(mod)
@@ -168,10 +177,10 @@ mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
         --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_001x_bethshair_notails.png",
-        SkinFolderSuffics = "gfx/characters/costumes/",
+        SkinFolderSuffics = "resources-dlc3/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_001x_bethshair_notails.png",
         TailCostumeSheep = "gfx/characters/costumes/character_001x_bethshair.png",
-        NullposRefSpr = GenSprite("mods/physhair/resources/gfx/characters/character_001x_bethanyhead.anm2"),
+        NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_001x_bethanyhead.anm2"),
         [1] = {
             CordSpr = cordSpr,
             RenderLayers = headDirToRender1,
@@ -184,7 +193,7 @@ mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
             CostumeNullpos = "bethshair_cord2",
             Length = 30,
         },
-    })
+    }, {modfolder = "resources-dlc3"})
 
 mod.BethPonyTailCord = BeamR("gfx/characters/costumes/beth_styles/ponytail/bethhair_ponytail_cord.anm2", "cord", "body", false, false, 3)
 mod.BethPonyNullPos = Sprite()
@@ -209,7 +218,7 @@ mod.HStyles.AddStyle("BethPonyTail", PlayerType.PLAYER_BETHANY, {
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
        --- Mass = 12,
     },
-})
+}, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
 
 mod.BethLowTailsCord = BeamR("gfx/characters/costumes/beth_styles/lowtwotail/bethhair_lowtails_cord.anm2", "cord", "body", false, false, 3)
 mod.BethLowTailsCord2 = BeamR("gfx/characters/costumes/beth_styles/lowtwotail/bethhair_lowtails_cord.anm2", "cord2", "body", false, false, 3)
@@ -262,7 +271,7 @@ mod.HStyles.AddStyle("BethLowTails", PlayerType.PLAYER_BETHANY, {
         StartHeight = 5,
         CS = {[0]=7,15}
     },
-})
+}, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
 
 
 function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, taildata)
@@ -305,7 +314,7 @@ mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
             RenderLayers = headDirToRender2,
             CostumeNullpos = "bethshair_cord2",
         },
-    })
+    }, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
 
 
     mod.EveCordSpr = Sprite()
@@ -611,63 +620,64 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
     local menuID = "PhysHairMenu"
     if not ImGui.ElementExists(upmenuid) then
         ImGui.CreateMenu(upmenuid, "Mods Setting")
-    end
-    if ImGui.ElementExists(menuID) then
-        if BethHair_SecondLoad then
-            ImGui.RemoveWindow(menuID)
-        else
-            BethHair_SecondLoad = true
+    --end
+        if ImGui.ElementExists(menuID) then
+            if BethHair_SecondLoad then
+                ImGui.RemoveWindow(menuID)
+            else
+                BethHair_SecondLoad = true
+            end
         end
-    end
-    if ImGui.ElementExists("BethOdangoMode") then
-        ImGui.RemoveElement("BethOdangoMode")
-    end
-    if ImGui.ElementExists("PhysHairMenuEntry") then
-        ImGui.RemoveElement("PhysHairMenuEntry")
-    end
-    ImGui.AddElement(upmenuid, "PhysHairMenuEntry", ImGuiElement.MenuItem, "Hair With Physics")
-
-    ImGui.CreateWindow(menuID, "Hair With Physics")
-    ImGui.LinkWindowToElement(menuID, "PhysHairMenuEntry")
-    ImGui.AddCheckbox (menuID, "BethOdangoMode", GetStr("Bethany Odango Mode"), function(a) mod.OdangoMode = a updateSaveData() end, false )
-    ImGui.AddText(menuID, "")
-    ImGui.AddText(menuID, GetStr("physfor"))
-    ImGui.AddCheckbox (menuID, "PhysHair_BethPhys","Bethany", function(a) mod.BlockedChar[PlayerType.PLAYER_BETHANY] = not a updateSaveData() end, true )
-    ImGui.AddCheckbox (menuID, "PhysHair_BethBPhys","T. Bethany", function(a) mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = not a  updateSaveData() end, true )
-    ImGui.AddCheckbox (menuID, "PhysHair_JudasPhys","Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS] = not a  updateSaveData() end, true )
-    ImGui.AddCheckbox (menuID, "PhysHair_JudasBPhys","T. Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = not a  updateSaveData() end, true )
-    ImGui.AddCheckbox (menuID, "PhysHair_EveBPhys","Eve", function(a) mod.BlockedChar[PlayerType.PLAYER_EVE] = not a updateSaveData() end, true )
-
-    mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, function(_, saveslot, isslotselected, rawslot)
-        if mod:HasData() then
-            local savedata = json.decode(mod:LoadData())
-            mod.OdangoMode = savedata.OdangoMode
-            mod.BlockedChar[PlayerType.PLAYER_BETHANY] = savedata.Beth == 1
-            mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = savedata.BethB == 1
-            mod.BlockedChar[PlayerType.PLAYER_JUDAS] = savedata.Judas == 1
-            mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = savedata.JudasB == 1
-            mod.BlockedChar[PlayerType.PLAYER_EVE] = savedata.Eve == 1
-
-            ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
-            ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
-            ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
-            ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
-            ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
-        else
-            --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true
-            mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = true
-            mod.BlockedChar[PlayerType.PLAYER_JUDAS] = true
-            mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = true
-            mod.BlockedChar[PlayerType.PLAYER_EVE] = true]]
-
-            ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
-            ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
-            ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
-            ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
-            ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+        if ImGui.ElementExists("BethOdangoMode") then
+            ImGui.RemoveElement("BethOdangoMode")
         end
-        
-    end)
+        if ImGui.ElementExists("PhysHairMenuEntry") then
+            ImGui.RemoveElement("PhysHairMenuEntry")
+        end
+        ImGui.AddElement(upmenuid, "PhysHairMenuEntry", ImGuiElement.MenuItem, "Hair With Physics")
+
+        ImGui.CreateWindow(menuID, "Hair With Physics")
+        ImGui.LinkWindowToElement(menuID, "PhysHairMenuEntry")
+        ImGui.AddCheckbox (menuID, "BethOdangoMode", GetStr("Bethany Odango Mode"), function(a) mod.OdangoMode = a updateSaveData() end, false )
+        ImGui.AddText(menuID, "")
+        ImGui.AddText(menuID, GetStr("physfor"))
+        ImGui.AddCheckbox (menuID, "PhysHair_BethPhys","Bethany", function(a) mod.BlockedChar[PlayerType.PLAYER_BETHANY] = not a updateSaveData() end, true )
+        ImGui.AddCheckbox (menuID, "PhysHair_BethBPhys","T. Bethany", function(a) mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = not a  updateSaveData() end, true )
+        ImGui.AddCheckbox (menuID, "PhysHair_JudasPhys","Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS] = not a  updateSaveData() end, true )
+        ImGui.AddCheckbox (menuID, "PhysHair_JudasBPhys","T. Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = not a  updateSaveData() end, true )
+        ImGui.AddCheckbox (menuID, "PhysHair_EveBPhys","Eve", function(a) mod.BlockedChar[PlayerType.PLAYER_EVE] = not a updateSaveData() end, true )
+
+        mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, function(_, saveslot, isslotselected, rawslot)
+            if mod:HasData() then
+                local savedata = json.decode(mod:LoadData())
+                mod.OdangoMode = savedata.OdangoMode
+                mod.BlockedChar[PlayerType.PLAYER_BETHANY] = savedata.Beth == 1
+                mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = savedata.BethB == 1
+                mod.BlockedChar[PlayerType.PLAYER_JUDAS] = savedata.Judas == 1
+                mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = savedata.JudasB == 1
+                mod.BlockedChar[PlayerType.PLAYER_EVE] = savedata.Eve == 1
+
+                ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
+                ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
+                ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
+                ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
+                ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+            else
+                --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true
+                mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = true
+                mod.BlockedChar[PlayerType.PLAYER_JUDAS] = true
+                mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = true
+                mod.BlockedChar[PlayerType.PLAYER_EVE] = true]]
+
+                ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
+                ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
+                ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
+                ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
+                ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+            end
+            
+        end)
+    end
 
 
 if Isaac.GetPlayer() then
@@ -769,7 +779,14 @@ function BethHair.StyleMenu.HUDRender()
                         
                         wga.DraggerSetValue(smenu.scrollbtn, btn.row / (smenu.rowcount), true)
                     end
+                end
 
+                if player then
+                    local tar = player.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0)
+                    
+                    local salon = BethHair.HStyles.salon
+                    salon.CameraFocusPos = salon.CameraFocusPos * 0.8 + (tar) * 0.2
+                    game:GetRoom():GetCamera():SetFocusPosition(salon.CameraFocusPos)
                 end
             end
             
@@ -811,6 +828,11 @@ smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"
 
 smenu.spr.scrollback.Offset = Vector(-2,-2)
 
+local greenbtnColor = Color(78/256, 1, 90/256, 1, 3/256, 30/256, 24/256)
+
+greenbtnColor = Color(1,1,1,1, 18/256, 20/256, 7/256)
+greenbtnColor:SetColorize(108/256, 1, 85/256, 1 )
+
 function BethHair.StyleMenu.GenWindowBtns(ptype)
     local mdata = wga.GetMenu(smenu.name)
     local navmap = {}
@@ -837,14 +859,21 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             end
         end
 
+        local style
+
         for i=1, #pstyles do
             local stylename = pstyles[i]
             
             local spr = GenSprite("gfx/editor/hairstyle_menu.anm2","button")
-            local hairgfx = stylesdata[stylename] and stylesdata[stylename].data and stylesdata[stylename].data.TailCostumeSheep
+            local styledt = stylesdata[stylename]
+            local hairgfx = styledt and styledt.data and styledt.data.TailCostumeSheep
             
             local hairspr
             if hairgfx then
+                if styledt and styledt.extra and styledt.extra.modfolder then
+                    hairgfx = styledt.extra.modfolder .. "/" .. hairgfx
+                end
+
                 hairspr = GenSprite("gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
                 for lr=0, hairspr:GetLayerCount()-1 do
                     hairspr:ReplaceSpritesheet(lr,hairgfx)
@@ -862,6 +891,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 function (button)
                     local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
                     BethHair.HStyles.SetStyleToPlayer(player, stylename)
+                    
                 end, function (pos, visible)
                     spr:SetFrame(self.IsSelected and 1 or 0)
                     local scroolupcrop = self.scrollupcrop
@@ -888,6 +918,21 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
                 self.canPressed = self.scrollupcrop < 32 and self.scrolldwoncrop < 40
                 
+                if smenu.TargetPlayer then
+                    if smenu.TargetPlayer:GetData()._PhysHair_HairStyle == stylename then
+                        if not self.DoGreen then
+                            self.DoGreen = true
+                            spr.Color = greenbtnColor
+                        end
+                    elseif self.DoGreen then
+                        self.DoGreen = nil
+                        spr.Color = Color.Default
+                    end
+                elseif self.DoGreen then
+                    self.DoGreen = nil
+                    spr.Color = Color.Default
+                end
+
                 --if wga.ControlType ==  self.IsSelected then
                 --    print(xy.Y , #pstyles, xy.Y / #pstyles)
                 --    wga.DraggerSetValue(smenu.scrollbtn, xy.Y / #pstyles)

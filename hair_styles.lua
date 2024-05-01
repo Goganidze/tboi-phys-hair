@@ -5,6 +5,21 @@ local game = Game()
 local Room 
 local Wtr = 20/13
 
+local function GenSprite(gfx, anim, frame)
+    if gfx then
+        local spr
+        spr = Sprite()
+        spr:Load(gfx, true)
+        if anim then
+            spr:Play(anim)
+        end
+        if frame then
+            spr:SetFrame(frame)
+        end
+        return spr
+    end
+end
+
 mod.HStyles = {}
 
 mod.HairStylesData = {
@@ -72,7 +87,7 @@ function mod.HStyles.SetStyleToPlayer(player, style_name)
             data._PhysHair_HairStyle = style_name
             mod.HairLib.InitHairData(player)
             
-            mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+            --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
         end
     end
 end
@@ -106,10 +121,14 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
     local sheep = stdata.data.NullposRefSpr   --stdata.data.TailCostumeSheep
     local tarcost = stdata.data.TargetCostume
     data._PhysHairExtra = data._PhysHairExtra or {}
-    print(stdata.data.NullposRefSpr)
+
+    --print(stdata.data.NullposRefSpr)
     if sheep and tarcost then
         data._PhysHairExtra.DefCostumetSheetPath = {}
         local dcsp = data._PhysHairExtra.DefCostumetSheetPath
+
+        data._PhysHairExtra.ForceOrigCost = {}
+        local foc = data._PhysHairExtra.ForceOrigCost
 
         local pos = 0
         for i, csd in pairs(player:GetCostumeSpriteDescs()) do
@@ -117,12 +136,22 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
             if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
                 if not tarcost.pos or tarcost.pos == pos then
                     local cspr = csd:GetSprite()
-                    print( sheep:GetFilename() )
+                    --print( sheep:GetFilename() )
+                    local anim = cspr:GetAnimation()
                     cspr:Load(sheep:GetFilename(), true)
+                    cspr:Play(anim)
 
                     for i=0, cspr:GetLayerCount()-1 do
-                        print(i, cspr:GetLayer(i):GetSpritesheetPath())
+                        --print(i, cspr:GetLayer(i):GetSpritesheetPath())
+                        local shpa = sheep:GetLayer(i)
+                        if shpa then
+                            cspr:ReplaceSpritesheet(i, shpa:GetSpritesheetPath())
+                            --print("layer", shpa:GetSpritesheetPath())
+                            --foc[i] = shpa:GetSpritesheetPath()
+                            dcsp[i] = shpa:GetSpritesheetPath()
+                        end
                     end
+                    cspr:LoadGraphics()
 
                     --break
 
@@ -224,7 +253,6 @@ mod:AddCallback(mod.HairLib.Callbacks.PRE_COLOR_CHANGE, mod.HStyles.BodyColorTra
 ----парихранитель
 
 mod.HStyles.HairKeeper = {ID = Isaac.GetEntityTypeByName("Парихранитель"), VAR = Isaac.GetEntityVariantByName("Парихранитель")}
-print(mod.HStyles.HairKeeper.ID, mod.HStyles.HairKeeper.VAR)
 
 ---@param ent EntitySlot
 function mod.HStyles.HairKeeper.update(_, ent)
@@ -240,21 +268,21 @@ function mod.HStyles.HairKeeper.update(_, ent)
             data.removedwall = true
             data.level = data.level or game:GetLevel()
             local crds = data.level:GetCurrentRoomDesc()
-            if crds.Flags & RoomDescriptor.FLAG_NO_WALLS == 0 then
-                crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
-                data.removeFLAG_NO_WALLS = true
-            end
+            --if crds.Flags & RoomDescriptor.FLAG_NO_WALLS == 0 then
+            --    crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
+            --    data.removeFLAG_NO_WALLS = true
+            --end
         end
         
         local camera = data.room:GetCamera()
-        camera:SetFocusPosition(ent.Target.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0))
+        --camera:SetFocusPosition(ent.Target.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0))
         if not mod.StyleMenu.wind then
             ent.Target = nil
             data.removedwall = nil
-            if data.removeFLAG_NO_WALLS then
-                local crds = data.level:GetCurrentRoomDesc()
-                crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
-            end
+            --if data.removeFLAG_NO_WALLS then
+            --    local crds = data.level:GetCurrentRoomDesc()
+            --    crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
+            --end
         end
     end
 
@@ -277,6 +305,359 @@ function mod.HStyles.HairKeeper.coll(_, ent, col)
     end
 end
 mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, mod.HStyles.HairKeeper.coll, mod.HStyles.HairKeeper.VAR)
+
+
+mod.HStyles.salon = {
+    CameraFocusPos = Vector(0,0),
+    EnterIndex = 131,
+    TopLeftRefIndex = 128,
+    BGEntVar = Isaac.GetEntityVariantByName("Фон парихмазерской")
+}
+local salon = mod.HStyles.salon
+
+
+function mod.HStyles.salon.NewRoom()
+    salon.IsRoom = false
+    local level = game:GetLevel()
+    
+    if level and level:GetStartingRoomIndex() == level:GetCurrentRoomIndex() then
+        local room = game:GetRoom()
+
+        salon.IsRoom = true
+        salon.bg = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "New Animation")
+
+        salon.EnterPos = room:GetGridPosition(salon.EnterIndex)
+        salon.TopLeftPos = room:GetGridPosition(salon.TopLeftRefIndex) + Vector(-20, 20 + 60)
+
+        local ef = Isaac.Spawn(1000,6,0, 
+        salon.EnterPos - Vector(0,42), Vector(0,0), nil)
+        local spr = ef:GetSprite()
+        spr:Load("gfx/grid/door_01_normaldoor.anm2", true) 
+        spr:Play("Opened", true)
+        spr.FlipY = true
+        ef:AddEntityFlags(EntityFlag.FLAG_RENDER_WALL)
+        ef:Update()
+
+        local grid = room:GetGridEntityFromPos(salon.EnterPos)
+        grid.CollisionClass = GridCollisionClass.COLLISION_NONE
+
+        salon.CameraFocusPos = room:GetCenterPos()
+
+        for i, keep in pairs(Isaac.FindByType(mod.HStyles.HairKeeper.ID, mod.HStyles.HairKeeper.VAR)) do
+            if i==1 then
+                salon.Chranya = EntityPtr(keep)
+            else
+                keep:Remove()
+            end
+        end
+
+        if not salon.Chranya or not salon.Chranya.Ref then
+            local keep = Isaac.Spawn(mod.HStyles.HairKeeper.ID, mod.HStyles.HairKeeper.VAR, 0,
+                salon.TopLeftPos + Vector(40*7, 40*4-0), Vector(0,0), nil )
+
+            salon.Chranya = EntityPtr(keep)
+
+            keep:GetSprite():Play("idle", true)
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.salon.NewRoom)
+
+---@param player EntityPlayer
+function mod.HStyles.salon.playerUpdate(_, player)
+    if salon.IsRoom then
+        local nextpos = player.Position + Vector(0,-20) --+ player.Velocity:Resized(6)
+
+        if salon.EnterPos and player.Velocity:Length()>0.1 then
+            if nextpos:Distance(salon.EnterPos) < 20 then
+                mod.HStyles.salon.EnterSalon()
+            end
+        end
+        if salon.Entered then
+            salon.CheckColl(player)
+            local corpos = player.Position - salon.TopLeftPos
+            --local index = corpos.X // 40 + corpos.Y // 40 * 11
+            if corpos.Y < 60 and not mod.StyleMenu.TargetPlayer then
+                mod.HStyles.salon.ExitSalon()
+            end
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.HStyles.salon.playerUpdate)
+
+
+function mod.HStyles.salon.EnterSalon()
+    if Isaac.GetPlayer() then
+        local room = game:GetRoom()
+        local level = game:GetLevel()
+        salon.ReturnSettings = {
+            CameraStyle = Options.CameraStyle,
+            NoWall = level:GetCurrentRoomDesc().Flags & RoomDescriptor.FLAG_NO_WALLS
+        }
+        local crds = level:GetCurrentRoomDesc()
+        crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
+
+        salon.Entered = true
+        for i = 0, game:GetNumPlayers()-1 do
+            local player = Isaac.GetPlayer(i)
+
+            player.GridCollisionClass = 0
+            player.Position = salon.TopLeftPos + Vector(40 * 3 + 20 , 40 * 2 - 10 )
+        end
+
+        salon.Alpha = 0
+
+        if not salon.BGentPtr or not salon.BGentPtr.Ref then
+            local bg = Isaac.Spawn(1000,salon.BGEntVar,0, Vector(0,-100), Vector(0,0), nil)
+            bg.SortingLayer = SortingLayer.SORTING_DOOR
+            bg.Color = Color(1,1,1,0)
+
+            salon.BGentPtr = EntityPtr(bg)
+        end
+    end
+end
+
+function mod.HStyles.salon.ExitSalon()
+    if Isaac.GetPlayer() then
+        for i = 0, game:GetNumPlayers()-1 do
+            local player = Isaac.GetPlayer(i)
+
+            player.Position = salon.EnterPos + Vector(0 , -10)
+            player:AddCacheFlags(CacheFlag.CACHE_FLYING, true)
+        end
+        --salon.Alpha = 0
+        Options.CameraStyle = salon.ReturnSettings.CameraStyle
+        if salon.ReturnSettings.NoWall then
+            local crds = game:GetLevel():GetCurrentRoomDesc()
+            crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
+        end
+
+        salon.Entered = false
+
+        salon.ReturnSettings = {}
+    end
+end
+
+do
+    local framecheck
+    function mod.HStyles.salon.RenderRoom(_, ent)
+        local frmae = Isaac.GetFrameCount()
+        if framecheck == frmae then return end
+        framecheck = frmae
+
+        local paused = game:IsPaused()
+
+        if salon.IsRoom then
+            if salon.Entered then
+                local room = game:GetRoom()
+                salon.bg.Color.A = salon.Alpha
+                if not paused then
+                    salon.Alpha = salon.Alpha * 0.9 + 0.1
+                    local tar
+                    if mod.StyleMenu.TargetPlayer then
+                        --tar = mod.StyleMenu.TargetPlayer.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0)
+                    else
+                        tar = salon.TopLeftPos+Vector(40*6+0,40*4+0)
+                        salon.CameraFocusPos = salon.CameraFocusPos * 0.8 + (tar) * 0.2
+                        room:GetCamera():SetFocusPosition(salon.CameraFocusPos)
+                    end
+                    --salon.CameraFocusPos = salon.CameraFocusPos * 0.8 + (tar) * 0.2
+                    --room:GetCamera():SetFocusPosition(salon.CameraFocusPos)
+                end
+
+                salon.bg:Render( Isaac.WorldToScreen(salon.TopLeftPos) )
+
+                local corpos = Isaac.GetPlayer().Position - salon.TopLeftPos
+                local index = corpos.X // 40 + corpos.Y // 40 * 11
+                Isaac.RenderText(tostring(index),50,50,1,1,1,1)
+            else
+                if not paused then
+                    salon.Alpha = salon.Alpha * 0.90
+                    if salon.Alpha > 0.05 then
+                        local room = game:GetRoom()
+                        salon.CameraFocusPos = salon.CameraFocusPos * 0.95 + room:GetCenterPos() * 0.05
+                        room:GetCamera():SetFocusPosition(salon.CameraFocusPos)
+                    end
+                end
+                salon.bg.Color.A = salon.Alpha
+                salon.bg:Render( Isaac.WorldToScreen(salon.TopLeftPos) )
+            end
+        end
+    end
+    mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.HStyles.salon.RenderRoom, mod.HStyles.salon.BGEntVar)
+end
+
+
+
+local angleVecP = {}
+local pointsCount = 16
+do
+    local num = 1
+    for i = 0, 360-(360/pointsCount), (360/pointsCount) do
+        angleVecP[num] = Vector.FromAngle(i)
+        num = num + 1
+    end
+end
+
+
+
+mod.HStyles.salon.CollisionMap = {
+    [0]=true,true,true,true,true,true,true,true,true,true,true,true,
+    true,true,true,false,true,true,true,true,true,true,true,
+    true,true,false,false,false,1,1,1,true,true,true,
+    true,true,false,false,false,false,false,false,true,true,true,
+    true,true,false,false,false,false,false,false,true,true,true,
+    true,true,true,true,true,true,true,true,true,true,true,
+    true,true,true,true,true,true,true,true,true,true,true,
+}
+
+function mod.HStyles.salon.CheckColl(player)
+    if player and salon.TopLeftPos then
+        local ps,vl = player.Position, player.Velocity
+        local entsize = player.Size
+        local corpos = ps - salon.TopLeftPos
+        corpos.X = corpos.X + 40
+        --local index = corpos.X // 40 + corpos.Y // 40 * 11
+
+        local pushVec = Vector(0,0)
+        local vecLength = vl:Length()/4+.01
+        local pushpower = math.max(0.01, vecLength-.2)
+        local map = salon.CollisionMap
+        local topush = false
+
+        for i=1, pointsCount do
+            local rotpoint = angleVecP[i]:Resized(entsize)
+            local gridcollpoint = corpos + rotpoint
+            local index = gridcollpoint.X // 40 + gridcollpoint.Y // 40 * 11
+
+            local grid = map[index]
+            if grid then
+                if grid == 1 then
+                    if gridcollpoint.Y < 90 then
+                        pushVec = pushVec - angleVecP[i]:Resized(pushpower)
+                        topush = true
+                    end
+                else
+                    pushVec = pushVec - angleVecP[i]:Resized(pushpower)
+                    topush = true
+                end
+            end
+        end
+
+        if topush then
+            local vec = player.Velocity
+            local angle = pushVec:GetAngleDegrees()
+            local rotvec = vec:Rotated(-angle)
+
+            player.Position = ps +  pushVec 
+       
+            local lenght = vl:Length()
+           
+            player.Velocity = Vector( math.max(0, rotvec.X ), rotvec.Y ):Rotated(angle)
+        end
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+------------       поиск респрайтов       -------------
+
+local function FindResprites(modfoldername, resources, path, costumepath, playerid, nullid, CostumeSheep, anm2)
+    local hairpath = "mods/" .. modfoldername .. path
+    local res = pcall(Renderer.LoadImage, hairpath)
+    if res then
+        
+        local tab = {
+            TargetCostume = {ID = nullid, Type = ItemType.ITEM_NULL},
+            TailCostumeSheep = CostumeSheep,
+            ReplaceCostumeSheep = "mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep,
+            NullposRefSpr = GenSprite(anm2),
+            SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath,
+        }
+        --print(modfoldername, "|", "mods/" .. modfoldername .. "/" .. resources .. tab.TailCostumeSheep)
+        tab.NullposRefSpr:ReplaceSpritesheet(0, 
+            "mods/" .. modfoldername .. "/" .. resources .. "/" .. tab.TailCostumeSheep)
+        tab.NullposRefSpr:LoadGraphics()
+        
+        mod.HStyles.AddStyle(modfoldername .. "-" .. playerid .. "-" .. CostumeSheep, playerid, tab,
+            {modfolder = "mods/" .. modfoldername .. "/" .. resources})
+    end
+end
+
+
+for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
+    local mod = XMLData.GetEntryById(XMLNode.MOD, i)
+    if mod then
+        --for i,k in pairs(mod) do
+           -- print(i,k)
+        --end
+        local dir = mod.realdirectory or mod.directory
+        if dir and mod.enabled == "true" then
+            --[[local hairpath1 = "mods/" .. dir .. "/resources/gfx/characters/costumes/character_001x_bethshair.png"
+            local res, ff = pcall(Renderer.LoadImage, hairpath1)
+            
+            if res then
+                print(dir)
+            end
+
+            local hairpath2 = "mods/" .. dir .. "/resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png"
+            local res = pcall(Renderer.LoadImage, hairpath2)
+            if res then
+                print(dir)
+
+                local tab = {
+                    TargetCostume = {ID = NullItemID.ID_EDEN, Type = ItemType.ITEM_NULL},
+                    TailCostumeSheep = "gfx/characters/costumes/character_009_edenhair" .. i .. ".png",
+                    ReplaceCostumeSheep = "gfx/characters/costumes/character_009_edenhair" .. i .. ".png",
+                    NullposRefSpr = GenSprite("gfx/characters/character_009_edenhair1.anm2")
+                }
+                tab.NullposRefSpr:ReplaceSpritesheet(0, tab.TailCostumeSheep)
+                tab.NullposRefSpr:LoadGraphics()
+                
+                mod.HStyles.AddStyle("edenstandarthair_"..i, PlayerType.PLAYER_EDEN, tab)
+            end]]
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png",
+                "/resources-dlc3/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
+                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2")
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_001x_bethshair.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
+                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2")
+
+        end
+    end
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

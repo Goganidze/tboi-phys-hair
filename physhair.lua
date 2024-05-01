@@ -407,6 +407,8 @@ return function (mod)
                     cdat.OrigCostume = {}
                     local pos = 0
                     
+                    --Isaac.RunCallbackWithParam(_HairCordData.Callbacks.PRE_HAIR_COLOR_CHANGE, ptype, player, bodcol, refsting)
+
                     for i, csd in pairs(player:GetCostumeSpriteDescs()) do
                         local conf = csd:GetItemConfig()
                         if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
@@ -419,7 +421,8 @@ return function (mod)
                                 if suffix or replacestr then
                                     if type(suffix) == "table" then
                                         for id, gfx in pairs(suffix) do
-                                            local orig = defSpriteSheep and defSpriteSheep[id] or cspr:GetLayer(id):GetDefaultSpritesheetPath()
+                                            local orig = cdat.ForceOrigCost and cdat.ForceOrigCost[id] 
+                                                or defSpriteSheep and defSpriteSheep[id] or cspr:GetLayer(id):GetDefaultSpritesheetPath()
                                             cdat.OrigCostume[id] = orig
                                             if replacestr then
                                                 orig = type(replacestr) == "table" and replacestr[id] or replacestr
@@ -453,11 +456,13 @@ return function (mod)
                                         cspr:LoadGraphics()
                                     else
                                         for id=0, cspr:GetLayerCount()-1 do
-                                            local orig = defSpriteSheep and defSpriteSheep[id] or cspr:GetLayer(id):GetDefaultSpritesheetPath()
+                                            local orig = cdat.ForceOrigCost and cdat.ForceOrigCost[id] 
+                                                or defSpriteSheep and defSpriteSheep[id] or cspr:GetLayer(id):GetDefaultSpritesheetPath()
                                             
                                             cdat.OrigCostume[id] = orig
                                             if replacestr then
                                                 orig = type(replacestr) == "table" and replacestr[id] or replacestr
+                                                print("replace", orig, replacestr)
                                             end
                                             refsting = orig:sub(0, orig:len()-4)
                                             local colorsuf = bodycolor[bodcol] or ""
@@ -481,6 +486,7 @@ return function (mod)
                                             if not havecolorver then
                                                 finalpath = refsting .. (suffix or "") .. ".png"
                                             end
+                                            print("chachacahcah", refsting, "|", finalpath, "|", defSpriteSheep and defSpriteSheep[id])
                                             cspr:ReplaceSpritesheet(id, finalpath) -- refsting .. (suffix or "") .. ".png")  -- rep)
                                         end
                                         cspr:LoadGraphics()

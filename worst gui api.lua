@@ -2279,6 +2279,21 @@ function menuTab.KeyboardButtonDetect()
 	local onceTouch = false
 	menuTab.OnFreePos = true
 
+	if menuTab.ManualSelectedButton and menuTab.ManualSelectedButton[2] then
+		local menunmae = menuTab.ManualSelectedButton[2]
+		local has = false
+		for ahhoh = #DetectSelectedButtonBuffer, 1,-1 do
+			local list = DetectSelectedButtonBuffer[ahhoh]
+			
+			if list and list[1] == menunmae then
+				has = true
+			end
+		end
+		if not has then
+			menuTab.ManualSelectedButton = nil
+		end
+	end
+
 	if not menuTab.ManualSelectedButton then
 		for ahhoh = #DetectSelectedButtonBuffer, 1,-1 do
 			local list = DetectSelectedButtonBuffer[ahhoh]
