@@ -403,6 +403,7 @@ function mod.HStyles.salon.EnterSalon()
 
             player.GridCollisionClass = 0
             player.Position = salon.TopLeftPos + Vector(40 * 3 + 20 , 40 * 2 - 10 )
+            player.ControlsCooldown = math.max(16, player.ControlsCooldown)
         end
 
         salon.Alpha = 0
@@ -422,8 +423,12 @@ function mod.HStyles.salon.ExitSalon()
         for i = 0, game:GetNumPlayers()-1 do
             local player = Isaac.GetPlayer(i)
 
-            player.Position = salon.EnterPos + Vector(0 , -10)
-            player:AddCacheFlags(CacheFlag.CACHE_FLYING, true)
+            if player.Position.Y > salon.TopLeftPos.Y and player.Position.X > salon.TopLeftPos.X then
+                player.Position = salon.EnterPos + Vector(0 , -10)
+                player:AddCacheFlags(CacheFlag.CACHE_FLYING, true)
+                --player:SetColor(Color(.0,.0,.0,.5), 10, 100, true, true)
+                player.ControlsCooldown = math.max(16, player.ControlsCooldown)
+            end
         end
         --salon.Alpha = 0
         Options.CameraStyle = salon.ReturnSettings.CameraStyle
@@ -570,7 +575,18 @@ end
 
 ------------       поиск респрайтов       -------------
 
-local function FindResprites(modfoldername, resources, path, costumepath, playerid, nullid, CostumeSheep, anm2)
+local strings = {
+    frommod = {
+        en = "from mod: ", ru = "из мода: ",
+    }
+}
+local function GetStr(str)
+    if strings[str] then
+        return strings[str][Options.Language] or strings[str].en
+    end
+end
+
+local function FindResprites(modfoldername, resources, path, costumepath, playerid, nullid, CostumeSheep, anm2, modd)
     local hairpath = "mods/" .. modfoldername .. path
     local res = pcall(Renderer.LoadImage, hairpath)
     if res then
@@ -588,7 +604,10 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
         tab.NullposRefSpr:LoadGraphics()
         
         mod.HStyles.AddStyle(modfoldername .. "-" .. playerid .. "-" .. CostumeSheep, playerid, tab,
-            {modfolder = "mods/" .. modfoldername .. "/" .. resources})
+            {
+                modfolder = "mods/" .. modfoldername .. "/" .. resources,
+                menuHintText = GetStr("frommod") .. modd.name -- .. " sggsgssggssg sggssggsgsgsgs",
+            })
     end
 end
 
@@ -596,11 +615,16 @@ end
 for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     local mod = XMLData.GetEntryById(XMLNode.MOD, i)
     if mod then
-        --for i,k in pairs(mod) do
-           -- print(i,k)
-        --end
+        --[[for i,k in pairs(mod) do
+            if i ~= "description" then
+                print(i,k)
+            end
+        end]]
+        
         local dir = mod.realdirectory or mod.directory
-        if dir and mod.enabled == "true" then
+
+        if dir and (not mod.enabled or mod.enabled == "true") then
+            
             --[[local hairpath1 = "mods/" .. dir .. "/resources/gfx/characters/costumes/character_001x_bethshair.png"
             local res, ff = pcall(Renderer.LoadImage, hairpath1)
             
@@ -628,13 +652,17 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 "/resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png",
                 "/resources-dlc3/gfx/characters/costumes/",
                 PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
-                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2")
+                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
+                mod
+            )
 
             FindResprites(dir, "resources",
                 "/resources/gfx/characters/costumes/character_001x_bethshair.png",
                 "/resources/gfx/characters/costumes/",
                 PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
-                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2")
+                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
+                mod
+            )
 
         end
     end

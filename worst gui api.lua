@@ -585,6 +585,50 @@ function menuTab.RemoveButton(menuName, buttonName, NoError)
 	end
 end
 
+function menuTab.stringMultiline(text, Width)
+	local BoxWidth = Width or 450
+	local str = {}
+	if BoxWidth ~= 0 then
+		local spaceLeft = BoxWidth
+		local words = {}
+		for word in string.gmatch(text, '([^ ]+)') do --Split string into individual words
+			words[#words+1] = word;
+		end
+		text = ""
+		for i=1, #words do
+			local wordLength = font:GetStringWidthUTF8(words[i])*0.5
+			if (words[i] == "\n") then --Word is purely breakline
+				--text = text.."\n"
+				str[#str+1] = text
+				text = ""
+			elseif (utf8_Sub(words[i], 1, 2) == "\n") then --Word starts with breakline
+				spaceLeft = BoxWidth - wordLength
+				text = text..words[i].." "
+			elseif (wordLength > spaceLeft) then --Word breaks text boundary
+				spaceLeft = BoxWidth - wordLength
+				str[#str+1] = text
+				text = ""
+				text = words[i].." " --text.."\n"..
+			else --Word is fine
+				spaceLeft = spaceLeft - wordLength
+				text = text..words[i].." "
+			end
+			--maxWidth = math.max(BoxWidth-spaceLeft, maxWidth)
+		end
+		str[#str+1] = text
+	end
+
+	local maxlenght = 0
+	for i=1,#str do
+		local text = str[i]
+		maxlenght = math.max(font:GetStringWidthUTF8(text)*0.5, maxlenght)
+	end
+	str.Width = maxlenght
+
+	return str
+end
+
+
 function menuTab.ButtonSetHintText(menuName, buttonName, text, Error)
 	if not menuTab.MenuData[menuName] then
 		if not Error then return end
@@ -1084,6 +1128,30 @@ function menuTab.AddScrollBar(menuName, buttonName, pos, size, sprite, dragSpr, 
 		table.insert(menu.sortList, Spos, {btn = buttonName, Priority = priority})]]
 		return menu.Buttons[buttonName]
     end
+end
+
+local function MouseWheel_DefCallFunc(btn, value)
+	--print("deffff", menuTab.DraggerGetValue(btn), value, btn.ValueSize)
+	menuTab.DraggerSetValue(btn, 
+		math.max(0, math.min(1, menuTab.DraggerGetValue(btn) + value/btn.ValueSize * 20)), 
+		true)
+end
+
+function menuTab.SetMouseWheelZone(btn, vec1, vec2, callbackfunc)
+	if btn and vec1 and vec2 then
+		btn.MouseWheelZone = btn.MouseWheelZone or {}
+		local mwz = btn.MouseWheelZone
+		mwz.callfunc = type(callbackfunc) == "function" and callbackfunc
+			or MouseWheel_DefCallFunc
+		
+
+		local topleft = Vector(math.min(vec1.X, vec2.X), math.min(vec1.Y, vec2.Y))
+		local bottomright = Vector(math.max(vec1.X, vec2.X), math.max(vec1.Y, vec2.Y))
+
+		mwz.vec = topleft
+		mwz.size = bottomright-topleft
+		
+	end
 end
 
 function menuTab.DefCounterUp(ya, btn)
@@ -2148,13 +2216,20 @@ function menuTab.SetControlType(ttype, targetplayer)
 	end
 end
 
-
-
+local function PointAABB(point, vectl, xs, ys)
+	if not vectl then error("gssgs",2) end
+	local xv = vectl.X - point.X + xs
+	local yv = vectl.Y - point.Y + ys
+	return xv > 0 and xv < xs 
+		and yv > 0 and yv < ys 
+end
 
 function menuTab.MouseButtonDetect(onceTouch)
 	local mousePos = menuTab.MousePos
 	local onceTouch = onceTouch or false
 	menuTab.OnFreePos = true
+	local isMB0, isMB1 = menuTab.IsMouseBtnTriggered(0), menuTab.IsMouseBtnTriggered(1)
+
 	for ahhoh = #DetectSelectedButtonBuffer, 1,-1 do
 		local list = DetectSelectedButtonBuffer[ahhoh]
 		local menu = list[1]   --DetectSelectedButtonBuffer[ahhoh]
@@ -2163,12 +2238,41 @@ function menuTab.MouseButtonDetect(onceTouch)
 		if type(button) == "table" then
 
 			local somethingPressed = false
+			local somethingmousewheel = false
 			---@param k EditorButton
 			for i, k in pairs(button) do
 				---@type EditorButton
 				if k.canPressed then
-					if not onceTouch and mousePos.X >= k.pos.X and mousePos.Y >= k.pos.Y
-						and mousePos.X < (k.pos.X + k.x) and mousePos.Y < (k.pos.Y + k.y) then
+
+					local mwz = k.MouseWheelZone
+					if not somethingmousewheel and mwz then
+						local menupos = k.pos - k.posref
+						local st = menupos + mwz.vec
+						menuTab.DelayRender(function()
+							Isaac.DrawQuad(st, st + Vector(mwz.size.X,0),
+								st + Vector(0, mwz.size.Y), st + mwz.size, 
+								KColor(1,1,1,1), 4
+							)
+							end, menuTab.Callbacks.WINDOW_POST_RENDER
+						)
+						--Isaac.DrawLine(k.pos + mwz.vec, k.pos +mwz.vec + mwz.size, 
+						--KColor(1,1,1,1), KColor(1,1,1,1), 2)
+						--print(mousePos, k.pos + mwz.vec, k.pos +mwz.vec + mwz.size)
+						if PointAABB(mousePos, menupos + mwz.vec, mwz.size.X, mwz.size.Y) then
+							local val = Input.GetMouseWheel and -Input.GetMouseWheel() or 0
+							
+							if val ~= 0 then
+								mwz.callfunc(k, val)
+							end
+							somethingmousewheel = true
+						end
+					end
+
+					--if not onceTouch and mousePos.X >= k.pos.X and mousePos.Y >= k.pos.Y
+					--	and mousePos.X < (k.pos.X + k.x) and mousePos.Y < (k.pos.Y + k.y) then
+
+					if not onceTouch and PointAABB(mousePos, k.pos, k.x, k.y) then
+
 						menuTab.OnFreePos = false
 						onceTouch = true
 						if not k.IsSelected then
@@ -2215,7 +2319,7 @@ function menuTab.MouseButtonDetect(onceTouch)
 
 						if not k.BlockPress then
 							somethingPressed = true
-							if menuTab.IsMouseBtnTriggered(0) and not menuTab.MouseDoNotPressOnButtons then
+							if isMB0 and not menuTab.MouseDoNotPressOnButtons then
 								if k.isDragZone then
 									menuTab.SelectedDragZone = k
 									--k.dragPrePos = k.dragPrePos or mousePos/1
@@ -2232,7 +2336,7 @@ function menuTab.MouseButtonDetect(onceTouch)
 									k.func(0)
 								end
 								break
-							elseif menuTab.IsMouseBtnTriggered(1) and not menuTab.MouseDoNotPressOnButtons then
+							elseif isMB1 and not menuTab.MouseDoNotPressOnButtons then
 								k.func(1)
 								break
 							end
@@ -2911,7 +3015,7 @@ function menuTab.RenderWindows()
 		end
 
 		if not window.IsHided then
-			menuTab.CallDelayRenders(menuTab.Callbacks.WINDOW_POST_RENDER, menuName, window.pos, window)
+			menuTab.CallDelayRenders(menuTab.Callbacks.WINDOW_PRE_RENDER, menuName, window.pos, window)
 			Isaac.RunCallbackWithParam(menuTab.Callbacks.WINDOW_PRE_RENDER, menuName, window.pos, window)
 		end
 
@@ -3197,6 +3301,8 @@ function menuTab.DrawText(fonttype, text, posX, posY, scaleX, scaleY, rot, color
 	scaleY = scaleY or 0.5
 	if fonttype == 2 then
 		f = TextBoxFont
+	elseif type(fonttype) ~= "number" then
+		f = fonttype
 	end
 	f:DrawStringScaledUTF8(text, 
 		posX, posY, 
@@ -3205,6 +3311,50 @@ function menuTab.DrawText(fonttype, text, posX, posY, scaleX, scaleY, rot, color
 		rot == 1 and 0 or rot == 2 and 1, 
 		rot == 2 and true or false
 	)
+end
+
+function menuTab.DrawMultilineText(fonttype, text, posX, posY, scaleX, scaleY, rot, color)
+	local f = font
+	scaleX = scaleX or 0.5
+	scaleY = scaleY or 0.5
+	if fonttype == 2 then
+		f = TextBoxFont
+	elseif type(fonttype) ~= "number" then
+		f = fonttype
+	end
+	local col = color or menuTab.DefTextColor
+
+	local Center = false
+	local BoxWidth = 0
+    local line = 0
+	if type(text) == "table" then
+		for li, word in ipairs(text) do
+			font:DrawStringScaledUTF8(word, posX, posY+(line*f:GetLineHeight()*0.5), 0.5, 0.5, col, 
+			rot == 1 and 0 or rot == 2 and 1, 
+			rot == 2 and true or false)
+			line = line + 1
+		end
+	elseif type(text) == "string" then
+		for word in string.gmatch(text, '([^\n]+)') do
+			font:DrawStringScaledUTF8(word, posX, posY+(line*f:GetLineHeight()*0.5), 0.5, 0.5, col, 
+			rot == 1 and 0 or rot == 2 and 1, 
+			rot == 2 and true or false)
+			line = line + 1
+		end
+	end
+end
+
+---@param btn EditorButton
+function menuTab.DraggerGetValue(btn)
+	if btn then
+		if btn.dragtype == 3 then
+			local full = btn.y - btn.DragerSize
+			
+			local preval = btn.dragCurPos.Y / full
+			print(preval, btn.ValueSize)
+			return preval --* btn.ValueSize
+		end
+	end
 end
 
 ---@param btn EditorButton

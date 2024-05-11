@@ -462,7 +462,7 @@ return function (mod)
                                             cdat.OrigCostume[id] = orig
                                             if replacestr then
                                                 orig = type(replacestr) == "table" and replacestr[id] or replacestr
-                                                print("replace", orig, replacestr)
+                                                
                                             end
                                             refsting = orig:sub(0, orig:len()-4)
                                             local colorsuf = bodycolor[bodcol] or ""
@@ -486,7 +486,7 @@ return function (mod)
                                             if not havecolorver then
                                                 finalpath = refsting .. (suffix or "") .. ".png"
                                             end
-                                            print("chachacahcah", refsting, "|", finalpath, "|", defSpriteSheep and defSpriteSheep[id])
+                                            
                                             cspr:ReplaceSpritesheet(id, finalpath) -- refsting .. (suffix or "") .. ".png")  -- rep)
                                         end
                                         cspr:LoadGraphics()
