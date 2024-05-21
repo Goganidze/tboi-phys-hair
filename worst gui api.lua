@@ -2259,7 +2259,7 @@ function menuTab.MouseButtonDetect(onceTouch)
 						--KColor(1,1,1,1), KColor(1,1,1,1), 2)
 						--print(mousePos, k.pos + mwz.vec, k.pos +mwz.vec + mwz.size)
 						if PointAABB(mousePos, menupos + mwz.vec, mwz.size.X, mwz.size.Y) then
-							local val = Input.GetMouseWheel and -Input.GetMouseWheel() or 0
+							local val = Input.GetMouseWheel and -Input.GetMouseWheel().Y or 0
 							
 							if val ~= 0 then
 								mwz.callfunc(k, val)
