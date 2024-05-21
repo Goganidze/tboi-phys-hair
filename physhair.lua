@@ -65,6 +65,7 @@ return function (mod)
     ----@field RL integer[][]
     ----@field Null string[]
     ---@field BackSpr Sprite?
+    ---@field Back2Spr Sprite?
     ---@field TargetCostume TargetCostume?
     ---@field ReplaceCostumeSheep string|string[]?
     ---@field SyncBColor boolean?
@@ -100,6 +101,7 @@ return function (mod)
 
     ---@class SetHairDataParam
     ---@field HeadBackSpr Sprite?
+    ---@field HeadBack2Spr Sprite?
     ---@field TargetCostume TargetCostume?
     ---@field ReplaceCostumeSheep string|string[]?
     ---@field ReplaceCostumeSuffix string|string[]?
@@ -117,6 +119,7 @@ return function (mod)
                 --RL = data.RenderLayers,
                 --Null = data.CostumeNullposes,
                 BackSpr = data.HeadBackSpr,
+                Back2Spr = data.HeadBack2Spr,
                 TargetCostume = data.TargetCostume,
                 ReplaceCostumeSheep = data.ReplaceCostumeSheep,
                 ReplaceCostumeSuffix = data.ReplaceCostumeSuffix,
@@ -589,6 +592,7 @@ return function (mod)
             
             data._BethsHairCord = {
                 BackSpr = datattab.BackSpr,
+                Back2Spr = datattab.Back2Spr,
                 TargetCostume = datattab.TargetCostume,
                 ReplaceCostumeSheep = datattab.ReplaceCostumeSheep,
                 ReplaceCostumeSuffix = datattab.ReplaceCostumeSuffix,
@@ -812,9 +816,48 @@ return function (mod)
         
         Room = Room or game:GetRoom()
         local data = player:GetData()
-        if data._BethsHairCord and Room:GetRenderMode() ~= RenderMode.RENDER_WATER_REFLECT then
+        if data._BethsHairCord then -- and Room:GetRenderMode() ~= RenderMode.RENDER_WATER_REFLECT then
             data._BethsHairCord.RealHeadPos = offset -- Isaac.WorldToScreen(player.Position)
             data._BethsHairCord.HeadPosCheckFrame = player.FrameCount
+
+            local cdat = data._BethsHairCord
+            local spr = player:GetSprite()
+            local playerCol = player:GetColor()
+            local playerPos = offset
+            local isreflect = Room:GetRenderMode() == RenderMode.RENDER_WATER_REFLECT
+
+            ---@type Sprite
+            local Back2Spr = cdat.Back2Spr
+            if Back2Spr then
+                --local spr =  player:GetSprite()
+                Back2Spr.Scale = spr.Scale
+                if player:HasWeaponType(WeaponType.WEAPON_BRIMSTONE) then
+                    local list = player:GetCostumeSpriteDescs()
+                    local sec = false
+                    for i=1, #list do
+                        local costume = list[i]
+                        if costume:GetItemConfig().ID == CollectibleType.COLLECTIBLE_BRIMSTONE then
+                            if not sec then
+                                sec = true
+                            else 
+                                Back2Spr.Scale = Back2Spr.Scale * costume:GetSprite():GetLayer(0):GetSize()
+                                break
+                            end
+                        end
+                    end
+                end
+                Back2Spr.Color = playerCol
+                Back2Spr:SetFrame(spr:GetOverlayAnimation(), spr:GetOverlayFrame())
+                if isreflect then
+                    Back2Spr:Render(playerPos + offset)
+                else
+                    Back2Spr:Render(playerPos)
+                end
+            end
+
+
+            if isreflect then return end
+
 
             if isbeth[ptype] and mod.OdangoMode then
                 return
@@ -823,21 +866,21 @@ return function (mod)
             if not player:IsExtraAnimationFinished() then
                 return
             end
-            local spr = player:GetSprite()
+            
 
             local hdir = player:GetHeadDirection()
             
-            local playerCol = player:GetColor()
+            
     
-            local isreflect = Room:GetRenderMode() == RenderMode.RENDER_WATER_REFLECT
+            --local isreflect = Room:GetRenderMode() == RenderMode.RENDER_WATER_REFLECT
     
-            local playerPos = offset -- Isaac.WorldToScreen(player.Position) --Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset()
+            --local playerPos = offset -- Isaac.WorldToScreen(player.Position) --Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset()
             --local hairPos1 = player:GetCostumeNullPos("bethshair_cord1", true, Vector(0,0))
             --local hairPos2 = player:GetCostumeNullPos("bethshair_cord2", true, Vector(0,0))
     
             --local screenOffset =  playerPos - Isaac.WorldToScreen(player.Position)
     
-            local cdat = data._BethsHairCord
+            
             if isreflect then
                 --realplayerPos = (Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset()) -- offset
                 local copyc = playerCol

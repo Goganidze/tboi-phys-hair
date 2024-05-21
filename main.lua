@@ -57,6 +57,8 @@ local function BeamR(anm2, anim, layername, bool1, bool2, points)
     return Beam(spr, layername, bool1, bool2, points)
 end
 
+local toreset = setmetatable({}, {__mode = "k"})
+
 local function GenSprite(gfx, anim, frame)
     if gfx then
         local spr
@@ -68,8 +70,30 @@ local function GenSprite(gfx, anim, frame)
         if frame then
             spr:SetFrame(frame)
         end
+        toreset[spr] = true
         return spr
     end
+end
+function mod.clearsprites()
+    for i,k in pairs(toreset) do
+        ---@type Sprite
+        local i = i
+        i:Reset()
+        i:Reload()
+    end
+    for i,k in pairs(mod.CordsSprites) do
+        k:Reset()
+        k:Reload()
+    end
+end
+
+local function BeamR(anm2, anim, layername, bool1, bool2, points)
+    local spr = Sprite()
+    mod.CordsSprites[anm2..anim] = spr
+    spr:Load(anm2, true)
+    spr:PlayOverlay(anim)
+    spr:Play(anim)
+    return Beam(spr, layername, bool1, bool2, points)
 end
 
 --#region cords
@@ -294,7 +318,7 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
     --TailCount = 2,
     --RenderLayers = headDirToRender,
     --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
-    HeadBackSpr = BethBackHair_oneside,
+    HeadBack2Spr = BethBackHair_oneside,
     TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
     ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/oneside/character_001x_bethshair_oneside_notails.png",
     TailCostumeSheep = "gfx/characters/costumes/beth_styles/oneside/character_001x_bethshair_oneside.png",
@@ -302,12 +326,14 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
     SkinFolderSuffics = "gfx/characters/costumes/beth_styles/oneside/",
     [1] = {
         CordSpr = mod.BethOneSideCord,
-        RenderLayers = { [3] = 3, [0] = 3, [1] = 3, [2] = 3 },
+        RenderLayers = { [3] = 3, [0] = 2, [1] = 3, [2] = 3 },
         CostumeNullpos = "bethshair_cord1",
-        Length = 30,
-        Scretch = scretch * 1.2,
+        Length = 20,
+        Scretch = scretch * 1.0,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
        --- Mass = 12,
+       StartHeight = 0,
+       CS = {[0]=3,10,15}
     },
 }, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
 
@@ -328,6 +354,14 @@ function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, taildata)
                 cordspr.FlipX = false
             end
             cordspr:Play(spranim == "HeadLeft" and "cord3" or spranim == "HeadRight" and "cord2" or "cord")
+        elseif HairStyle == "BethOneSideTail" then
+            local spranim = spr:GetOverlayAnimation()
+            local cordspr = mod.BethOneSideCord:GetSprite()
+            if spranim == "HeadUp" then
+                cordspr.FlipX = true
+            else
+                cordspr.FlipX = false
+            end
         end
     end
 end
