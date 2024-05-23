@@ -36,6 +36,16 @@ function mod.HStyles.AddStyle(name, playerid, data, extradata)
     end
 end
 
+---@class HairStyleData
+---@field ID PlayerType
+---@field data PlayerHairData
+---@field extra table
+
+---@return HairStyleData
+function BethHair.HStyles.GetStyleData(name)
+    return HairStylesData.styles[name]
+end
+
 function mod.SetHairStyleData(player, playerType, style_data)
     mod.HairLib.SetHairData(playerType,  style_data)
 end

@@ -244,7 +244,9 @@ mod.HStyles.AddStyle("BethPonyTail", PlayerType.PLAYER_BETHANY, {
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
        --- Mass = 12,
     },
-}, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
+}, {modfolder = "mods/" .. mod.Foldername .. "/resources",
+    CustomCharPortrait = "gfx/characters/costumes/beth_styles/ponytail/charactermenu.png"
+})
 
     -- lowtails
 
@@ -299,7 +301,9 @@ mod.HStyles.AddStyle("BethLowTails", PlayerType.PLAYER_BETHANY, {
         StartHeight = 5,
         CS = {[0]=7,15}
     },
-}, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
+}, {modfolder = "mods/" .. mod.Foldername .. "/resources",
+    CustomCharPortrait = "gfx/characters/costumes/beth_styles/lowtwotail/charactermenu.png"
+    })
 
 
     --- oneside
@@ -331,11 +335,14 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
         Length = 20,
         Scretch = scretch * 1.0,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
-       --- Mass = 12,
-       StartHeight = 0,
-       CS = {[0]=3,10,15}
+        --= Mass = 12,
+        StartHeight = 0,
+        CS = {[0]=3,10,15}
     },
-}, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
+}, {
+    modfolder = "mods/" .. mod.Foldername .. "/resources",
+    CustomCharPortrait = "gfx/characters/costumes/beth_styles/oneside/charactermenu.png"
+})
 
 
 
@@ -680,9 +687,47 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
             JudasB = mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] and 1 or 0,
             Eve = mod.BlockedChar[PlayerType.PLAYER_EVE] and 1 or 0,
         }
+
+        data.PlayerData = {}
+        for i=0, game:GetNumPlayers()-1 do
+            local player = Isaac.GetPlayer(i)
+            local pdata = player:GetData()
+            local unickyID = player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_SAD_ONION):GetSeed()
+           
+            data.PlayerData[tostring(unickyID)] = {HairStyle = pdata._PhysHair_HairStyle}
+
+            mod.MainMenuStuff.RenderCharPort = nil
+            mod.CustomCharPortrait = nil
+            if i == 0 then
+                local hsdata = mod.HStyles.GetStyleData(pdata._PhysHair_HairStyle)
+                if hsdata then
+                    data.PlayerData.CustomCharPortrait = hsdata.extra.CustomCharPortrait
+                    mod.CustomCharPortrait = hsdata.extra.CustomCharPortrait
+                else
+                    mod.CustomCharPortrait = nil
+                end
+            end
+        end
        
         mod:SaveData( json.encode(data) )
     end
+
+    function mod.PlayerPostInit(_, player)
+        local data = player:GetData()
+        if not data._PHYSHAIR_SAVELOADED then -- and player.FrameCount > 1 then
+            data._PHYSHAIR_SAVELOADED = true
+            if mod.SavePlayerData then
+                local unickyID = player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_SAD_ONION):GetSeed()
+                local savePlayerData = mod.SavePlayerData[tostring(unickyID)]
+                
+                if savePlayerData and savePlayerData.HairStyle then
+                    mod.HStyles.SetStyleToPlayer(player, savePlayerData.HairStyle)
+                    --player:GetData()._PhysHair_HairStyle = savePlayerData.HairStyle
+                end
+            end
+        end
+    end
+    mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.PlayerPostInit)
 
     local strings = {
         ["Bethany Odango Mode"] = {en = "Bethany Odango Mode", ru = "Режим Оданго для Вифании"},
@@ -722,10 +767,14 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
         ImGui.AddCheckbox (menuID, "PhysHair_JudasPhys","Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS] = not a  updateSaveData() end, true )
         ImGui.AddCheckbox (menuID, "PhysHair_JudasBPhys","T. Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = not a  updateSaveData() end, true )
         ImGui.AddCheckbox (menuID, "PhysHair_EveBPhys","Eve", function(a) mod.BlockedChar[PlayerType.PLAYER_EVE] = not a updateSaveData() end, true )
-
+    end
         mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, function(_, saveslot, isslotselected, rawslot)
+            mod.MainMenuStuff.RenderCharPort = nil
             if mod:HasData() then
                 local savedata = json.decode(mod:LoadData())
+
+                mod.SavePlayerData = savedata.PlayerData
+
                 mod.OdangoMode = savedata.OdangoMode
                 mod.BlockedChar[PlayerType.PLAYER_BETHANY] = savedata.Beth == 1
                 mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = savedata.BethB == 1
@@ -738,6 +787,13 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
                 ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
                 ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
                 ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+                
+                mod.CustomCharPortrait = savedata.PlayerData.CustomCharPortrait
+                if mod.CustomCharPortrait then
+                    mod.MainMenuStuff.RenderCharPort = true
+                    MainMenu.GetContinueWidgetSprite():ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
+                end
+            
             else
                 --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true
                 mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = true
@@ -751,9 +807,29 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
                 ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
                 ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
             end
-            
         end)
-    end
+
+        function mod.PostExitGame(shouldSave)
+            mod.MainMenuStuff.RenderCharPort = nil
+            if shouldSave then
+                updateSaveData()
+            end
+            mod.MainMenuStuff.frame = #mod.MainMenuStuff.WidgedMap
+
+            --[[local menu = MainMenu
+            local widgetSpr = menu.GetContinueWidgetSprite()
+            local charlayer = widgetSpr:GetLayer(0)
+            --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait, mod.CustomCharPortrait == charlayer:GetSpritesheetPath())
+            if mod.CustomCharPortrait and charlayer then
+                print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath())
+                if mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath() then
+                    --widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
+                end
+            end]]
+        end
+
+        mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, mod.PostExitGame)
+    --end
 
 
 if Isaac.GetPlayer() then
@@ -763,7 +839,78 @@ if Isaac.GetPlayer() then
 end
 
 
+----------------------------------------------------
+
+mod.MainMenuStuff = {frame = 0, state = 0, WidgedCurPos = Vector(0,0)}
+local MainMenuStuff = mod.MainMenuStuff
+MainMenuStuff.CharacterWidgetSpr = GenSprite("gfx/characters/costumes/beth_styles/WidgedCharPort.anm2","Character")
+MainMenuStuff.WidgetPos = Vector(8 + 24, 85 + 24)
+
+MainMenuStuff.WidgedMap = {
+    [0] = Vector(-150, 0), Vector(-150, 0), Vector(-150, 0), Vector(-150, 0), 
+    Vector(-200, 0), Vector(-200, 0), Vector(-160, 0), Vector(-150, 0),
+    Vector(-120, 0), Vector(-55, 0), Vector(-18, 0), Vector(-6, 0), 
+    Vector(-0, 0), Vector(-0, 0), Vector(0, 0) , Vector(0, 0)
+}
+MainMenuStuff.WidgedMapScale = {
+    [0] = Vector(1, 1), Vector(1, 1), Vector(-150, 0), Vector(-150, 0), 
+    Vector(-200, 0), Vector(1, 1), Vector(1.37, 0.63), Vector(1.2, 0.8),
+    Vector(1.15, 0.85), Vector(1.07, .93), Vector(1.0, 1.0), Vector(0.9,1.1), 
+    Vector(.8, 1.2), Vector(1.0, 1.0), Vector(1.0, 1.0) , Vector(1, 1)
+}
+
+function mod.MainMenuRender()
+    if MenuManager.GetActiveMenu() == MainMenuType.GAME then
+        local menuPos = Isaac.WorldToMenuPosition(MainMenuType.GAME, Vector(0,0))
+
+        local widgetSpr = MainMenu.GetContinueWidgetSprite()
+        
+        local charlayer = widgetSpr:GetLayer(0)
+        --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait, mod.CustomCharPortrait == charlayer:GetSpritesheetPath())
+        if mod.CustomCharPortrait and charlayer then
+            --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath())
+            if mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath() then
+
+                widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
+                MainMenuStuff.RenderCharPort = true
+
+                MainMenuStuff.CharacterWidgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
+                MainMenuStuff.CharacterWidgetSpr:LoadGraphics()
+            end
+        end
+
+        if MainMenuStuff.RenderCharPort then
+
+            if MainMenu.GetSelectedElement() == 1 then
+                if MainMenuStuff.frameoff then
+                    MainMenuStuff.frameoff = nil
+                    MainMenuStuff.frame = -1
+                end
+                MainMenuStuff.frame = math.min(#MainMenuStuff.WidgedMap, MainMenuStuff.frame + 1)
+            else
+                MainMenuStuff.frame = math.max(0, MainMenuStuff.frame - 1)
+                if not MainMenuStuff.frameoff then
+                    MainMenuStuff.frame = #MainMenuStuff.WidgedMap
+                    MainMenuStuff.frameoff = true
+                end
+            end
+            MainMenuStuff.WidgedCurPos = MainMenuStuff.WidgedMap[MainMenuStuff.frame] or MainMenuStuff.WidgedMap[0]
+            MainMenuStuff.WidgedCurScale = MainMenuStuff.WidgedMapScale[MainMenuStuff.frame] or MainMenuStuff.WidgedMapScale[0]
+
+            local wigdedOff = widgetSpr.Offset
+            local renderpos = menuPos + MainMenuStuff.WidgetPos + MainMenuStuff.WidgedCurPos + wigdedOff
+            MainMenuStuff.CharacterWidgetSpr:Render(renderpos)
+            MainMenuStuff.CharacterWidgetSpr.Scale = widgetSpr.Scale * MainMenuStuff.WidgedCurScale
+        end
+    else
+        MainMenuStuff.frame = #MainMenuStuff.WidgedMap
+    end
+end
+mod:AddCallback(ModCallbacks.MC_MAIN_MENU_RENDER, mod.MainMenuRender) --, MainMenuType.GAME)
+
+
 -----------------------------------------------------
+--[[
 testvec = Vector(20, 20)
 local ms
 local spr1 = GenSprite("gfx/001.000_player.anm2", "WalkDown")
@@ -777,7 +924,7 @@ if MultiSprite then
 end
 SpriteBuffer = ms
 GenSprite1 = GenSprite
-
+]]
 
 
 ---@type wga_menu
@@ -801,7 +948,7 @@ local testcord = Beam(TestSpr, "body", false, false, 3)
 
 
 function BethHair.StyleMenu.HUDRender()
-    if ms and renderms then
+    --[[if ms and renderms then
         local t = Isaac.GetTime()
         local vec = Vector(Isaac.GetScreenWidth()/2,Isaac.GetScreenHeight()/2) --Vector(60,60)
         --for i=1,120*20 do
@@ -816,10 +963,12 @@ function BethHair.StyleMenu.HUDRender()
         --print("sec", Isaac.GetTime()-t1)
         ms:SetPosRotation((t / 30) % 360)
         ms:SetRotation((t / 30) % 360)
-    end
+    end]]
     --testcord:Add(Vector(10,10),0)
     --testcord:Add(Vector(190,100),30)
     --testcord:Render()
+
+
     local notpaused = not game:IsPaused()
     if notpaused then
         --wga.DetectMenuButtons(smenu.name)
@@ -830,7 +979,7 @@ function BethHair.StyleMenu.HUDRender()
     if notpaused then
 
         local pos = Isaac.WorldToScreen(Input.GetMousePosition(true))-game.ScreenShakeOffset
-        if wga.ControlType == wga.enum.ControlType.CONTROLLER then
+        --[[if wga.ControlType == wga.enum.ControlType.CONTROLLER then
             if pos:Distance(preMousePos) > 3 then
                 wga.ControlType = wga.enum.ControlType.MOUSE
             end
@@ -839,13 +988,25 @@ function BethHair.StyleMenu.HUDRender()
             if move:Length() > .2 then
                 wga.ControlType = wga.enum.ControlType.CONTROLLER
             end
-        end
-        preMousePos = pos
+        end]]
+        --preMousePos = pos
 
         wga.HandleWindowControl()
 
         --window logic
         if smenu.wind then
+            if wga.ControlType == wga.enum.ControlType.CONTROLLER then
+                if pos:Distance(preMousePos) > 3 then
+                    wga.ControlType = wga.enum.ControlType.MOUSE
+                end
+            else
+                local move = wga.input.GetRefMoveVector()
+                if move:Length() > .2 then
+                    wga.ControlType = wga.enum.ControlType.CONTROLLER
+                end
+            end
+            preMousePos = pos
+
             local wind = smenu.wind
             local player = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:ToPlayer()
             local keeper = BethHair.StyleMenu.TargetHairKeeper
@@ -1289,6 +1450,8 @@ function BethHair.StyleMenu.ShowWindow()
     smenu.wind.unuser = true
     smenu.wind.backcolor = Color(1,1,1,1)
     smenu.wind.backcolornfocus = Color(1,1,1,1)
+
+    BethHair.StyleMenu.TargetPlayer = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
 
     wga.SetControlType(wga.enum.ControlType.CONTROLLER, BethHair.StyleMenu.TargetPlayer )
 

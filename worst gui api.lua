@@ -783,6 +783,9 @@ end
 ---@field IsHided boolean
 ---@field hide EditorButton
 ---@field unhide EditorButton
+---@field unuser boolean --нельзя перемещать и без кнопок Закрыть и Свернуть
+---@field backcolor Color
+---@field backcolornfocus Color --цвет в не фокусе
 menuTab.WindowMeta = {}
 menuTab.WindowMetaTable = {__index = menuTab.WindowMeta}
 --TSJDNHC.FGrid.__index = TSJDNHC.Grid
@@ -3394,6 +3397,8 @@ function menuTab.DraggerSetValue(btn, value, callpress)
 end
 
 menuTab.CustomMenuBack = {}
+
+---@return fun(pos:Vector, size:Vector, col:Color)?
 function menuTab.CreateCustomMenuBackRenderFunc(name, tab)
 	if not name then return end
 
