@@ -127,6 +127,7 @@ return function (mod)
                 SyncBColor = data.SyncWithCostumeBodyColor,
                 NullposRefSpr = data.NullposRefSpr,
                 SkinFolderSuffics = data.SkinFolderSuffics,
+                ExtraAnimHairLayer = data.ExtraAnimHairLayer,
             }
             for i = 1, #data do
                 local dd = data[i]
@@ -597,7 +598,8 @@ return function (mod)
                 ReplaceCostumeSheep = datattab.ReplaceCostumeSheep,
                 ReplaceCostumeSuffix = datattab.ReplaceCostumeSuffix,
                 SyncBColor = datattab.SyncBColor,
-                NPRefSpr = datattab.NullposRefSpr
+                NPRefSpr = datattab.NullposRefSpr,
+                EXAnim_HL = datattab.ExtraAnimHairLayer,
             }
             local cdat = data._BethsHairCord
 
@@ -631,6 +633,20 @@ return function (mod)
                 end
             end
 
+            if cdat.EXAnim_HL then
+                local path = cdat.EXAnim_HL
+                cdat.EXAnim_HL = Sprite()
+                cdat.EXAnim_HL:Load("gfx/001.000_player.anm2", true)
+                --for i, layer in pairs(cdat.EXAnim_HL:GetAllLayers()) do
+                    for h=0, 14 do
+                        if h ~= 13 then
+                            cdat.EXAnim_HL:ReplaceSpritesheet(h, path)
+                        end
+                    end
+                    cdat.EXAnim_HL:LoadGraphics()
+                --end
+            end
+
             Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_POST_INIT, ptype, player, cdat)
         end
     end
@@ -648,7 +664,29 @@ return function (mod)
     ---@param player EntityPlayer
     function _HairCordData.HairPostRender(_, player, offset)
         local ptype = player:GetPlayerType()
-        if not PlayerData[ptype] or not player:IsExtraAnimationFinished() then
+        if not PlayerData[ptype] then
+            return
+        end
+
+        if not player:IsExtraAnimationFinished() then
+            local cdat = player:GetData()._BethsHairCord
+            if cdat and cdat.EXAnim_HL then
+                local spr =  player:GetSprite()
+                local rendermode = Room:GetRenderMode()
+                local isreflect = rendermode == RenderMode.RENDER_WATER_REFLECT
+                local playerPos = (worldToScreen1(player.Position) + player:GetFlyingOffset())
+
+                local EXAnim_HL = cdat.EXAnim_HL
+                if EXAnim_HL then
+                    EXAnim_HL:SetFrame(spr:GetAnimation(), spr:GetFrame())
+                    if isreflect then
+                        EXAnim_HL:Render(playerPos + offset)
+                    else
+                        EXAnim_HL:Render(playerPos)
+                    end
+                end
+            end
+
             return
         end
         
@@ -662,8 +700,7 @@ return function (mod)
             local isreflect = rendermode == RenderMode.RENDER_WATER_REFLECT
 
             local realplayerPos
-            local playerPos = data._BethsHairCord.RealHeadPos 
-                or (worldToScreen(player.Position) + player:GetFlyingOffset())
+            local playerPos = (worldToScreen(player.Position) + player:GetFlyingOffset())
             
             if isreflect then
                 realplayerPos = (worldToScreen(player.Position) + player:GetFlyingOffset()) -- offset
@@ -709,6 +746,17 @@ return function (mod)
                     BackSpr:Render(playerPos)
                 end
             end
+
+            --[[local EXAnim_HL = cdat.EXAnim_HL
+            if EXAnim_HL then
+                EXAnim_HL:SetFrame(spr:GetAnimation(), spr:GetFrame())
+                if isreflect then
+                    EXAnim_HL:Render(playerPos + offset)
+                else
+                    EXAnim_HL:Render(playerPos)
+                end
+                print(EXAnim_HL:GetAnimation(), EXAnim_HL:GetOverlayAnimation(), "gsgs")
+            end]]
 
             if isbeth[ptype] and mod.OdangoMode then
                 return

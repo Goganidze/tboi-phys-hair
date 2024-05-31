@@ -328,6 +328,7 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
     TailCostumeSheep = "gfx/characters/costumes/beth_styles/oneside/character_001x_bethshair_oneside.png",
     NullposRefSpr = mod.BethOneSideNullPos,
     SkinFolderSuffics = "gfx/characters/costumes/beth_styles/oneside/",
+    ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/oneside/character_hair_layer.png",
     [1] = {
         CordSpr = mod.BethOneSideCord,
         RenderLayers = { [3] = 3, [0] = 2, [1] = 3, [2] = 3 },
