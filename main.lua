@@ -195,6 +195,9 @@ local headDirToRender2 = {
 
 --#region bethany hairs
 
+
+local defaultmodfolder = "mods/" .. mod.Foldername .. "/resources"
+
 --mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
 mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
         --CordSpr = cordSpr,
@@ -244,7 +247,7 @@ mod.HStyles.AddStyle("BethPonyTail", PlayerType.PLAYER_BETHANY, {
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
        --- Mass = 12,
     },
-}, {modfolder = "mods/" .. mod.Foldername .. "/resources",
+}, {modfolder = defaultmodfolder,
     CustomCharPortrait = "gfx/characters/costumes/beth_styles/ponytail/charactermenu.png"
 })
 
@@ -301,7 +304,7 @@ mod.HStyles.AddStyle("BethLowTails", PlayerType.PLAYER_BETHANY, {
         StartHeight = 5,
         CS = {[0]=7,15}
     },
-}, {modfolder = "mods/" .. mod.Foldername .. "/resources",
+}, {modfolder = defaultmodfolder,
     CustomCharPortrait = "gfx/characters/costumes/beth_styles/lowtwotail/charactermenu.png"
     })
 
@@ -341,9 +344,46 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
         CS = {[0]=3,10,15}
     },
 }, {
-    modfolder = "mods/" .. mod.Foldername .. "/resources",
+    modfolder = defaultmodfolder,
     CustomCharPortrait = "gfx/characters/costumes/beth_styles/oneside/charactermenu.png"
 })
+
+
+----                drill tail
+
+
+mod.HStyles.AddStyle("BethDrillTail", PlayerType.PLAYER_BETHANY, {
+    --CordSpr = cordSpr,
+    --TailCount = 2,
+    --RenderLayers = headDirToRender,
+    --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
+    --HeadBack2Spr = BethBackHair_oneside,
+    TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
+    ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/drilltail/character_001x_bethshair_drilltail.png",
+    TailCostumeSheep = "gfx/characters/costumes/beth_styles/drilltail/character_001x_bethshair_drilltail.png",
+    NullposRefSpr = mod.BethOneSideNullPos,
+    --SkinFolderSuffics = "gfx/characters/costumes/beth_styles/drilltail/",
+    --ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
+    --[[[1] = {
+        CordSpr = mod.BethOneSideCord,
+        RenderLayers = { [3] = 3, [0] = 2, [1] = 3, [2] = 3 },
+        CostumeNullpos = "bethshair_cord1",
+        Length = 20,
+        Scretch = scretch * 1.0,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        --= Mass = 12,
+        StartHeight = 0,
+        CS = {[0]=3,10,15}
+    },]]
+}, {
+    modfolder = defaultmodfolder,
+    --CustomCharPortrait = "gfx/characters/costumes/beth_styles/oneside/charactermenu.png"
+})
+
+
+
+
+
 
 
 
@@ -1394,6 +1434,8 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                     local next = mdata.HairSelPos.Y + add
                     if navmap.collums[mdata.CurCollum][next] then
                         mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
+                    else
                         btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
                     end
                 end

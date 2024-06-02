@@ -260,7 +260,7 @@ mod:AddCallback(mod.HairLib.Callbacks.PRE_COLOR_CHANGE, mod.HStyles.BodyColorTra
 
 
 
-----парихранитель
+----храня
 
 mod.HStyles.HairKeeper = {ID = Isaac.GetEntityTypeByName("Парихранитель"), VAR = Isaac.GetEntityVariantByName("Парихранитель")}
 
