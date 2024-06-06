@@ -352,29 +352,42 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
 ----                drill tail
 
 
+mod.BethDrillTailCord = BeamR("gfx/characters/costumes/beth_styles/drilltail/bethhair_drilltail_cord.anm2", "cord", "body", false, false, 3)
+mod.BethDrillTailCord2 = BeamR("gfx/characters/costumes/beth_styles/drilltail/bethhair_drilltail_cord.anm2", "cord2", "body", false, false, 3)
+mod.BethDrillTailNullPos = Sprite()
+mod.BethDrillTailNullPos:Load("gfx/characters/costumes/beth_styles/drilltail/bethanyhead_drilltail.anm2", true)
+
 mod.HStyles.AddStyle("BethDrillTail", PlayerType.PLAYER_BETHANY, {
-    --CordSpr = cordSpr,
-    --TailCount = 2,
-    --RenderLayers = headDirToRender,
-    --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
     --HeadBack2Spr = BethBackHair_oneside,
     TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
-    ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/drilltail/character_001x_bethshair_drilltail.png",
+    ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/drilltail/character_001x_bethshair_drilltail_notails.png",
     TailCostumeSheep = "gfx/characters/costumes/beth_styles/drilltail/character_001x_bethshair_drilltail.png",
-    NullposRefSpr = mod.BethOneSideNullPos,
-    --SkinFolderSuffics = "gfx/characters/costumes/beth_styles/drilltail/",
-    --ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
-    --[[[1] = {
-        CordSpr = mod.BethOneSideCord,
-        RenderLayers = { [3] = 3, [0] = 2, [1] = 3, [2] = 3 },
+    NullposRefSpr = mod.BethDrillTailNullPos,
+    SkinFolderSuffics = "gfx/characters/costumes/beth_styles/drilltail/",
+    ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
+    [1] = {
+        CordSpr = mod.BethDrillTailCord,
+        RenderLayers = { [3] = 3, [0] = 1, [1] = 3, [2] = 3 },
         CostumeNullpos = "bethshair_cord1",
-        Length = 20,
-        Scretch = scretch * 1.0,
+        --DotCount = 2,
+        Length = 31,
+        StartHeight = 3,
+        Scretch = scretch * 1.4,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
-        --= Mass = 12,
-        StartHeight = 0,
-        CS = {[0]=3,10,15}
-    },]]
+        --Mass = 12,
+        CS = {[0]=8,17}
+    },
+    [2] = {
+        CordSpr = mod.BethDrillTailCord2,
+        RenderLayers = { [3] = 3, [0] = 3, [1] = 3, [2] = 1 },
+        CostumeNullpos = "bethshair_cord2",
+        Length = 31,
+        Scretch = scretch * 1.4,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        StartHeight = 3,
+        --Mass = 15,
+        CS = {[0]=8,17}
+    },
 }, {
     modfolder = defaultmodfolder,
     --CustomCharPortrait = "gfx/characters/costumes/beth_styles/oneside/charactermenu.png"
@@ -410,6 +423,18 @@ function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, taildata)
             else
                 cordspr.FlipX = false
             end
+        elseif HairStyle == "BethDrillTail" then
+            local spranim = spr:GetOverlayAnimation()
+            local cordspr = mod.BethDrillTailCord:GetSprite()
+            local cordspr2 = mod.BethDrillTailCord2:GetSprite()
+            if spranim == "HeadUp" then
+                cordspr:Play("cordb")
+                cordspr2:Play("cordb2")
+            else
+                cordspr:Play("cord")
+                cordspr2:Play("cord2")
+            end
+            --cordspr:Play(spranim == "HeadLeft" and "cord3" or spranim == "HeadRight" and "cord2" or "cord")
         end
     end
 end
