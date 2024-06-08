@@ -331,7 +331,7 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
     TailCostumeSheep = "gfx/characters/costumes/beth_styles/oneside/character_001x_bethshair_oneside.png",
     NullposRefSpr = mod.BethOneSideNullPos,
     SkinFolderSuffics = "gfx/characters/costumes/beth_styles/oneside/",
-    ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/oneside/character_hair_layer.png",
+    --ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/oneside/character_hair_layer.png",
     [1] = {
         CordSpr = mod.BethOneSideCord,
         RenderLayers = { [3] = 3, [0] = 2, [1] = 3, [2] = 3 },
@@ -364,7 +364,7 @@ mod.HStyles.AddStyle("BethDrillTail", PlayerType.PLAYER_BETHANY, {
     TailCostumeSheep = "gfx/characters/costumes/beth_styles/drilltail/character_001x_bethshair_drilltail.png",
     NullposRefSpr = mod.BethDrillTailNullPos,
     SkinFolderSuffics = "gfx/characters/costumes/beth_styles/drilltail/",
-    ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
+    --ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
     [1] = {
         CordSpr = mod.BethDrillTailCord,
         RenderLayers = { [3] = 3, [0] = 1, [1] = 3, [2] = 3 },
@@ -372,25 +372,25 @@ mod.HStyles.AddStyle("BethDrillTail", PlayerType.PLAYER_BETHANY, {
         --DotCount = 2,
         Length = 31,
         StartHeight = 3,
-        Scretch = scretch * 1.4,
+        Scretch = scretch * 1.35,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
-        --Mass = 12,
-        CS = {[0]=8,17}
+        Mass = 13,
+        CS = {[0]=8,15,22}
     },
     [2] = {
         CordSpr = mod.BethDrillTailCord2,
         RenderLayers = { [3] = 3, [0] = 3, [1] = 3, [2] = 1 },
         CostumeNullpos = "bethshair_cord2",
         Length = 31,
-        Scretch = scretch * 1.4,
+        Scretch = scretch * 1.35,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
         StartHeight = 3,
-        --Mass = 15,
-        CS = {[0]=8,17}
+        Mass = 13,
+        CS = {[0]=8,15,22}
     },
 }, {
     modfolder = defaultmodfolder,
-    --CustomCharPortrait = "gfx/characters/costumes/beth_styles/oneside/charactermenu.png"
+    CustomCharPortrait = "gfx/characters/costumes/beth_styles/drilltail/charactermenu.png"
 })
 
 
@@ -1000,7 +1000,10 @@ local wga = BethHair.WGA
 BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240),
     hairselectoffset = Vector(30,30), hairselectsize = Vector(150, 200),
     hairbtnsoffset = 0,
-    hinttextoffset = Vector(0,240)
+    hinttextoffset = Vector(0,240),
+
+    charrotateBtnL_offset = Vector(-50, 30),
+    charrotateBtnR_offset = Vector(50, 30),
 }
 local smenu = BethHair.StyleMenu
 local preMousePos = Vector(0,0)
@@ -1012,6 +1015,13 @@ TestSpr:PlayOverlay("cord")
 TestSpr:Play("cord")
 local testcord = Beam(TestSpr, "body", false, false, 3)
 
+--[[
+local testimage = Renderer.LoadImage("gfx/characters/costumes/bethhairs_cord.png")
+local v1,v2,v3,v4 = Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)
+local sq = SourceQuad(v1,v2,v3,v4)
+local dq = DestinationQuad(v1,v2,v3,v4)
+local kc1 = KColor(1,1,1,1)
+]]
 
 function BethHair.StyleMenu.HUDRender()
     --[[if ms and renderms then
@@ -1034,6 +1044,14 @@ function BethHair.StyleMenu.HUDRender()
     --testcord:Add(Vector(190,100),30)
     --testcord:Render()
 
+    --[[print(v1,v2,v3,v4, sq, dq, kc1)
+
+    local trans = Renderer.StartTransformation(testimage)
+    --local sq = SourceQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32))
+    --local dq = DestinationQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32))
+    trans:Render(testimage, sq, dq, kc1)
+    print(trans:IsValid ())
+    --trans:Apply ()]]
 
     local notpaused = not game:IsPaused()
     if notpaused then
@@ -1150,6 +1168,46 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
         local offset = #text == 1 and 10 or #text == 2 and 5 or 0
         wga.DrawMultilineText(1, text, x + 105,y + offset, 1,1, 2)
     end
+
+    local player = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:ToPlayer()
+
+    if player then
+        local sw,sh = Isaac.GetScreenWidth() --, Isaac.GetScreenHeight()
+        local sprs = smenu.spr
+
+        local centerPos = Vector(sw/4, pos.Y + smenu.size.Y * 0.7 )
+        
+        local Xscale = sw/4 / 100
+        local charrotateBtnL_offset = smenu.charrotateBtnL_offset/1
+        charrotateBtnL_offset.X = charrotateBtnL_offset.X * Xscale
+        local charrotateBtnR_offset = smenu.charrotateBtnR_offset/1
+        charrotateBtnR_offset.X = charrotateBtnR_offset.X * Xscale
+        sprs.CharRotateL:Render(centerPos + charrotateBtnL_offset)
+        sprs.CharRotateR:Render(centerPos + charrotateBtnR_offset)
+
+        local ControllerIndex = wga.input.TargetControllerIndex or player.ControllerIndex
+
+        --local inputDeviceName 
+        if ControllerIndex == 0 then
+            --sprs.Buttons:Play("XboxOne", true)
+
+            --sprs.Buttons:SetFrame()
+            sprs.VerySpecialKeyBoardLeftArrow.FlipX = false
+            sprs.VerySpecialKeyBoardLeftArrow:Render(centerPos + charrotateBtnL_offset + Vector(0, 30))
+            sprs.VerySpecialKeyBoardLeftArrow.FlipX = true
+            sprs.VerySpecialKeyBoardLeftArrow:Render(centerPos + charrotateBtnR_offset + Vector(0, 30))
+        else
+            local inputDeviceName = Input.GetDeviceNameByIdx and Input.GetDeviceNameByIdx(ControllerIndex) or "XboxOne"
+            if inputDeviceName and inputDeviceName:find("XInput") then
+                inputDeviceName = "XboxOne"
+            end
+            sprs.Buttons:Play(inputDeviceName, true)
+
+            sprs.Buttons:SetFrame(10)
+
+            sprs.Buttons:Render(centerPos + charrotateBtnL_offset + Vector(0, 30))
+        end
+    end
 end
 BethHair:AddCallback(wga.Callbacks.WINDOW_PRE_RENDER, BethHair.StyleMenu.PreWindowRender, smenu.name)
 
@@ -1157,9 +1215,16 @@ BethHair:AddCallback(wga.Callbacks.WINDOW_PRE_RENDER, BethHair.StyleMenu.PreWind
 smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"),
     gragger1 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger1"),
     gragger2 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger2"),
-    gragger3 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger3")}
+    gragger3 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger3"),
+
+    CharRotateL = GenSprite("gfx/editor/hairstyle_menu.anm2", "char_rotate_l"),
+    CharRotateR = GenSprite("gfx/editor/hairstyle_menu.anm2", "char_rotate_r"),
+    Buttons = GenSprite("gfx/ui/buttons.anm2"),
+    VerySpecialKeyBoardLeftArrow = GenSprite("gfx/editor/hairstyle_menu.anm2", "keyboard_arrow_left"),
+}
 
 smenu.spr.scrollback.Offset = Vector(-2,-2)
+smenu.spr.Buttons:SetCustomShader("shaders/PhysHairWhiteOutline")
 
 local greenbtnColor = Color(78/256, 1, 90/256, 1, 3/256, 30/256, 24/256)
 
