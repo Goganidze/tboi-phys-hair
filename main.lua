@@ -1152,6 +1152,9 @@ function BethHair.StyleMenu.HUDRender()
     --wga.DrawText(0, "MouseHWheel: "..mhw, 70,60, nil,nil,nil,KColor(1,1,1,1))
 end
 
+---@type EditorButton
+local CharRotateBtnL, CharRotateBtnR
+
 function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
     BethHair.StyleMenu.paperrender( pos+smenu.hairselectoffset, 
         smenu.hairselectsize, 
@@ -1172,6 +1175,20 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
     local player = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:ToPlayer()
 
     if player then
+
+        player:SetHeadDirection(smenu.CharHeadDirection, 1, true)
+
+        --[[if Input.IsButtonTriggered(Keyboard.KEY_Q, 0) then
+            smenu.CharHeadDirection = (smenu.CharHeadDirection + 1) % 4
+            --CharRotateBtnL.IsSelected = 1
+            CharRotateBtnL.forceSel = 5
+        elseif Input.IsButtonTriggered(Keyboard.KEY_E, 0) then
+            smenu.CharHeadDirection = (smenu.CharHeadDirection - 1) % 4
+            --CharRotateBtnR.IsSelected = 1
+            CharRotateBtnR.forceSel = 5
+        end]]
+
+
         local sw,sh = Isaac.GetScreenWidth() --, Isaac.GetScreenHeight()
         local sprs = smenu.spr
 
@@ -1182,30 +1199,84 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
         charrotateBtnL_offset.X = charrotateBtnL_offset.X * Xscale
         local charrotateBtnR_offset = smenu.charrotateBtnR_offset/1
         charrotateBtnR_offset.X = charrotateBtnR_offset.X * Xscale
-        sprs.CharRotateL:Render(centerPos + charrotateBtnL_offset)
-        sprs.CharRotateR:Render(centerPos + charrotateBtnR_offset)
+
+        local CharRotateL = sprs.CharRotateL
+        local CharRotateR = sprs.CharRotateR
+
+        CharRotateL:SetFrame((CharRotateBtnL.IsSelected or CharRotateBtnL.forceSel) and 1 or 0)
+        CharRotateR:SetFrame((CharRotateBtnR.IsSelected or CharRotateBtnR.forceSel) and 1 or 0)
+
+        CharRotateL:Render(centerPos + charrotateBtnL_offset)
+        CharRotateR:Render(centerPos + charrotateBtnR_offset)
+
+        if CharRotateBtnL.forceSel then
+            CharRotateBtnL.forceSel = CharRotateBtnL.forceSel - 1
+            if CharRotateBtnL.forceSel <= 0 then
+                CharRotateBtnL.forceSel = nil
+            end
+        end
+        if CharRotateBtnR.forceSel then
+            CharRotateBtnR.forceSel = CharRotateBtnR.forceSel - 1
+            if CharRotateBtnR.forceSel <= 0 then
+                CharRotateBtnR.forceSel = nil
+            end
+        end
+
+        CharRotateBtnL.ForcePos = centerPos + charrotateBtnL_offset - Vector(24,24)
+        CharRotateBtnR.ForcePos = centerPos + charrotateBtnR_offset - Vector(24,24)
 
         local ControllerIndex = wga.input.TargetControllerIndex or player.ControllerIndex
 
         --local inputDeviceName 
         if ControllerIndex == 0 then
+
+            if Input.IsButtonTriggered(Keyboard.KEY_Q, 0) then
+                smenu.CharHeadDirection = (smenu.CharHeadDirection + 1) % 4
+                --CharRotateBtnL.IsSelected = 1
+                CharRotateBtnL.forceSel = 5
+            elseif Input.IsButtonTriggered(Keyboard.KEY_E, 0) then
+                smenu.CharHeadDirection = (smenu.CharHeadDirection - 1) % 4
+                --CharRotateBtnR.IsSelected = 1
+                CharRotateBtnR.forceSel = 5
+            end
+
+
             --sprs.Buttons:Play("XboxOne", true)
 
             --sprs.Buttons:SetFrame()
-            sprs.VerySpecialKeyBoardLeftArrow.FlipX = false
+            --sprs.VerySpecialKeyBoardLeftArrow.FlipX = false
+            sprs.VerySpecialKeyBoardLeftArrow:SetFrame(1)
             sprs.VerySpecialKeyBoardLeftArrow:Render(centerPos + charrotateBtnL_offset + Vector(0, 30))
-            sprs.VerySpecialKeyBoardLeftArrow.FlipX = true
+            sprs.VerySpecialKeyBoardLeftArrow:SetFrame(2)
+            --sprs.VerySpecialKeyBoardLeftArrow.FlipX = true
             sprs.VerySpecialKeyBoardLeftArrow:Render(centerPos + charrotateBtnR_offset + Vector(0, 30))
+
         else
+            if Input.IsButtonTriggered(Keyboard.KEY_H, ControllerIndex) then
+                smenu.CharHeadDirection = (smenu.CharHeadDirection + 1) % 4
+                CharRotateBtnL.forceSel = 5
+            elseif Input.IsButtonTriggered(Keyboard.KEY_KP_DIVIDE, ControllerIndex) then
+                smenu.CharHeadDirection = (smenu.CharHeadDirection - 1) % 4
+                CharRotateBtnR.forceSel = 5
+            elseif Input.IsButtonTriggered(Keyboard.KEY_F4, ControllerIndex) then
+                wga.DelayRender(function()
+                    wga.GetButton(smenu.name, "disчё").func(1)
+                end, wga.Callbacks.WINDOW_POST_RENDER)
+
+            end
+
             local inputDeviceName = Input.GetDeviceNameByIdx and Input.GetDeviceNameByIdx(ControllerIndex) or "XboxOne"
             if inputDeviceName and inputDeviceName:find("XInput") then
                 inputDeviceName = "XboxOne"
             end
+
             sprs.Buttons:Play(inputDeviceName, true)
-
             sprs.Buttons:SetFrame(10)
-
             sprs.Buttons:Render(centerPos + charrotateBtnL_offset + Vector(0, 30))
+
+            --sprs.Buttons:Play(inputDeviceName, true)
+            sprs.Buttons:SetFrame(11)
+            sprs.Buttons:Render(centerPos + charrotateBtnR_offset + Vector(0, 30))
         end
     end
 end
@@ -1224,12 +1295,17 @@ smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"
 }
 
 smenu.spr.scrollback.Offset = Vector(-2,-2)
-smenu.spr.Buttons:SetCustomShader("shaders/PhysHairWhiteOutline")
+if Sprite().SetCustomShader then
+    smenu.spr.Buttons:SetCustomShader("shaders/PhysHairWhiteOutline")
+    smenu.spr.VerySpecialKeyBoardLeftArrow:SetCustomShader("shaders/PhysHairWhiteOutline")
+end
 
 local greenbtnColor = Color(78/256, 1, 90/256, 1, 3/256, 30/256, 24/256)
 
 greenbtnColor = Color(1,1,1,1, 18/256, 20/256, 7/256)
 greenbtnColor:SetColorize(108/256, 1, 85/256, 1 )
+
+local nilspr = Sprite()
 
 function BethHair.StyleMenu.GenWindowBtns(ptype)
     local mdata = wga.GetMenu(smenu.name)
@@ -1250,7 +1326,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
         local stylesdata = BethHair.HairStylesData.styles
         navmap.collums[1] = {{},{},{}}
         local cl1 = navmap.collums[1]
-        local nilspr = Sprite()
+        --local nilspr = Sprite()
         local lastrow = 0
 
         if smenu.hairscount then
@@ -1360,7 +1436,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             local spr = smenu.spr
             local self
             self = wga.AddScrollBar(smenu.name, "hairs_scroooolbar", Vector(150+30,34), Vector(16,192),
-                Sprite(), Sprite(),
+            nilspr, nilspr,
                 function(but, val)
                     if but == 0 then
                         smenu.hairbtnsoffset = val
@@ -1531,6 +1607,32 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 end
             end
         end
+    end
+
+
+    smenu.CharHeadDirection = Direction.DOWN
+
+    --local CharRotateL
+    CharRotateBtnL = wga.AddButton(smenu.name, "CharRotateL", Vector(200,200),
+    48, 48, nilspr,
+        function (button)
+            smenu.CharHeadDirection = (smenu.CharHeadDirection + 1) % 4
+        end, function (pos, visible)
+            --wga.RenderCustomButton2(pos, CharRotateBtnL, Color(1,1,1,.25))
+        end)
+    CharRotateBtnL.posfunc = function()
+        CharRotateBtnL.pos = CharRotateBtnL.ForcePos or CharRotateBtnL.pos
+    end
+
+    CharRotateBtnR = wga.AddButton(smenu.name, "CharRotateR", Vector(200,200),
+        48, 48, nilspr,
+            function (button)
+                smenu.CharHeadDirection = (smenu.CharHeadDirection - 1) % 4
+            end, function (pos, visible)
+                --wga.RenderCustomButton2(pos, CharRotateBtnR, Color(1,1,1,.25))
+            end)
+    CharRotateBtnR.posfunc = function()
+        CharRotateBtnR.pos = CharRotateBtnR.ForcePos or CharRotateBtnR.pos
     end
 
 
