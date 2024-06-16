@@ -395,6 +395,34 @@ mod.HStyles.AddStyle("BethDrillTail", PlayerType.PLAYER_BETHANY, {
 
 
 
+--                           спущенные волосы
+
+mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
+    --HeadBack2Spr = BethBackHair_oneside,
+    TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
+    ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/notail/character_001x_bethshair_notail.png",
+    TailCostumeSheep = "gfx/characters/costumes/beth_styles/notail/character_001x_bethshair_notail.png",
+    --NullposRefSpr = mod.BethDrillTailNullPos,
+    --SkinFolderSuffics = "gfx/characters/costumes/beth_styles/drilltail/",
+    --ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
+    --[[[1] = {
+        CordSpr = mod.BethDrillTailCord,
+        RenderLayers = { [3] = 3, [0] = 1, [1] = 3, [2] = 3 },
+        CostumeNullpos = "bethshair_cord1",
+        --DotCount = 2,
+        Length = 31,
+        StartHeight = 3,
+        Scretch = scretch * 1.35,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        Mass = 13,
+        CS = {[0]=8,15,22}
+    },]]
+}, {
+    modfolder = defaultmodfolder,
+    --CustomCharPortrait = "gfx/characters/costumes/beth_styles/drilltail/charactermenu.png"
+})
+
+
 
 
 
