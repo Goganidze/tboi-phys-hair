@@ -668,6 +668,8 @@ return function (mod)
             return
         end
 
+        local Room = game:GetRoom()
+
         if not player:IsExtraAnimationFinished() then
             local cdat = player:GetData()._BethsHairCord
             if cdat and cdat.EXAnim_HL then
@@ -690,7 +692,7 @@ return function (mod)
             return
         end
         
-        Room = Room or game:GetRoom()
+        --Room = Room or game:GetRoom()
         local data = player:GetData()
         if data._BethsHairCord then 
             local hdir = player:GetHeadDirection()
@@ -864,7 +866,8 @@ return function (mod)
             return
         end
         
-        Room = Room or game:GetRoom()
+        local Room = game:GetRoom()
+        --Room = Room or game:GetRoom()
         local data = player:GetData()
         if data._BethsHairCord then -- and Room:GetRenderMode() ~= RenderMode.RENDER_WATER_REFLECT then
             data._BethsHairCord.RealHeadPos = offset -- Isaac.WorldToScreen(player.Position)
