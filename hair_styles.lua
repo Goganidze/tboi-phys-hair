@@ -88,14 +88,15 @@ local bodycolor = {
 }
 local cacheNoHairColor = {}
 
-function mod.HStyles.SetStyleToPlayer(player, style_name)
+--mode: 1 = no phys hair
+function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
     if player and style_name then
         local stdata = HairStylesData.styles[style_name]
         if stdata then
             --mod.SetHairStyleData(ptype, stdata)
             local data = player:GetData()
             data._PhysHair_HairStyle = style_name
-            mod.HairLib.InitHairData(player)
+            mod.HairLib.InitHairData(player, nil, nil, mode)
             
             --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
         end

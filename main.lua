@@ -401,9 +401,9 @@ mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
     --HeadBack2Spr = BethBackHair_oneside,
     TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
     ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/notail/character_001x_bethshair_notail.png",
-    TailCostumeSheep = "gfx/characters/costumes/beth_styles/notail/character_001x_bethshair_notail.png",
+    TailCostumeSheep = "gfx/characters/costumes/beth_styles/notail/character_001x_bethshair.png",
     --NullposRefSpr = mod.BethDrillTailNullPos,
-    --SkinFolderSuffics = "gfx/characters/costumes/beth_styles/drilltail/",
+    SkinFolderSuffics = "gfx/characters/costumes/beth_styles/notail/",
     --ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
     --[[[1] = {
         CordSpr = mod.BethDrillTailCord,
@@ -788,7 +788,8 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
             local pdata = player:GetData()
             local unickyID = player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_SAD_ONION):GetSeed()
            
-            data.PlayerData[tostring(unickyID)] = {HairStyle = pdata._PhysHair_HairStyle}
+            data.PlayerData[tostring(unickyID)] = {HairStyle = pdata._PhysHair_HairStyle, 
+                HairMode = pdata._PhysHair_HairMode}
 
             mod.MainMenuStuff.RenderCharPort = nil
             mod.CustomCharPortrait = nil
@@ -815,7 +816,7 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
                 local savePlayerData = mod.SavePlayerData[tostring(unickyID)]
                 
                 if savePlayerData and savePlayerData.HairStyle then
-                    mod.HStyles.SetStyleToPlayer(player, savePlayerData.HairStyle)
+                    mod.HStyles.SetStyleToPlayer(player, savePlayerData.HairStyle, savePlayerData.HairMode)
                     --player:GetData()._PhysHair_HairStyle = savePlayerData.HairStyle
                 end
             end
@@ -1047,7 +1048,7 @@ local testcord = Beam(TestSpr, "body", false, false, 3)
 local testimage = Renderer.LoadImage("gfx/characters/costumes/bethhairs_cord.png")
 local v1,v2,v3,v4 = Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)
 local sq = SourceQuad(v1,v2,v3,v4)
-local dq = DestinationQuad(v1,v2,v3,v4)
+local dq = DestinationQuad(v1+Vector(102,102),v2+Vector(102,102),v3+Vector(102,152),v4+Vector(102,152))
 local kc1 = KColor(1,1,1,1)
 ]]
 
@@ -1072,15 +1073,20 @@ function BethHair.StyleMenu.HUDRender()
     --testcord:Add(Vector(190,100),30)
     --testcord:Render()
 
-    --[[print(v1,v2,v3,v4, sq, dq, kc1)
-
-    local trans = Renderer.StartTransformation(testimage)
+    --print(v1,v2,v3,v4, sq, dq, kc1)
+--[[
+    local fl = Game():GetRoom():GetBackdrop():GetFloorImage()
+    local trans = Renderer.StartTransformation(fl)
     --local sq = SourceQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32))
     --local dq = DestinationQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32))
-    trans:Render(testimage, sq, dq, kc1)
-    print(trans:IsValid ())
-    --trans:Apply ()]]
-
+    --trans:Render(testimage, sq, dq, kc1)
+    trans:Render(testimage, 
+        SourceQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)), 
+        DestinationQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)), 
+        KColor(1,1,1,1))
+    --print(trans:IsValid ())
+    trans:Apply ()
+]]
     local notpaused = not game:IsPaused()
     if notpaused then
         --wga.DetectMenuButtons(smenu.name)
@@ -1399,7 +1405,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
              40, 40, nilspr,
                 function (button)
                     local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
-                    BethHair.HStyles.SetStyleToPlayer(player, stylename)
+                    BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.SetStyleMode)
                     
                 end, function (pos, visible)
                     spr:SetFrame(self.IsSelected and 1 or 0)
@@ -1516,6 +1522,22 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
     BethHair.StyleMenu.closespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "disчёта-там")
     BethHair.StyleMenu.acceptspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "accept")
 
+    local usephys
+    usephys = wga.AddButton(smenu.name, "usephys", Vector(200,148),
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
+        function (button)
+            if smenu.SetStyleMode then
+                smenu.SetStyleMode = nil
+            else
+                smenu.SetStyleMode = 1
+            end
+
+            local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
+            BethHair.HStyles.SetStyleToPlayer(player, player:GetData()._PhysHair_HairStyle, smenu.SetStyleMode)
+        end, function (pos, visible)
+            --BethHair.StyleMenu.acceptspr:Render(pos)
+        end)
+
     local accept
     accept = wga.AddButton(smenu.name, "accept", Vector(200,174),
     24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
@@ -1533,7 +1555,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
             local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
             if smenu.PrevStyleName then
-                BethHair.HStyles.SetStyleToPlayer(player, smenu.PrevStyleName)
+                BethHair.HStyles.SetStyleToPlayer(player, smenu.PrevStyleName, smenu.SetStyleMode)
             else
 
             end
@@ -1547,6 +1569,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
     navmap.collums[2][1] = accept
     navmap.collums[2][2] = close
+    navmap.collums[2][0] = usephys
 
     ---navigation
 
@@ -1777,6 +1800,8 @@ if debugmultiplayer and WORSTDEBUGMENU then
         end
     end)
 end
+
+
 
 
 

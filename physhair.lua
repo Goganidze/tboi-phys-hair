@@ -584,13 +584,25 @@ return function (mod)
     end
     mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, _HairCordData.playerUpdate)
 
-    function _HairCordData.InitHairData(player, data, ptype)
+    function _HairCordData.InitHairData(player, data, ptype, mode)
         if player then
             data = data or player:GetData()
             ptype = ptype or player:GetPlayerType()
+            data._PhysHair_HairMode = mode
             Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_PRE_INIT, ptype, player)
             local datattab = PlayerData[ptype]
             
+            if mode == 1 then
+                data._BethsHairCord = {
+                    TargetCostume = datattab.TargetCostume,
+                    ReplaceCostumeSheep = datattab.TailCostumeSheep,
+                }
+    
+                Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_POST_INIT, ptype, player, data._BethsHairCord)
+
+                return
+            end
+
             data._BethsHairCord = {
                 BackSpr = datattab.BackSpr,
                 Back2Spr = datattab.Back2Spr,
