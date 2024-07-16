@@ -714,6 +714,19 @@ local headsize = 20* Wtr
 mod.extraPhysFunc = {}
 local epf = mod.extraPhysFunc
 
+local getAngleDiv = function(a,b)
+    local r1,r2
+    if a > b then
+        r1,r2 = a-b, b-a+360
+    else
+        r1,r2 = b-a, a-b+360
+    end
+    return r1>r2 and r2 or r1
+end
+
+local lerpAngle = function(a, b, t)
+    return (a - (((a+180)-b)%360-180)*t) % 360
+end
 
 
 function epf.PonyTailFunc(player, HairData, StartPos, scale, headpos)
@@ -763,7 +776,7 @@ function epf.PonyTailFunc(player, HairData, StartPos, scale, headpos)
                 cur[1] = prep-(prep-lpos):Resized(scretch*1*scale)
             end
             
-            local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp))
+            local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp*scale))
             
             cur[2] = (cur[2]* lerp + vel * (1-lerp))
             --print(i, (1-lerp), "|", vel)
@@ -786,6 +799,108 @@ function epf.PonyTailFunc(player, HairData, StartPos, scale, headpos)
             local vel = (lpos - headpos):Resized(math.max(0,headsize*0.6-bttdis)*.25)
             cur[2] = cur[2] *.8 + vel* headpospushpower*lerp
         end
+
+        cur[1] = cur[1] + cur[2]
+
+        local bttdis = cur[1]:Distance(prep)
+        if bttdis > scretch then
+            cur[1] = prep-(prep-cur[1]):Resized(scretch*scale)
+            --lpos = cur[1]
+            bttdis = scretch*scale
+        end
+    end
+end 
+
+
+function epf.HoholockTailFunc(player, HairData, StartPos, scale, headpos)
+    local cdat = HairData
+    local tail1 = HairData
+    local plpos1 = StartPos
+    local scretch = cdat.Scretch
+    local Mmass = 10 / cdat.Mass   --/ 10
+
+    local headdir = player:GetHeadDirection()
+    local headpospushpower = headdir == 0 and -115 or headdir == 2 and -65 or headdir == 1 and -105 or -75
+
+    for i=0, #tail1 do
+        local mass = Mmass * i --(#tail1 - i)
+        local prep, nextp
+        local cur = tail1[i]
+        local precur = tail1[i-1]
+        local lpos = cur[1]
+
+        local srch = cur[3]
+        if i == 0 then
+            prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
+            --scretch = 0
+        else
+            prep = tail1[i-1][1]
+        end
+        --if i < maxcoord-1 then
+        --    nextp = tail1[i+1][1]
+        --end
+        local lerp = 1 - (.12 * mass )
+
+            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( cdat.Mass/10 ))
+
+            local preangle
+            if i == 0 then
+                preangle = headpospushpower
+            elseif i == 1 then
+                preangle = (prep - plpos1 ):GetAngleDegrees()
+            else
+                preangle = (prep - tail1[i-2][1]):GetAngleDegrees()
+            end
+
+
+            local curangle = (lpos - prep):GetAngleDegrees()
+
+            local addvec = Vector.FromAngle(preangle):Resized(i == 0 and 5 or i==1 and 1 or 1) * scale
+            if i==0 then
+                cur[2] = cur[2] * .5 + addvec * .5
+            else
+                cur[2] = cur[2] + addvec
+            end
+            
+            if i == 2 then
+                cdat.Cord:GetSprite().FlipX = curangle < -100 or curangle > 100
+            end
+        --end
+        
+        if prep then
+            local bttdis = lpos:Distance(prep)
+            
+            if bttdis > scretch*2 then
+                cur[1] = prep-(prep-lpos):Resized(scretch*2*scale)
+                --lpos = cur[1]
+                bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+            elseif bttdis < scretch*1 then
+                cur[1] = prep-(prep-lpos):Resized(scretch*1*scale)
+            end
+            
+            local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp*scale))
+            
+            cur[2] = (cur[2]* lerp + vel * (1-lerp))
+            --print(i, (1-lerp), "|", vel)
+            --cur[2] = cur[2] * 0.2 + vel * .8
+        end
+        if nextp then
+            --local bttdis = lpos:Distance(nextp)
+
+            --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
+            --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
+            --cur[2] = (cur[2] + vel)* .68
+            --cur[2] = cur[2]  + vel * .1
+        end
+
+        --[[if headpos then
+            headpos = headpos + Vector(0,-15)
+            local lerp = (.3 * (#tail1 - i) )
+            local bttdis = lpos:Distance(headpos)/scale
+            
+            local vel = (lpos - headpos):Resized(math.max(0,headsize*0.6-bttdis)*.25)
+            cur[2] = cur[2] *.8 + vel* headpospushpower*lerp
+        end]]
 
         cur[1] = cur[1] + cur[2]
 

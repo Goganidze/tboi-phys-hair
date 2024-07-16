@@ -397,26 +397,114 @@ mod.HStyles.AddStyle("BethDrillTail", PlayerType.PLAYER_BETHANY, {
 
 --                           спущенные волосы
 
+mod.BethNoTailCords = {
+    ["1"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord", "body", false, false, 3),
+    ["1b"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cordb", "body", false, false, 3),
+    ["2"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord2", "body", false, false, 3),
+    ["2b"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord2b", "body", false, false, 3),
+    ["3"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord3", "body", false, false, 3),
+    ["4"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord4", "body", false, false, 3),
+    ["5"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord5", "body", false, false, 3),
+    ["6"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord6", "body", false, false, 3),
+    ["6b"] = BeamR("gfx/characters/costumes/beth_styles/notail/bethhair_cord.anm2", 
+    "cord6b", "body", false, false, 3),
+}
+
+mod.BethNoTailNullPos = Sprite()
+mod.BethNoTailNullPos:Load("gfx/characters/costumes/beth_styles/notail/bethanyhead.anm2", true)
+
 mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
     --HeadBack2Spr = BethBackHair_oneside,
     TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
     ReplaceCostumeSheep = "gfx/characters/costumes/beth_styles/notail/character_001x_bethshair_notail.png",
     TailCostumeSheep = "gfx/characters/costumes/beth_styles/notail/character_001x_bethshair.png",
-    --NullposRefSpr = mod.BethDrillTailNullPos,
+    NullposRefSpr = mod.BethNoTailNullPos,
     SkinFolderSuffics = "gfx/characters/costumes/beth_styles/notail/",
     --ExtraAnimHairLayer = "gfx/characters/costumes/beth_styles/drilltail/character_hair_layer.png",
-    --[[[1] = {
-        CordSpr = mod.BethDrillTailCord,
-        RenderLayers = { [3] = 3, [0] = 1, [1] = 3, [2] = 3 },
+
+    {
+        CordSpr = mod.BethNoTailCords["3"],
+        RenderLayers = { [3] = 3, [0] = 3, [1] = 3, [2] = 3 },
+        CostumeNullpos = "bethshair_cord_tail",
+        DotCount = 3,
+        Length = 16,
+        StartHeight = 1,
+        Scretch = scretch * 1.,
+        PhysFunc = mod.extraPhysFunc.HoholockTailFunc,
+        Mass = 6,
+        CS = {[0]=4,8,12}
+    },
+
+    {
+        CordSpr = mod.BethNoTailCords["1b"],
+        RenderLayers = { [3] = 2, [0] = 0, [1] = 0, [2] = 2 },
         CostumeNullpos = "bethshair_cord1",
-        --DotCount = 2,
-        Length = 31,
-        StartHeight = 3,
-        Scretch = scretch * 1.35,
+        DotCount = 2,
+        Length = 20,
+        StartHeight = 1,
+        Scretch = scretch * 1.5,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
-        Mass = 13,
-        CS = {[0]=8,15,22}
+        Mass = 6,
+        CS = {[0]=8,15}
+    },
+    {
+        CordSpr = mod.BethNoTailCords["1"],
+        RenderLayers = { [3] = 3, [0] = 0, [1] = 0, [2] = 3 },
+        CostumeNullpos = "bethshair_cord1",
+        DotCount = 2,
+        Length = 20,
+        StartHeight = 1,
+        Scretch = scretch * 1.5,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        Mass = 6,
+        CS = {[0]=8,15}
+    },
+    {
+        CordSpr = mod.BethNoTailCords["2b"],
+        RenderLayers = { [3] = 2, [0] = 2, [1] = 0, [2] = 0 },
+        CostumeNullpos = "bethshair_cord2",
+        DotCount = 2,
+        Length = 20,
+        StartHeight = 1,
+        Scretch = scretch * 1.5,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        Mass = 6,
+        CS = {[0]=8,15}
+    },
+    {
+        CordSpr = mod.BethNoTailCords["2"],
+        RenderLayers = { [3] = 3, [0] = 3, [1] = 0, [2] = 0 },
+        CostumeNullpos = "bethshair_cord2",
+        DotCount = 2,
+        Length = 20,
+        StartHeight = 1,
+        Scretch = scretch * 1.5,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        Mass = 6,
+        CS = {[0]=8,15}
+    },
+
+    --[[{
+        CordSpr = mod.BethNoTailCords["3"],
+        RenderLayers = { [3] = 3, [0] = 3, [1] = 3, [2] = 3 },
+        CostumeNullpos = "bethshair_cord_tail",
+        DotCount = 3,
+        Length = 16,
+        StartHeight = 1,
+        Scretch = scretch * 5.,
+        PhysFunc = mod.extraPhysFunc.HoholockTailFunc,
+        Mass = 6,
+        CS = {[0]=5,10,}
     },]]
+
 }, {
     modfolder = defaultmodfolder,
     --CustomCharPortrait = "gfx/characters/costumes/beth_styles/drilltail/charactermenu.png"
@@ -462,7 +550,14 @@ function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, taildata)
                 cordspr:Play("cord")
                 cordspr2:Play("cord2")
             end
-            --cordspr:Play(spranim == "HeadLeft" and "cord3" or spranim == "HeadRight" and "cord2" or "cord")
+        --[[elseif HairStyle == "BethNoTails" then
+            local spranim = spr:GetOverlayAnimation()
+            local cordspr = mod.BethNoTailCords["3"]:GetSprite()
+            if spranim == "HeadUp" then
+                cordspr.FlipX = true
+            else
+                cordspr.FlipX = false
+            end]]
         end
     end
 end
