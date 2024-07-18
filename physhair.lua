@@ -778,6 +778,10 @@ return function (mod)
     
             local scale = spr.Scale
             local pause = game:IsPaused()
+
+            --for i,k in pairs(cdat) do
+            --    print(i,k)
+            --end
             --for tail=1, cdat.tailCount do
             for tail=1, #cdat do
                 ---@type HairData
@@ -846,7 +850,7 @@ return function (mod)
             end
     
             if mod.DR then
-                local tail1 = cdat[1]
+                local tail1 = cdat[7]
                 local hairPos = player:GetCostumeNullPos(tail1.Null, true, Vector(0,0))
                 local hap1 --= playerPos+hairPos1 --(Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
                 if isreflect then

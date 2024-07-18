@@ -58,8 +58,10 @@ function mod.HairPreInit(_, player)
         if data._PhysHair_HairStyle then
             local stdata = HairStylesData.styles[data._PhysHair_HairStyle]
             if stdata then
-                mod.SetHairStyleData(player,ptype, stdata.data)
-                mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                if stdata.ID == ptype then
+                    mod.SetHairStyleData(player,ptype, stdata.data)
+                    mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                end
             end
         else
             local firstname = pladat[1]
@@ -92,7 +94,7 @@ local cacheNoHairColor = {}
 function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
     if player and style_name then
         local stdata = HairStylesData.styles[style_name]
-        if stdata then
+        if stdata and stdata.ID == player:GetPlayerType() then
             --mod.SetHairStyleData(ptype, stdata)
             local data = player:GetData()
             data._PhysHair_HairStyle = style_name
@@ -912,3 +914,87 @@ function epf.HoholockTailFunc(player, HairData, StartPos, scale, headpos)
         end
     end
 end 
+
+function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
+    local cdat = HairData
+    local tail1 = HairData
+    local plpos1 = StartPos
+    local scretch = cdat.Scretch
+    local Mmass = 10 / cdat.Mass   --/ 10
+
+    local headdir = player:GetHeadDirection()
+    local headpospushpower = .8
+
+    local dotnum = #tail1
+
+    for i=0, dotnum do
+        local mass = Mmass * (dotnum-i+1)*5 --(#tail1 - i)
+        local prep, nextp
+        local cur = tail1[i]
+        local precur = tail1[i-1]
+        local lpos = cur[1]
+
+        local srch = cur[3]
+        if i == 0 then
+            prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
+            --scretch = 0
+        else
+            prep = tail1[i-1][1]
+        end
+        
+        local lerp =  i==0 and .98 or i==1 and .7 or i==2 and 0.5 or 0.4     --1 - ((i+1)/dotnum)   --1 - (.12 * mass )
+        
+        cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( mass ))
+        if precur then
+            
+            --cur[2] = cur[2] * .8 + precur[2]*lerp*.2*scale * (scretch/defscretch) * ( cdat.Mass/10 )
+            local prepust = precur[2]*lerp*scale * (scretch/defscretch) * ( cdat.Mass/10 )
+            local leng = cur[2]:Length()
+            --cur[2] = (cur[2] + prepust):Resized(leng)
+        end
+        if prep then
+            local bttdis = lpos:Distance(prep)
+            
+            if bttdis > scretch*2 then
+                cur[1] = prep-(prep-lpos):Resized(scretch*2*scale)
+                --lpos = cur[1]
+                bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+            elseif bttdis < scretch*1 then
+                cur[1] = prep-(prep-lpos):Resized(scretch*1*scale)
+            end
+            
+            local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp*scale))
+            
+            cur[2] = (cur[2]* lerp + vel * (1-lerp))
+            
+            --cur[2] = cur[2] * 0.2 + vel * .8
+        end
+        --if nextp then
+            --local bttdis = lpos:Distance(nextp)
+
+            --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
+            --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
+            --cur[2] = (cur[2] + vel)* .68
+            --cur[2] = cur[2]  + vel * .1
+        --end
+
+        if headpos then
+            headpos = headpos + Vector(0,-5)
+            local lerp = (.3 * (#tail1 - i) )
+            local bttdis = lpos:Distance(headpos)/scale
+            
+            local vel = (lpos - headpos):Resized(math.max(0,headsize*0.8-bttdis)*.25)
+            print(i,mass)
+            cur[2] = cur[2] *.8 + vel* headpospushpower* ((i+1)/dotnum) * mass/10 --lerp
+        end
+
+        cur[1] = cur[1] + cur[2]
+
+        local bttdis = cur[1]:Distance(prep)
+        if bttdis > scretch then
+            cur[1] = prep-(prep-cur[1]):Resized(scretch*scale)
+            --lpos = cur[1]
+            bttdis = scretch*scale
+        end
+    end
+end

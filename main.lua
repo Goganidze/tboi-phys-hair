@@ -443,7 +443,7 @@ mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
         CS = {[0]=4,8,12}
     },
 
-    {
+    --[[{
         CordSpr = mod.BethNoTailCords["1b"],
         RenderLayers = { [3] = 2, [0] = 0, [1] = 0, [2] = 2 },
         CostumeNullpos = "bethshair_cord1",
@@ -454,7 +454,7 @@ mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
         Mass = 6,
         CS = {[0]=8,15}
-    },
+    },]]
     {
         CordSpr = mod.BethNoTailCords["1"],
         RenderLayers = { [3] = 3, [0] = 0, [1] = 0, [2] = 3 },
@@ -467,7 +467,7 @@ mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
         Mass = 6,
         CS = {[0]=8,15}
     },
-    {
+    --[[{
         CordSpr = mod.BethNoTailCords["2b"],
         RenderLayers = { [3] = 2, [0] = 2, [1] = 0, [2] = 0 },
         CostumeNullpos = "bethshair_cord2",
@@ -478,32 +478,68 @@ mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
         Mass = 6,
         CS = {[0]=8,15}
-    },
+    },]]
     {
         CordSpr = mod.BethNoTailCords["2"],
         RenderLayers = { [3] = 3, [0] = 3, [1] = 0, [2] = 0 },
         CostumeNullpos = "bethshair_cord2",
         DotCount = 2,
-        Length = 20,
+        Length = 16,
         StartHeight = 1,
-        Scretch = scretch * 1.5,
+        Scretch = scretch * 1.2,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
         Mass = 6,
-        CS = {[0]=8,15}
+        CS = {[0]=7 ,12}
+    },
+    {
+        CordSpr = mod.BethNoTailCords["4"],
+        RenderLayers = { [3] = 0, [0] = 2, [1] = 0, [2] = 2 },
+        CostumeNullpos = "bethshair_cord3",
+        DotCount = 2,
+        Length = 14,
+        StartHeight = 1,
+        Scretch = scretch * 0.7,
+        PhysFunc = mod.extraPhysFunc.PonyTailFunc,
+        Mass = 12,
+        CS = {[0]=5,10,}
     },
 
-    --[[{
-        CordSpr = mod.BethNoTailCords["3"],
-        RenderLayers = { [3] = 3, [0] = 3, [1] = 3, [2] = 3 },
-        CostumeNullpos = "bethshair_cord_tail",
+    {
+        CordSpr = mod.BethNoTailCords["5"],
+        RenderLayers = { [3] = 0, [0] = 0, [1] = 3, [2] = 0 },
+        CostumeNullpos = "bethshair_cord4",
         DotCount = 3,
         Length = 16,
         StartHeight = 1,
-        Scretch = scretch * 5.,
-        PhysFunc = mod.extraPhysFunc.HoholockTailFunc,
-        Mass = 6,
-        CS = {[0]=5,10,}
-    },]]
+        Scretch = scretch * 1.0,
+        PhysFunc = mod.extraPhysFunc.PonyTailFuncHard,
+        Mass = 42,
+        CS = {[0]=5,10,15}
+    },
+    {
+        CordSpr = mod.BethNoTailCords["6b"],
+        RenderLayers = { [3] = 0, [0] = 0, [1] = 2, [2] = 0 },
+        CostumeNullpos = "bethshair_cord5",
+        DotCount = 4,
+        Length = 21,
+        StartHeight = 1,
+        Scretch = scretch * 1.0,
+        PhysFunc = mod.extraPhysFunc.PonyTailFuncHard,
+        Mass = 30,
+        CS = {[0]=3,9,13,17}
+    },
+    {
+        CordSpr = mod.BethNoTailCords["6"],
+        RenderLayers = { [3] = 0, [0] = 0, [1] = 3, [2] = 0 },
+        CostumeNullpos = "bethshair_cord5",
+        DotCount = 4,
+        Length = 21,
+        StartHeight = 1,
+        Scretch = scretch * 1.0,
+        PhysFunc = mod.extraPhysFunc.PonyTailFuncHard,
+        Mass = 30,
+        CS = {[0]=3,9,13,17}
+    },
 
 }, {
     modfolder = defaultmodfolder,
@@ -550,14 +586,14 @@ function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, taildata)
                 cordspr:Play("cord")
                 cordspr2:Play("cord2")
             end
-        --[[elseif HairStyle == "BethNoTails" then
+        elseif HairStyle == "BethNoTails" then
             local spranim = spr:GetOverlayAnimation()
-            local cordspr = mod.BethNoTailCords["3"]:GetSprite()
-            if spranim == "HeadUp" then
+            local cordspr = mod.BethNoTailCords["4"]:GetSprite()
+            if spranim == "HeadLeft" then
                 cordspr.FlipX = true
             else
                 cordspr.FlipX = false
-            end]]
+            end
         end
     end
 end
@@ -890,7 +926,7 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
             mod.CustomCharPortrait = nil
             if i == 0 then
                 local hsdata = mod.HStyles.GetStyleData(pdata._PhysHair_HairStyle)
-                if hsdata then
+                if hsdata and hsdata.extra then
                     data.PlayerData.CustomCharPortrait = hsdata.extra.CustomCharPortrait
                     mod.CustomCharPortrait = hsdata.extra.CustomCharPortrait
                 else
