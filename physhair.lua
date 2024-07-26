@@ -168,9 +168,10 @@ return function (mod)
     
     local z = Vector(0,0)
     local worldToScreen1 = Isaac.WorldToScreen
-    local function worldToScreen(vec)
-        return worldToScreen1(z) + vec/Wtr
-    end
+    --local function worldToScreen(vec)
+    --    return worldToScreen1(z) + vec/Wtr
+    --end
+    local worldToScreen = worldToScreen1
     
     local function ScreenToWorld(vec)
         return  (vec-worldToScreen1(z)) * Wtr
