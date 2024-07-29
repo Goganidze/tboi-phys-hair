@@ -556,7 +556,7 @@ mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
 function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, taildata)
     local data = player:GetData()
     local spr = player:GetSprite()
-    local HairStyle = data._PhysHair_HairStyle
+    local HairStyle = data._PhysHair_HairStyle and data._PhysHair_HairStyle.StyleName
     if HairStyle then
         if HairStyle == "BethPonyTail" then
             local spranim = spr:GetOverlayAnimation()
@@ -625,6 +625,8 @@ mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
     }, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
 
 
+--#region EVE стили
+
     mod.EveCordSpr = Sprite()
     local EveCordSpr = mod.EveCordSpr
     EveCordSpr:Load("gfx/characters/costumes/evehair_cord.anm2", true)
@@ -660,15 +662,26 @@ mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
         [2] = 3, --1 << 1
     }
 
-mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
+
+--mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
+mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --CordSpr = cordSprB,
         --TailCount = 2,
         --RenderLayers = headDirToRender,
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_005_evehead_notails.png",
+        --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_005_evehead_notails.png",
         SyncWithCostumeBodyColor = true,
+
+
+        --TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
+        SkinFolderSuffics = "resources/gfx/characters/costumes/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_005_evehead_notails.png",
+        TailCostumeSheep = "gfx/characters/costumes/character_005_evehead.png",
+        NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_005_evehead.anm2"),
+
+
         [2] = {
             Scretch = scretch * 1.5,
             DotCount = 4,
@@ -698,6 +711,19 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
         },
     })
 
+    mod.HStyles.AddStyle("EvePonyTail", PlayerType.PLAYER_EVE, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
+        --SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "resources/gfx/characters/costumes/eve_styles/ponytail",
+        ReplaceCostumeSheep = "gfx/characters/costumes/eve_styles/ponytail/character_005_evehead.png",
+        TailCostumeSheep = "gfx/characters/costumes/eve_styles/ponytail/character_005_evehead.png",
+    })
+
+
+
+
+
     mod:AddCallback(mod.HairLib.Callbacks.HAIR_POST_INIT, function (_, player, hairdata)
         local plaType = player:GetPlayerType()
         if plaType == PlayerType.PLAYER_EVE then
@@ -707,16 +733,16 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
                 --    local k = i+1
                 --    hairdata[2][i][3] = taildata.Length/taildata.DotCount*k-k*2+5
                 --end
-                hairdata[1][0][3] = 11
+                --[[hairdata[1][0][3] = 11
 
                 hairdata[3][1][3] = 13
                 hairdata[3][0][3] = 8
-                hairdata[3][1][3] = 13
+                hairdata[3][1][3] = 13]]
             --end
         end
     end)
 
-
+--#endregion 
 
 
 
@@ -919,13 +945,13 @@ mod.HairLib.SetHairData(PlayerType.PLAYER_EVE, {
             local pdata = player:GetData()
             local unickyID = player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_SAD_ONION):GetSeed()
            
-            data.PlayerData[tostring(unickyID)] = {HairStyle = pdata._PhysHair_HairStyle, 
+            data.PlayerData[tostring(unickyID)] = {HairStyle = pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle.StyleName, 
                 HairMode = pdata._PhysHair_HairMode}
 
             mod.MainMenuStuff.RenderCharPort = nil
             mod.CustomCharPortrait = nil
             if i == 0 then
-                local hsdata = mod.HStyles.GetStyleData(pdata._PhysHair_HairStyle)
+                local hsdata = mod.HStyles.GetStyleData(pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle.StyleName)
                 if hsdata and hsdata.extra then
                     data.PlayerData.CustomCharPortrait = hsdata.extra.CustomCharPortrait
                     mod.CustomCharPortrait = hsdata.extra.CustomCharPortrait
@@ -1478,7 +1504,8 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
     mdata.navmap = navmap
     navmap.collums = {}
 
-    smenu.PrevStyleName = (BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()):GetData()._PhysHair_HairStyle
+    local playerdata = (BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()):GetData()
+    smenu.PrevStyleName = playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName
 
     local hspd = BethHair.HairStylesData.playerdata
     local pstyles = hspd[ptype]
@@ -1569,7 +1596,8 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 self.canPressed = self.scrollupcrop < 32 and self.scrolldwoncrop < 40
                 
                 if smenu.TargetPlayer then
-                    if smenu.TargetPlayer:GetData()._PhysHair_HairStyle == stylename then
+                    local playerdata = smenu.TargetPlayer:GetData()
+                    if playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName == stylename then
                         if not self.DoGreen then
                             self.DoGreen = true
                             spr.Color = greenbtnColor
@@ -1730,6 +1758,8 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                             if navmap.collums[mdata.CurCollum+add] then
                                 mdata.CurCollum = mdata.CurCollum+add
                                 btn[1] = navmap.collums[mdata.CurCollum][1]
+                                mdata.PreHairSelPos = mdata.HairSelPos
+                                mdata.HairSelPos = Vector(mdata.CurCollum, 1)
                             end
                         end
                     else

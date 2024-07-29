@@ -56,11 +56,16 @@ function mod.HairPreInit(_, player)
     if pladat then
         local data = player:GetData()
         if data._PhysHair_HairStyle then
-            local stdata = HairStylesData.styles[data._PhysHair_HairStyle]
-            if stdata then
-                if stdata.ID == ptype then
-                    mod.SetHairStyleData(player,ptype, stdata.data)
-                    mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+            local PHSdata = data._PhysHair_HairStyle
+            if PHSdata.PlayerType and PHSdata.PlayerType ~= ptype then
+                data._PhysHair_HairStyle = nil
+            else
+                local stdata = HairStylesData.styles[PHSdata.StyleName]
+                if stdata then
+                    if stdata.ID == ptype then
+                        mod.SetHairStyleData(player,ptype, stdata.data)
+                        mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                    end
                 end
             end
         else
@@ -94,10 +99,12 @@ local cacheNoHairColor = {}
 function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
     if player and style_name then
         local stdata = HairStylesData.styles[style_name]
-        if stdata and stdata.ID == player:GetPlayerType() then
+        local ptype = player:GetPlayerType()
+        if stdata and stdata.ID == ptype then
             --mod.SetHairStyleData(ptype, stdata)
             local data = player:GetData()
-            data._PhysHair_HairStyle = style_name
+            --data._PhysHair_HairStyle = style_name
+            data._PhysHair_HairStyle = {StyleName = style_name, PlayerType = ptype}
             mod.HairLib.InitHairData(player, nil, nil, mode)
             
             --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
@@ -137,6 +144,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
 
     --print(stdata.data.NullposRefSpr)
     if sheep and tarcost then
+        print(player:GetPlayerType(), sheep, tarcost.ID)
         data._PhysHairExtra.DefCostumetSheetPath = {}
         local dcsp = data._PhysHairExtra.DefCostumetSheetPath
 
@@ -158,6 +166,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                         --print(i, cspr:GetLayer(i):GetSpritesheetPath())
                         local shpa = sheep:GetLayer(i)
                         if shpa then
+                            print(i, shpa:GetSpritesheetPath())
                             cspr:ReplaceSpritesheet(i, shpa:GetSpritesheetPath())
                             --print("layer", shpa:GetSpritesheetPath())
                             --foc[i] = shpa:GetSpritesheetPath()
@@ -224,28 +233,31 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
 end
 
 function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
-    local stdata = HairStylesData.styles[player:GetData()._PhysHair_HairStyle]
-    if stdata then
-        local skinsheet = stdata.data.SkinFolderSuffics
-        if skinsheet then
-            local spr = player:GetSprite()
-            ---@type string
-            --local orig = spr:GetLayer(0):GetDefaultSpritesheetPath()
-            --orig = orig:match(".+/(.-)%.png")
-            local orig
-            local pconf = EntityConfig.GetPlayer(stdata.ID)
-            if pconf then
-                orig = pconf:GetSkinPath()
-            end
-            
-            if orig then
-                orig = orig:match(".+/(.-)%.png")
-                local path = skinsheet .. orig .. ( refstring or "") .. ".png"
-                --print(path)
-                for i=0, spr:GetLayerCount()-1 do
-                    spr:ReplaceSpritesheet(i,path)
+    local PHSdata = player:GetData()._PhysHair_HairStyle
+    if PHSdata then
+        local stdata = HairStylesData.styles[PHSdata.StyleName]
+        if stdata then
+            local skinsheet = stdata.data.SkinFolderSuffics
+            if skinsheet then
+                local spr = player:GetSprite()
+                ---@type string
+                --local orig = spr:GetLayer(0):GetDefaultSpritesheetPath()
+                --orig = orig:match(".+/(.-)%.png")
+                local orig
+                local pconf = EntityConfig.GetPlayer(stdata.ID)
+                if pconf then
+                    orig = pconf:GetSkinPath()
                 end
-                spr:LoadGraphics()
+                
+                if orig then
+                    orig = orig:match(".+/(.-)%.png")
+                    local path = skinsheet .. orig .. ( refstring or "") .. ".png"
+                    --print(path)
+                    for i=0, spr:GetLayerCount()-1 do
+                        spr:ReplaceSpritesheet(i,path)
+                    end
+                    spr:LoadGraphics()
+                end
             end
         end
     end
@@ -625,14 +637,22 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
 end
 
 
+CachedModXMLData = CachedModXMLData or {}
+
 for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     local mod = XMLData.GetEntryById(XMLNode.MOD, i)
     if mod then
-        --[[for i,k in pairs(mod) do
-            if i ~= "description" then
-                print(i,k)
+        if not CachedModXMLData[i] then
+            CachedModXMLData[i] = {}
+            local cache = CachedModXMLData[i]
+            for i,k in pairs(mod) do
+                if i ~= "description" then
+                    --print(i,k)
+                    cache[i] = k
+                end
             end
-        end]]
+        end
+        local mod = CachedModXMLData[i]
         
         local dir = mod.realdirectory or mod.directory
 
@@ -661,6 +681,8 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 
                 mod.HStyles.AddStyle("edenstandarthair_"..i, PlayerType.PLAYER_EDEN, tab)
             end]]
+
+            -- бетон
             FindResprites(dir, "resources-dlc3",
                 "/resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png",
                 "/resources-dlc3/gfx/characters/costumes/",
@@ -674,6 +696,23 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 "/resources/gfx/characters/costumes/",
                 PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
                 "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
+                mod
+            )
+
+            --ева
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_005_evehead.png",
+                "/resources-dlc3/gfx/characters/costumes/",
+                PlayerType.PLAYER_EVE,  NullItemID.ID_EVE, 
+                "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
+                mod
+            )
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_005_evehead.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_EVE,  NullItemID.ID_EVE, 
+                "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
                 mod
             )
 
@@ -984,7 +1023,7 @@ function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
             local bttdis = lpos:Distance(headpos)/scale
             
             local vel = (lpos - headpos):Resized(math.max(0,headsize*0.8-bttdis)*.25)
-            print(i,mass)
+           
             cur[2] = cur[2] *.8 + vel* headpospushpower* ((i+1)/dotnum) * mass/10 --lerp
         end
 

@@ -3388,6 +3388,7 @@ function menuTab.DraggerSetValue(btn, value, callpress)
 				
 				local preval = btn.dragCurPos.Y / full
 				btn.dragCurPos.Y = proc -- btn.y * proc
+				btn.dragPrePos = btn.dragCurPos/1
 				if callpress then
 					btn.func(0, value * (math.abs(btn.ValueSize) - btn.y ), preval * btn.ValueSize)
 				end
