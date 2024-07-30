@@ -615,11 +615,11 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
     local hairpath = "mods/" .. modfoldername .. path
     local res = pcall(Renderer.LoadImage, hairpath)
     if res then
-        
+        local fullCostumeSheep = "mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep
         local tab = {
             TargetCostume = {ID = nullid, Type = ItemType.ITEM_NULL},
-            TailCostumeSheep = CostumeSheep,
-            ReplaceCostumeSheep = "mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep,
+            TailCostumeSheep = fullCostumeSheep,
+            ReplaceCostumeSheep = fullCostumeSheep,
             NullposRefSpr = GenSprite(anm2),
             SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath,
         }
@@ -630,7 +630,8 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
         
         mod.HStyles.AddStyle(modfoldername .. "-" .. playerid .. "-" .. CostumeSheep, playerid, tab,
             {
-                modfolder = "mods/" .. modfoldername .. "/" .. resources,
+                --modfolder = "", -- "mods/" .. modfoldername .. "/" .. resources,
+                --useDirectTailCostumeSheepForIcon = true,
                 menuHintText = GetStr("frommod") .. modd.name -- .. " sggsgssggssg sggssggsgsgsgs",
             })
     end

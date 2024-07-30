@@ -2,7 +2,7 @@ return function (mod)
     ---@class hairlib
     ---@field SetHairData fun(playertype:PlayerType, data:PlayerHairDataIn)
 
-    local mod = BethHair
+    --local mod = BethHair
     local Isaac = Isaac
     local game = Game()
     local Room 
@@ -592,75 +592,80 @@ return function (mod)
             data._PhysHair_HairMode = mode
             Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_PRE_INIT, ptype, player)
             local datattab = PlayerData[ptype]
+            print("INIT", datattab, ptype, mode)
             
             if mode == 1 then
                 data._BethsHairCord = {
                     TargetCostume = datattab.TargetCostume,
                     ReplaceCostumeSheep = datattab.TailCostumeSheep,
+                    SyncBColor = datattab.SyncBColor,
+                    NPRefSpr = datattab.NullposRefSpr,
                 }
     
                 Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_POST_INIT, ptype, player, data._BethsHairCord)
 
                 return
-            end
+            else
 
-            data._BethsHairCord = {
-                BackSpr = datattab.BackSpr,
-                Back2Spr = datattab.Back2Spr,
-                TargetCostume = datattab.TargetCostume,
-                ReplaceCostumeSheep = datattab.ReplaceCostumeSheep,
-                ReplaceCostumeSuffix = datattab.ReplaceCostumeSuffix,
-                SyncBColor = datattab.SyncBColor,
-                NPRefSpr = datattab.NullposRefSpr,
-                EXAnim_HL = datattab.ExtraAnimHairLayer,
-            }
-            local cdat = data._BethsHairCord
+                data._BethsHairCord = {
+                    BackSpr = datattab.BackSpr,
+                    Back2Spr = datattab.Back2Spr,
+                    TargetCostume = datattab.TargetCostume,
+                    ReplaceCostumeSheep = datattab.ReplaceCostumeSheep,
+                    ReplaceCostumeSuffix = datattab.ReplaceCostumeSuffix,
+                    SyncBColor = datattab.SyncBColor,
+                    NPRefSpr = datattab.NullposRefSpr,
+                    EXAnim_HL = datattab.ExtraAnimHairLayer,
+                }
+                print("   ", datattab.ReplaceCostumeSheep, "|", datattab.ReplaceCostumeSuffix)
+                local cdat = data._BethsHairCord
 
-            --[[for tail=1, cdat.tailCount do
-                cdat["tail"..tail] = {}
-                for i=0, cdat.DotCount-1 do --pos                         velocity,     длина
-                    cdat["tail"..tail][i] = {playerPos + Vector(0,30/cdat.DotCount*i), Vector(0,0), 30/cdat.DotCount*i+12-i*2}
-                end
-            end]]
-            local playerPos = player.Position
-            for tail = 1, #datattab do
-                ---@type HairData
-                local tld = datattab[tail]
-                ---@type HairData
-                cdat[tail] = { Cord = tld.Cord, PhysFunc = tld.PhysFunc or physhair,
-                    RL = tld.RL, Null = tld.Null, Scretch = tld.Scretch, DotCount = tld.DotCount, Length = tld.Length, Mass = tld.Mass,
-                    STH = tld.STH, CS = tld.CS }
-                
-                ---@type HairData
-                local taildata = cdat[tail]
-                for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
-                    cdat[tail][i] = {playerPos + Vector(0,taildata.Length/taildata.DotCount*i), Vector(0,0), taildata.Length/taildata.DotCount*i+(12)-i*2}
-                end
-                local cs = taildata.CS
-                if cs then
-                    for i=0, taildata.DotCount-1 do
-                        if cs[i] then
-                            cdat[tail][i][3] = cs[i]
+                --[[for tail=1, cdat.tailCount do
+                    cdat["tail"..tail] = {}
+                    for i=0, cdat.DotCount-1 do --pos                         velocity,     длина
+                        cdat["tail"..tail][i] = {playerPos + Vector(0,30/cdat.DotCount*i), Vector(0,0), 30/cdat.DotCount*i+12-i*2}
+                    end
+                end]]
+                local playerPos = player.Position
+                for tail = 1, #datattab do
+                    ---@type HairData
+                    local tld = datattab[tail]
+                    ---@type HairData
+                    cdat[tail] = { Cord = tld.Cord, PhysFunc = tld.PhysFunc or physhair,
+                        RL = tld.RL, Null = tld.Null, Scretch = tld.Scretch, DotCount = tld.DotCount, Length = tld.Length, Mass = tld.Mass,
+                        STH = tld.STH, CS = tld.CS }
+                    
+                    ---@type HairData
+                    local taildata = cdat[tail]
+                    for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
+                        cdat[tail][i] = {playerPos + Vector(0,taildata.Length/taildata.DotCount*i), Vector(0,0), taildata.Length/taildata.DotCount*i+(12)-i*2}
+                    end
+                    local cs = taildata.CS
+                    if cs then
+                        for i=0, taildata.DotCount-1 do
+                            if cs[i] then
+                                cdat[tail][i][3] = cs[i]
+                            end
                         end
                     end
                 end
-            end
 
-            if cdat.EXAnim_HL then
-                local path = cdat.EXAnim_HL
-                cdat.EXAnim_HL = Sprite()
-                cdat.EXAnim_HL:Load("gfx/001.000_player.anm2", true)
-                --for i, layer in pairs(cdat.EXAnim_HL:GetAllLayers()) do
-                    for h=0, 14 do
-                        if h ~= 13 then
-                            cdat.EXAnim_HL:ReplaceSpritesheet(h, path)
+                if cdat.EXAnim_HL then
+                    local path = cdat.EXAnim_HL
+                    cdat.EXAnim_HL = Sprite()
+                    cdat.EXAnim_HL:Load("gfx/001.000_player.anm2", true)
+                    --for i, layer in pairs(cdat.EXAnim_HL:GetAllLayers()) do
+                        for h=0, 14 do
+                            if h ~= 13 then
+                                cdat.EXAnim_HL:ReplaceSpritesheet(h, path)
+                            end
                         end
-                    end
-                    cdat.EXAnim_HL:LoadGraphics()
-                --end
-            end
+                        cdat.EXAnim_HL:LoadGraphics()
+                    --end
+                end
 
-            Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_POST_INIT, ptype, player, cdat)
+                Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_POST_INIT, ptype, player, cdat)
+            end
         end
     end
     

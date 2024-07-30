@@ -1,7 +1,8 @@
-BethHair = RegisterMod("Vifaniia s fisikoi", 1)
+--BethHair = RegisterMod("Vifaniia s fisikoi", 1)
 
 
-local mod = BethHair
+local mod = RegisterMod("Vifaniia s fisikoi", 1) -- BethHair
+BethHair = mod
 mod.BlockedChar = {}
 local Isaac = Isaac
 local game = Game()
@@ -208,7 +209,7 @@ mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
         --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_001x_bethshair_notails.png",
         SkinFolderSuffics = "resources-dlc3/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_001x_bethshair_notails.png",
-        TailCostumeSheep = "gfx/characters/costumes/character_001x_bethshair.png",
+        TailCostumeSheep = "resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png",
         NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_001x_bethanyhead.anm2"),
         [1] = {
             CordSpr = cordSpr,
@@ -222,7 +223,7 @@ mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
             CostumeNullpos = "bethshair_cord2",
             Length = 30,
         },
-    }, {modfolder = "resources-dlc3"})
+    }, {})
 
 mod.BethPonyTailCord = BeamR("gfx/characters/costumes/beth_styles/ponytail/bethhair_ponytail_cord.anm2", "cord", "body", false, false, 3)
 mod.BethPonyNullPos = Sprite()
@@ -674,8 +675,6 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_005_evehead_notails.png",
         SyncWithCostumeBodyColor = true,
 
-
-        --TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
         SkinFolderSuffics = "resources/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_005_evehead_notails.png",
         TailCostumeSheep = "gfx/characters/costumes/character_005_evehead.png",
@@ -709,7 +708,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             Mass = 20,
             PhysFunc = mod.HairLib.EveheavyHairPhys,
         },
-    })
+    }, {modfolder = "resources"})
 
     mod.HStyles.AddStyle("EvePonyTail", PlayerType.PLAYER_EVE, {
         --HeadBackSpr = BethBBackHair,
@@ -758,7 +757,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
     mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS, {
         TargetCostume = {ID = NullItemID.ID_JUDAS, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_004_judasfez_notails.png",
+        --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_004_judasfez_notails.png",
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_004_judasfez_notails.png",
         --[[[1] = {
             DotCount = 3,
             Scretch = scretch*.75,
@@ -1543,8 +1543,12 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             
             local hairspr
             if hairgfx then
-                if styleexdt and styleexdt.modfolder then
-                    hairgfx = styledt.extra.modfolder .. "/" .. hairgfx
+                if styleexdt then 
+                    if styleexdt.modfolder then
+                        hairgfx = styledt.extra.modfolder .. "/" .. hairgfx
+                    --elseif styleexdt.useDirectTailCostumeSheepForIcon then
+                        --hairgfx = hairgfx
+                    end
                 end
 
                 hairspr = GenSprite("gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
