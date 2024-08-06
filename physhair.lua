@@ -592,7 +592,7 @@ return function (mod)
             data._PhysHair_HairMode = mode
             Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_PRE_INIT, ptype, player)
             local datattab = PlayerData[ptype]
-            print("INIT", datattab, ptype, mode)
+            --print("INIT", datattab, ptype, mode)
             
             if mode == 1 then
                 data._BethsHairCord = {
@@ -617,7 +617,7 @@ return function (mod)
                     NPRefSpr = datattab.NullposRefSpr,
                     EXAnim_HL = datattab.ExtraAnimHairLayer,
                 }
-                print("   ", datattab.ReplaceCostumeSheep, "|", datattab.ReplaceCostumeSuffix)
+                --print("   ", datattab.ReplaceCostumeSheep, "|", datattab.ReplaceCostumeSuffix)
                 local cdat = data._BethsHairCord
 
                 --[[for tail=1, cdat.tailCount do

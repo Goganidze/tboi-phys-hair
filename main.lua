@@ -1183,7 +1183,7 @@ GenSprite1 = GenSprite
 BethHair.WGA = include("worst gui api")
 local wga = BethHair.WGA
 
-BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240),
+BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240), misc = {},
     hairselectoffset = Vector(30,30), hairselectsize = Vector(150, 200),
     hairbtnsoffset = 0,
     hinttextoffset = Vector(0,240),
@@ -1473,6 +1473,13 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
 end
 BethHair:AddCallback(wga.Callbacks.WINDOW_PRE_RENDER, BethHair.StyleMenu.PreWindowRender, smenu.name)
 
+function BethHair.StyleMenu.PostWindowRender(_,pos, wind)
+    local sprs = smenu.spr
+
+    sprs.Scisors:Render(pos + Vector(40,0))
+end
+BethHair:AddCallback(wga.Callbacks.WINDOW_POST_RENDER, BethHair.StyleMenu.PostWindowRender, smenu.name)
+
 
 smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"),
     gragger1 = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar_gragger1"),
@@ -1483,6 +1490,7 @@ smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"
     CharRotateR = GenSprite("gfx/editor/hairstyle_menu.anm2", "char_rotate_r"),
     Buttons = GenSprite("gfx/ui/buttons.anm2"),
     VerySpecialKeyBoardLeftArrow = GenSprite("gfx/editor/hairstyle_menu.anm2", "keyboard_arrow_left"),
+    Scisors = GenSprite("gfx/editor/hairstyle_menu.anm2","detail1"),
 }
 
 smenu.spr.scrollback.Offset = Vector(-2,-2)
@@ -1684,6 +1692,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
     BethHair.StyleMenu.closespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "disчёта-там")
     BethHair.StyleMenu.acceptspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "accept")
+    BethHair.StyleMenu.setphysspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "phys")
 
     local usephys
     usephys = wga.AddButton(smenu.name, "usephys", Vector(200,148),
@@ -1691,14 +1700,17 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
         function (button)
             if smenu.SetStyleMode then
                 smenu.SetStyleMode = nil
+                BethHair.StyleMenu.setphysspr:SetFrame(0)
             else
                 smenu.SetStyleMode = 1
+                BethHair.StyleMenu.setphysspr:SetFrame(1)
             end
 
             local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
-            BethHair.HStyles.SetStyleToPlayer(player, player:GetData()._PhysHair_HairStyle, smenu.SetStyleMode)
+            local _PhysHair_HairStyle = player:GetData()._PhysHair_HairStyle
+            BethHair.HStyles.SetStyleToPlayer(player, _PhysHair_HairStyle and _PhysHair_HairStyle.StyleName, smenu.SetStyleMode)
         end, function (pos, visible)
-            --BethHair.StyleMenu.acceptspr:Render(pos)
+            BethHair.StyleMenu.setphysspr:Render(pos)
         end)
 
     local accept
@@ -1909,6 +1921,10 @@ function BethHair.StyleMenu.ShowWindow()
     local ptype = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:GetPlayerType()
         or Isaac.GetPlayer():GetPlayerType()
     BethHair.StyleMenu.GenWindowBtns(ptype)
+
+    smenu.misc.physPaper = {
+        cord = BeamR("gfx/editor/hairstyle_menu.anm2", "physpaper", 0, false, false, 3)
+    }
 end
 
 function BethHair.StyleMenu.CloseWindow()
@@ -1965,9 +1981,4 @@ if debugmultiplayer and WORSTDEBUGMENU then
         end
     end)
 end
-
-
-
-
-
 

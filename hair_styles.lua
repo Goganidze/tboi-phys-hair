@@ -144,7 +144,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
 
     --print(stdata.data.NullposRefSpr)
     if sheep and tarcost then
-        print(player:GetPlayerType(), sheep, tarcost.ID)
+        --print(player:GetPlayerType(), sheep, tarcost.ID)
         data._PhysHairExtra.DefCostumetSheetPath = {}
         local dcsp = data._PhysHairExtra.DefCostumetSheetPath
 
@@ -166,7 +166,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                         --print(i, cspr:GetLayer(i):GetSpritesheetPath())
                         local shpa = sheep:GetLayer(i)
                         if shpa then
-                            print(i, shpa:GetSpritesheetPath())
+                            --print(i, shpa:GetSpritesheetPath())
                             cspr:ReplaceSpritesheet(i, shpa:GetSpritesheetPath())
                             --print("layer", shpa:GetSpritesheetPath())
                             --foc[i] = shpa:GetSpritesheetPath()
@@ -1036,5 +1036,46 @@ function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
             --lpos = cur[1]
             bttdis = scretch*scale
         end
+    end
+end
+
+
+function epf.MenuPaperSwing(tab, start_pos)
+    local scretch = tab.Scretch
+    local dotnum = #tab
+
+    for i = 1, dotnum do
+        local cur = tab[i]
+        local prep, nextp
+        local lpos = cur[1]
+
+        if i == 0 then
+            prep = start_pos --+(plpos1-lpos):Resized(scretch*.7)
+            --scretch = 0
+        else
+            prep = tab[i-1][1]
+        end
+
+        cur[2] = cur[2] + Vector(0,.8 * (scretch))
+            if prep then
+                local bttdis = lpos:Distance(prep)
+                
+                if bttdis > scretch*3 then
+                    cur[1] = prep-(prep-lpos):Resized(scretch*3*scale)
+                end
+    
+                local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch))
+                
+                local lerp = 1 - (.12 * mass )
+                cur[2] = (cur[2]* lerp + vel * (1-lerp))
+            end
+            if nextp then
+                --local bttdis = lpos:Distance(nextp)
+    
+                --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
+                --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
+                --cur[2] = (cur[2] + vel)* .68
+                --cur[2] = cur[2]  + vel * .1
+            end
     end
 end

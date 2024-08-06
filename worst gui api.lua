@@ -3519,7 +3519,7 @@ if WORSTGUI then
 		function WORSTGUI.LastLoadCall()
 		
 			--WORSTGUI:AddCallback()
-			print(WORSTGUI.Name)
+			--print(WORSTGUI.Name)
 		end
 		function WORSTGUI.GlobalButtonDetect()
 			local mousetouch = false
@@ -3534,7 +3534,7 @@ if WORSTGUI then
 				end
 			end]]
 			if WORSTGUI.CachedDetect then
-				print(#WORSTGUI.CachedDetect)
+				--print(#WORSTGUI.CachedDetect)
 				for i = #WORSTGUI.CachedDetect, 1, -1 do
 					local menus = WORSTGUI.CachedDetect[i]
 					menus.DetectSelectedButtonActualeActuale(mousetouch)
@@ -3556,7 +3556,7 @@ else
 	function WORSTGUI.LastLoadCall()
 		
 		--WORSTGUI:AddCallback()
-		print(WORSTGUI.Name)
+		--print(WORSTGUI.Name)
 
 	end
 	menuTab:AddCallback(ModCallbacks.MC_POST_MODS_LOADED, function()
