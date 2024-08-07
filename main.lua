@@ -1186,6 +1186,7 @@ local wga = BethHair.WGA
 
 BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240), misc = {},
     hairselectoffset = Vector(30,30), hairselectsize = Vector(150, 200),
+    hairselectshadowoffset = Vector(-7,7),
     hairbtnsoffset = 0,
     hinttextoffset = Vector(0,240),
 
@@ -1377,6 +1378,11 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
         smenu.hairselectsize, 
         Color.Default)
 
+    if wga.ManualSelectedButton then
+        local btn = wga.ManualSelectedButton[1]
+        smenu.HintText = btn and btn.IsSelected and btn.HintText
+    end
+
     if smenu.HintText then
         local htpos = pos+smenu.hinttextoffset
         BethHair.StyleMenu.paperrender( htpos-Vector(0,5), 
@@ -1498,6 +1504,14 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
     end
 end
 BethHair:AddCallback(wga.Callbacks.WINDOW_PRE_RENDER, BethHair.StyleMenu.PreWindowRender, smenu.name)
+
+local shadowColor = Color(0,0,0,.33)
+function BethHair.StyleMenu.PreWindowBackRender(_,pos, wind)
+    BethHair.StyleMenu.windowbackrender( pos+smenu.hairselectshadowoffset, 
+        smenu.size, 
+        shadowColor)
+end
+BethHair:AddCallback(wga.Callbacks.WINDOW_BACK_PRE_RENDER, BethHair.StyleMenu.PreWindowBackRender, smenu.name)
 
 function BethHair.StyleMenu.PostWindowRender(_,pos, wind)
     local sprs = smenu.spr
@@ -1625,7 +1639,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 end)
             
             self.row = xy.Y
-            self.hintText = hintText
+            self.HintText = hintText
             self.posfunc = function ()
                 self.posref.Y = pos.Y - smenu.hairbtnsoffset
                 self.pos = smenu.wind.pos + self.posref
@@ -1950,11 +1964,11 @@ function BethHair.StyleMenu.ShowWindow()
     BethHair.StyleMenu.GenWindowBtns(ptype)
 
     smenu.misc.physPaper = {
-        cord = BeamR("gfx/editor/hairstyle_menu.anm2", "physpaper", 0, false, false, 3), start_offset = Vector(80,200),
+        cord = BeamR("gfx/editor/hairstyle_menu.anm2", "physpaper", 0, false, false, 3), start_offset = Vector(80,210),
         Scretch = 11, [0]={ Vector(0,0),Vector(0,0),21}, { Vector(0,0),Vector(0,0),43}, { Vector(0,0),Vector(0,0),64},
     }
     local pp = smenu.misc.physPaper
-    local dotnum = 12
+    local dotnum = 11
     for i=0, dotnum-1 do
         pp[i] = {Vector(0,0),Vector(0,0),(64/dotnum)*(i+1) }
     end

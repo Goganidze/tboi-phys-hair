@@ -282,8 +282,13 @@ mod.HStyles.HairKeeper = {ID = Isaac.GetEntityTypeByName("Парихраните
 ---@param ent EntitySlot
 function mod.HStyles.HairKeeper.update(_, ent)
     local data = ent:GetData()
+    local spr = ent:GetSprite()
     if ent.FrameCount < 2 then
         ent.TargetPosition = ent.Position
+    end
+
+    if spr:IsFinished("Appear") then
+        spr:Play("idle", true)
     end
 
     if ent.Target then
@@ -382,8 +387,9 @@ function mod.HStyles.salon.NewRoom()
 
             salon.Chranya = EntityPtr(keep)
 
-            keep:GetSprite():Play("idle", true)
+            --keep:GetSprite():Play("sleep", true)
         end
+        salon.Chranya.Ref:GetSprite():Play("sleep", true)
     end
 end
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.salon.NewRoom)
@@ -419,6 +425,7 @@ function mod.HStyles.salon.EnterSalon()
             CameraStyle = Options.CameraStyle,
             NoWall = level:GetCurrentRoomDesc().Flags & RoomDescriptor.FLAG_NO_WALLS
         }
+        Options.CameraStyle = CameraStyle.ACTIVE_CAM_OFF
         local crds = level:GetCurrentRoomDesc()
         crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
 
@@ -440,6 +447,13 @@ function mod.HStyles.salon.EnterSalon()
 
             salon.BGentPtr = EntityPtr(bg)
         end
+
+        if salon.Chranya and salon.Chranya.Ref then
+            Isaac.CreateTimer(function ()
+                salon.Chranya.Ref:GetSprite():Play("Appear")
+            end, 13, 1)
+        end
+        
     end
 end
 
@@ -456,7 +470,13 @@ function mod.HStyles.salon.ExitSalon()
             end
         end
         --salon.Alpha = 0
-        Options.CameraStyle = salon.ReturnSettings.CameraStyle
+        --Options.CameraStyle = salon.ReturnSettings.CameraStyle
+
+        local returnCameraStyle = salon.ReturnSettings.CameraStyle
+        Isaac.CreateTimer(function ()
+            Options.CameraStyle = returnCameraStyle
+        end, 15, 1, true)
+
         if salon.ReturnSettings.NoWall then
             local crds = game:GetLevel():GetCurrentRoomDesc()
             crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS

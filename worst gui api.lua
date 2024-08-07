@@ -153,7 +153,7 @@ local ControlType = {
 ---@field MouseSprite Sprite
 ---@field HandleWindowControl function
 ---@field RenderWindows function
----@field Callbacks table
+---@field Callbacks wga_callbacks
 ---@field OnFreePos boolean
 ---@field ScrollOffset Vector
 ---@field LastOrderRender function
@@ -163,9 +163,11 @@ local menuTab = RegisterMod("worst gui api: phys hair", 1)
 menuTab.Ver = 0.13
 
 menuTab.Callbacks = {}
+---@enum wga_callbacks
 local Callbacks = {
-	WINDOW_PRE_RENDER = {},
-	WINDOW_POST_RENDER = {},
+	WINDOW_PRE_RENDER = "",
+	WINDOW_POST_RENDER = "",
+	WINDOW_BACK_PRE_RENDER = "",
 }
 local function addCallbackID(name)
 	menuTab.Callbacks[name] = setmetatable({},{__concat = function(t,b) return "[WGA] "..name..b end})
@@ -2278,6 +2280,7 @@ function menuTab.MouseButtonDetect(onceTouch)
 
 						menuTab.OnFreePos = false
 						onceTouch = true
+						menuTab.ManualSelectedButton = {k, menu}
 						if not k.IsSelected then
 							k.IsSelected = 0
 							if k.spr then
@@ -3011,6 +3014,10 @@ function menuTab.RenderWindows()
 
 		local bgcolorfocus = backcolor or Color(1,1,1,.5)
 		local bgcolorunfocus = backcolorunfocus or Color(.6,.6,.6,.5)
+
+		menuTab.CallDelayRenders(menuTab.Callbacks.WINDOW_BACK_PRE_RENDER, menuName, window.pos, window)
+		Isaac.RunCallbackWithParam(menuTab.Callbacks.WINDOW_BACK_PRE_RENDER, menuName, window.pos, window)
+
 		if window.RenderCustomMenuBack then
 			window.RenderCustomMenuBack(window.pos,window.size, i==1 and bgcolorfocus or bgcolorunfocus)
 		else
