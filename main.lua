@@ -3,6 +3,7 @@
 
 local mod = RegisterMod("Vifaniia s fisikoi", 1) -- BethHair
 BethHair = mod
+local BethHair = BethHair
 mod.BlockedChar = {}
 local Isaac = Isaac
 local game = Game()
@@ -1347,6 +1348,31 @@ end
 local CharRotateBtnL, CharRotateBtnR
 
 function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
+
+    if smenu.misc.physPaper then
+        local pp = smenu.misc.physPaper
+        local startPos = pos + pp.start_offset
+        if not game:IsPaused() then
+            local mouseunderpaper = wga.MousePos.Y > (smenu.hairselectsize.Y + smenu.hairselectoffset.Y + pos.Y)
+            BethHair.extraPhysFunc.MenuPaperSwing(pp, startPos, mouseunderpaper and wga.MousePos)
+        end
+        pp.cord:Add(startPos, 0)
+        for i=1, #pp do
+            local cdat = pp[i]
+            pp.cord:Add(cdat[1], cdat[3])
+        end
+        pp.cord:Render()
+
+        --[[for i=0, #pp do
+            local cur = pp[i]
+            local pos = cur[1] 
+            Isaac.DrawLine(pos-Vector(.5,0),pos+Vector(.5,0),KColor(1,1,1,1),KColor(1,1,1,1),5)
+            local vel = cur[1] + cur[2] * 5
+            Isaac.DrawLine(pos, vel,KColor(2,.2,.2,1),KColor(2,.2,.2,1),1)
+            Isaac.RenderScaledText(i, pos.X,pos.Y-5, .5, .5, 1,1,1,1)
+        end]]
+    end
+
     BethHair.StyleMenu.paperrender( pos+smenu.hairselectoffset, 
         smenu.hairselectsize, 
         Color.Default)
@@ -1582,9 +1608,9 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                     local scroolupcrop = self.scrollupcrop
                     local scrolldwoncrop = self.scrolldwoncrop
 
-                    if self.IsSelected then
-                        smenu.HintText = hintText
-                    end
+                    --if self.IsSelected then
+                    --    smenu.HintText = hintText
+                    --end
 
                     spr:Render(pos, Vector(0, math.max(0, scroolupcrop)), 
                         Vector(0,math.max(0, scrolldwoncrop) ) )
@@ -1599,6 +1625,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 end)
             
             self.row = xy.Y
+            self.hintText = hintText
             self.posfunc = function ()
                 self.posref.Y = pos.Y - smenu.hairbtnsoffset
                 self.pos = smenu.wind.pos + self.posref
@@ -1923,8 +1950,15 @@ function BethHair.StyleMenu.ShowWindow()
     BethHair.StyleMenu.GenWindowBtns(ptype)
 
     smenu.misc.physPaper = {
-        cord = BeamR("gfx/editor/hairstyle_menu.anm2", "physpaper", 0, false, false, 3)
+        cord = BeamR("gfx/editor/hairstyle_menu.anm2", "physpaper", 0, false, false, 3), start_offset = Vector(80,200),
+        Scretch = 11, [0]={ Vector(0,0),Vector(0,0),21}, { Vector(0,0),Vector(0,0),43}, { Vector(0,0),Vector(0,0),64},
     }
+    local pp = smenu.misc.physPaper
+    local dotnum = 12
+    for i=0, dotnum-1 do
+        pp[i] = {Vector(0,0),Vector(0,0),(64/dotnum)*(i+1) }
+    end
+    pp.Scretch = 64/dotnum / 2
 end
 
 function BethHair.StyleMenu.CloseWindow()

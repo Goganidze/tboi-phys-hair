@@ -1040,42 +1040,81 @@ function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
 end
 
 
-function epf.MenuPaperSwing(tab, start_pos)
+function epf.MenuPaperSwing(tab, start_pos, headpos)
     local scretch = tab.Scretch
     local dotnum = #tab
 
-    for i = 1, dotnum do
+    for i = 0, dotnum do
         local cur = tab[i]
         local prep, nextp
         local lpos = cur[1]
 
         if i == 0 then
-            prep = start_pos --+(plpos1-lpos):Resized(scretch*.7)
-            --scretch = 0
+            prep = start_pos
+            
         else
             prep = tab[i-1][1]
         end
+        if i ~= dotnum then
+            nextp = tab[i+1][1]
+            cur[2] = cur[2] + Vector(0,.05 * (scretch))
+        else
+            cur[2] = cur[2] + Vector(0,.1 * (scretch))
+        end
 
-        cur[2] = cur[2] + Vector(0,.8 * (scretch))
-            if prep then
-                local bttdis = lpos:Distance(prep)
-                
-                if bttdis > scretch*3 then
-                    cur[1] = prep-(prep-lpos):Resized(scretch*3*scale)
-                end
-    
-                local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch))
-                
-                local lerp = 1 - (.12 * mass )
-                cur[2] = (cur[2]* lerp + vel * (1-lerp))
+        --cur[2] = cur[2] + Vector(0,.3 * (scretch))
+        
+        local squeezevel = Vector(0,0)
+        if nextp then
+            local bttdis = lpos:Distance(nextp)
+            
+            if bttdis > scretch*2 then
+                cur[1] = nextp-(nextp-lpos):Resized(scretch*2)
             end
-            if nextp then
-                --local bttdis = lpos:Distance(nextp)
-    
-                --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
-                --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
-                --cur[2] = (cur[2] + vel)* .68
-                --cur[2] = cur[2]  + vel * .1
+
+            local vel = (nextp-lpos):Resized( math.max(0, (bttdis*2.2-scretch)) )    --(nextp-lpos):Resized(  math.min(scretch*3, math.max(0, bttdis-scretch*.5)*0.2) )
+            --print(i, vel, bttdis)
+            squeezevel = (squeezevel + vel * .39 ) -- (cur[2] * .5 + vel * .5)
+        end
+
+        if prep then
+            local bttdis = lpos:Distance(prep)
+            
+            if bttdis > scretch*2 then
+                cur[1] = prep-(prep-lpos):Resized(scretch*2)
             end
+
+            local vel = (prep-lpos):Resized( math.max(0, (bttdis*2.2-scretch)) )
+            
+            squeezevel = (squeezevel + vel * .39 ) -- (cur[2] * .5 + vel * .5)
+        end
+        --[[if nextp then
+            local bttdis = lpos:Distance(nextp)
+            
+            if bttdis > scretch*3 then
+                cur[1] = nextp-(nextp-lpos):Resized(scretch*3)
+            end
+
+            local vel = (nextp-nextp):Resized(math.max(-1,bttdis-scretch))
+            
+            cur[2] = (cur[2] * .5 + vel * .5)
+        end]]
+        --if i ~= dotnum then
+        --    cur[2] = cur[2] + squeezevel
+        --else
+            cur[2] = cur[2] * .9 + squeezevel * .1
+        --end
+
+        if headpos then
+            local collisionsize = i == dotnum and 5 or 12 
+            headpos = headpos + Vector(0,0)
+            local bttdis = lpos:Distance(headpos)
+            
+            local vel = (lpos - headpos):Resized( math.max(0, collisionsize-bttdis) ) --math.max(0,13-bttdis)*.25)
+            
+            cur[2] = cur[2] + vel* .1  --* ((i+1)/dotnum)
+        end
+
+        cur[1] = cur[1] + cur[2]
     end
 end
