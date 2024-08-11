@@ -446,6 +446,10 @@ function mod.HStyles.salon.EnterSalon()
             bg.Color = Color(1,1,1,0)
 
             salon.BGentPtr = EntityPtr(bg)
+
+            if room:HasWater() then
+                bg.SortingLayer = SortingLayer.SORTING_NORMAL
+            end
         end
 
         if salon.Chranya and salon.Chranya.Ref then
@@ -491,12 +495,12 @@ end
 do
     local framecheck
     function mod.HStyles.salon.RenderRoom(_, ent)
+        if game:GetRoom():GetRenderMode() == RenderMode.RENDER_WATER_REFLECT then return end
         local frmae = Isaac.GetFrameCount()
         if framecheck == frmae then return end
         framecheck = frmae
 
         local paused = game:IsPaused()
-
         if salon.IsRoom then
             if salon.Entered then
                 local room = game:GetRoom()
