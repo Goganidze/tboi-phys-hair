@@ -279,6 +279,16 @@ mod:AddCallback(mod.HairLib.Callbacks.PRE_COLOR_CHANGE, mod.HStyles.BodyColorTra
 
 mod.HStyles.HairKeeper = {ID = Isaac.GetEntityTypeByName("Парихранитель"), VAR = Isaac.GetEntityVariantByName("Парихранитель")}
 
+mod.HStyles.salon = {
+    CameraFocusPos = Vector(0,0),
+    EnterIndex = 131,
+    EnterIndexLongRoom = 236,
+    TopLeftRefIndex = 128,
+    TopLeftRefIndexLongRoom = 233,
+    BGEntVar = Isaac.GetEntityVariantByName("Фон парихмазерской")
+}
+local salon = mod.HStyles.salon
+
 ---@param ent EntitySlot
 function mod.HStyles.HairKeeper.update(_, ent)
     local data = ent:GetData()
@@ -287,12 +297,43 @@ function mod.HStyles.HairKeeper.update(_, ent)
         ent.TargetPosition = ent.Position
     end
 
+    if salon.FakeCollision then
+        local nearP = game:GetNearestPlayer(ent.Position)
+        if nearP.Position:Distance(ent.Position) < nearP.Size+ent.Size then
+            if nearP.EntityCollisionClass == EntityCollisionClass.ENTCOLL_ALL then
+                --ent:ForceCollide(nearP, true)
+                mod.HStyles.HairKeeper.coll(nil, ent, nearP)
+            end
+        end
+    end
+
     if spr:IsFinished("Appear") then
         spr:Play("idle", true)
+    elseif spr:IsFinished("scisor_start") then
+        spr:Play("scisor_loop", true)
+    elseif spr:IsFinished("scisor_end") then
+        spr:Play("idle", true)
+        data.faceAngle = nil
+    end
+
+    local overName = spr:GetOverlayAnimation()
+    if not spr:IsPlaying("scisor_loop") 
+    and (overName == "scisor_прямо" or overName == "scisor_вниз") then
+        spr:RemoveOverlay()
     end
 
     if ent.Target then
         data.room = data.room or game:GetRoom()
+
+        if spr:IsPlaying("scisor_loop") then
+            local prefaceAngle = data.faceAngle
+            data.faceAngle = ent.Target:GetSprite().Scale.Y > 1.4 and 1 or 0
+            if data.faceAngle ~= prefaceAngle then
+                spr:PlayOverlay(data.faceAngle == 1 and "scisor_прямо" or "scisor_вниз")
+            end
+            spr:SetOverlayFrame(spr:GetFrame())
+            --data.faceAngle = ent.Target:GetSprite().Scale.Y > 1.2 and 1 or 0
+        end
 
         if not data.removedwall then
             data.removedwall = true
@@ -331,19 +372,15 @@ function mod.HStyles.HairKeeper.coll(_, ent, col)
             BethHair.StyleMenu.TargetPlayer = player
             BethHair.StyleMenu.TargetHairKeeper = ent
             BethHair.StyleMenu.ShowWindow()
+
+            ent:GetSprite():Play("scisor_start", true)
         end
     end
 end
 mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, mod.HStyles.HairKeeper.coll, mod.HStyles.HairKeeper.VAR)
 
 
-mod.HStyles.salon = {
-    CameraFocusPos = Vector(0,0),
-    EnterIndex = 131,
-    TopLeftRefIndex = 128,
-    BGEntVar = Isaac.GetEntityVariantByName("Фон парихмазерской")
-}
-local salon = mod.HStyles.salon
+
 
 
 function mod.HStyles.salon.NewRoom()
@@ -353,11 +390,27 @@ function mod.HStyles.salon.NewRoom()
     if level and level:GetStartingRoomIndex() == level:GetCurrentRoomIndex() then
         local room = game:GetRoom()
 
+        local useIndex = salon.EnterIndex
+        local TopLeftRefIndex = salon.TopLeftRefIndex
+        local roomshape = room:GetRoomShape()
+        salon.FakeCollision = nil
+        if roomshape == RoomShape.ROOMSHAPE_1x1 then
+            --useIndex = salon.EnterIndex
+        elseif roomshape == RoomShape.ROOMSHAPE_1x2 then
+            useIndex = salon.EnterIndexLongRoom
+            TopLeftRefIndex = salon.TopLeftRefIndexLongRoom
+            salon.FakeCollision = true
+        else
+            Console.PrintWarning("[HairPhys] inappropriate shape of the room for Salon")
+            return
+        end
+
         salon.IsRoom = true
         salon.bg = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "New Animation")
 
-        salon.EnterPos = room:GetGridPosition(salon.EnterIndex)
-        salon.TopLeftPos = room:GetGridPosition(salon.TopLeftRefIndex) + Vector(-20, 20 + 60)
+        
+        salon.EnterPos = room:GetGridPosition(useIndex)
+        salon.TopLeftPos = room:GetGridPosition(TopLeftRefIndex) + Vector(-20, 20 + 60)
 
         local ef = Isaac.Spawn(1000,6,0, 
         salon.EnterPos - Vector(0,42), Vector(0,0), nil)
@@ -369,6 +422,9 @@ function mod.HStyles.salon.NewRoom()
         ef:Update()
 
         local grid = room:GetGridEntityFromPos(salon.EnterPos)
+        --if not grid then
+        --    grid = room:GetGridEntityFromPos(salon.EnterPos)
+        --end
         grid.CollisionClass = GridCollisionClass.COLLISION_NONE
 
         salon.CameraFocusPos = room:GetCenterPos()
@@ -454,7 +510,12 @@ function mod.HStyles.salon.EnterSalon()
 
         if salon.Chranya and salon.Chranya.Ref then
             Isaac.CreateTimer(function ()
-                salon.Chranya.Ref:GetSprite():Play("Appear")
+                if salon.Chranya.Ref then
+                    local spr = salon.Chranya.Ref:GetSprite()
+                    if spr:GetAnimation() == "sleep" then
+                        spr:Play("Appear")
+                    end
+                end
             end, 13, 1)
         end
         
@@ -539,6 +600,38 @@ do
         end
     end
     mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.HStyles.salon.RenderRoom, mod.HStyles.salon.BGEntVar)
+
+    function mod.HStyles.salon.RenderHairChoop(_, player, renderPos)
+        print(BethHair.DoChoopEffect)
+        if BethHair.DoChoopEffect and BethHair.StyleMenu.TargetPlayer and
+        GetPtrHash(BethHair.StyleMenu.TargetPlayer) == GetPtrHash(player) then
+            
+            --BethHair.DoChoopEffect = false
+            local data = player:GetData()
+            local stdata = HairStylesData.styles[data._PhysHair_HairStyle.StyleName]
+
+            local tarcost = stdata.data.TargetCostume
+
+            if tarcost then
+                local pos = 0
+                for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+                    local conf = csd:GetItemConfig()
+                    if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
+                        if not tarcost.pos or tarcost.pos == pos then
+                            local cspr = csd:GetSprite()
+                            print(cspr:GetAnimation())
+
+                            local renderPos = data._BethsHairCord.RealHeadPos
+                            cspr:Render(renderPos)
+                        elseif tarcost.pos > pos then
+                            pos = pos + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+    mod:AddPriorityCallback(ModCallbacks.MC_POST_PLAYER_RENDER, 100, mod.HStyles.salon.RenderHairChoop, 0)
 end
 
 

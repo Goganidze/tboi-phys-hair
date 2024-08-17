@@ -1616,6 +1616,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 function (button)
                     local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
                     BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.SetStyleMode)
+                    BethHair.DoChoopEffect = true
                     
                 end, function (pos, visible)
                     spr:SetFrame(self.IsSelected and 1 or 0)
@@ -1980,6 +1981,9 @@ function BethHair.StyleMenu.CloseWindow()
     smenu.wind = nil
     BethHair.StyleMenu.TargetPlayer = nil
     BethHair.StyleMenu.TargetHairKeeper = nil
+    if BethHair.HStyles.salon.Chranya.Ref then
+        BethHair.HStyles.salon.Chranya.Ref:GetSprite():Play("scisor_end", true)
+    end
 end
 
 

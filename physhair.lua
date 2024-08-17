@@ -721,6 +721,9 @@ return function (mod)
 
             local realplayerPos
             local playerPos = (worldToScreen(player.Position) + player:GetFlyingOffset())
+            if data._BethsHairCord.RealHeadPos then
+                playerPos = data._BethsHairCord.RealHeadPos
+            end
             
             if isreflect then
                 realplayerPos = (worldToScreen(player.Position) + player:GetFlyingOffset()) -- offset
