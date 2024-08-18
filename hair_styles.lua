@@ -365,15 +365,17 @@ mod:AddCallback(ModCallbacks.MC_POST_SLOT_UPDATE, mod.HStyles.HairKeeper.update,
 function mod.HStyles.HairKeeper.coll(_, ent, col)
     if not ent.Target and col.Type == EntityType.ENTITY_PLAYER then
         local player = col:ToPlayer()
-        local ptype = player:GetPlayerType()
-        local bhpd = BethHair.HairStylesData.playerdata
-        if bhpd[ptype] then
-            ent.Target = player
-            BethHair.StyleMenu.TargetPlayer = player
-            BethHair.StyleMenu.TargetHairKeeper = ent
-            BethHair.StyleMenu.ShowWindow()
+        if not player:IsHeadless() then
+            local ptype = player:GetPlayerType()
+            local bhpd = BethHair.HairStylesData.playerdata
+            if bhpd[ptype] then
+                ent.Target = player
+                BethHair.StyleMenu.TargetPlayer = player
+                BethHair.StyleMenu.TargetHairKeeper = ent
+                BethHair.StyleMenu.ShowWindow()
 
-            ent:GetSprite():Play("scisor_start", true)
+                ent:GetSprite():Play("scisor_start", true)
+            end
         end
     end
 end
@@ -602,7 +604,7 @@ do
     mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.HStyles.salon.RenderRoom, mod.HStyles.salon.BGEntVar)
 
     function mod.HStyles.salon.RenderHairChoop(_, player, renderPos)
-        print(BethHair.DoChoopEffect)
+        --print(BethHair.DoChoopEffect)
         if BethHair.DoChoopEffect and BethHair.StyleMenu.TargetPlayer and
         GetPtrHash(BethHair.StyleMenu.TargetPlayer) == GetPtrHash(player) then
             
