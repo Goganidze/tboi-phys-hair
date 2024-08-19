@@ -603,10 +603,26 @@ do
     end
     mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.HStyles.salon.RenderRoom, mod.HStyles.salon.BGEntVar)
 
+    ---@param rng RNG
+    local trowHairpiecy = function(rng, pos, col)
+        local vec = rng:RandomVector()
+        vec.X = vec.X * .2
+        vec.Y = vec.Y + .5
+        local spr = GenSprite("gfx/editor/parechmacher.anm2", "hair_piece")
+        spr:SetFrame(rng:RandomInt(4))
+        spr.Color = col
+        spr.Rotation = rng:RandomInt(360)
+        return {pos, vec, spr, 40, (rng:RandomFloat()-.5)*5}
+    end
+
+    local mrandom = function (rng, a, b)
+        return a + rng:RandomInt(b-a)
+    end
+
     function mod.HStyles.salon.RenderHairChoop(_, player, renderPos)
         --print(BethHair.DoChoopEffect)
-        if BethHair.DoChoopEffect and BethHair.StyleMenu.TargetPlayer and
-        GetPtrHash(BethHair.StyleMenu.TargetPlayer) == GetPtrHash(player) then
+        if mod.DoChoopEffect and mod.StyleMenu.TargetPlayer and
+        GetPtrHash(mod.StyleMenu.TargetPlayer) == GetPtrHash(player) then
             
             --BethHair.DoChoopEffect = false
             local data = player:GetData()
@@ -620,16 +636,103 @@ do
                     local conf = csd:GetItemConfig()
                     if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
                         if not tarcost.pos or tarcost.pos == pos then
+                            ---@type Sprite
                             local cspr = csd:GetSprite()
                             print(cspr:GetAnimation())
 
                             local renderPos = data._BethsHairCord.RealHeadPos
                             cspr:Render(renderPos)
+
+                            local rng = RNG(Isaac.GetFrameCount(), 35)
+                            mod.HStyles.Chooping = {rng = rng, list = {}, RenderPos = renderPos, FloorYpos = Isaac.WorldToScreen(player.Position).Y}
+                            local Chooping = mod.HStyles.Chooping
+
+                            --for i = 1, 20 do
+                            for x = 1, 15 do
+                                for y = 1, 15 do
+                                    local layerID = rng:RandomInt(cspr:GetLayerCount())
+                                    local layer = cspr:GetCurrentAnimationData():GetLayer(layerID):GetFrame(cspr:GetFrame()) 
+
+                                    if layer then
+                                        local pos = Vector(
+                                            --mrandom(rng, layer:GetPos().X - layer:GetPivot().X, layer:GetPos().X - layer:GetPivot().X +layer:GetWidth()), 
+                                            --mrandom(rng, layer:GetPos().Y - layer:GetPivot().Y, layer:GetPos().Y - layer:GetPivot().Y +layer:GetHeight())
+                                            layer:GetPos().X - layer:GetPivot().X + x/15 * layer:GetWidth() + mrandom(rng, -1,1),
+                                            layer:GetPos().Y - layer:GetPivot().Y + y/15 * layer:GetHeight() + mrandom(rng, -1,1)
+                                        )
+
+                                         ---@type KColor
+                                        local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
+                                        local r,g,b = tex.Red, tex.Green, tex.Blue
+                                            --print(pos, tex, tex and tex.Alpha)
+                                        if tex and tex.Alpha > 0 and r+g+b > 0.1 then
+
+                                            local midR, midG, midB = 1,1,1
+                                            local isHasColor = false
+                                            for xi = -2, 2 do
+                                                for yi = -2, 2 do
+                                                    ---@type KColor
+                                                    local tex = cspr:GetTexel(pos+Vector(xi,yi), Vector.Zero, 0.5, layerID)
+                                                    if tex and tex.Alpha > 0 then
+                                                        local r,g,b = tex.Red, tex.Green, tex.Blue
+                                                        if r+g+b > 0.1 then
+                                                            midR = (midR + r) / 2
+                                                            midG = (midG + g) / 2
+                                                            midB = (midB + b) / 2
+                                                        end
+                                                    end
+                                                    isHasColor = true
+                                                end
+                                            end
+                                            if isHasColor then
+                                                ----@type KColor
+                                                --local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
+                                                --print(pos, tex, tex and tex.Alpha)
+                                                --if tex and tex.Alpha > 0 then
+                                                    local refColor = Color(1,1,1,1,0,0,0, midR, midG, midB, 1)
+                                                -- refColor:SetColorize()
+                                                    Chooping.list[#Chooping.list+1] = trowHairpiecy(rng, pos, refColor)
+                                                --end
+                                            end
+                                        end
+                                    end
+                                    --if #Chooping.list > 10 then
+                                    --    break
+                                    --end
+                                end
+                            end
+                            mod.DoChoopEffect = nil
+
                         elseif tarcost.pos > pos then
                             pos = pos + 1
                         end
                     end
                 end
+            end
+        end
+        if mod.HStyles.Chooping then
+            local Chooping = mod.HStyles.Chooping
+            if Chooping.list and #Chooping.list > 0 then
+                for i = #Chooping.list, 1, -1 do
+                    local tab = Chooping.list[i]
+                    tab[1] = tab[1] + tab[2]
+                    tab[3].Rotation = tab[3].Rotation + tab[5]
+                    tab[2].Y = tab[2].Y + 0.1
+                    if Chooping.RenderPos.Y + tab[1].Y > Chooping.FloorYpos then
+                        --tab[1].Y = Chooping.RenderPos.Y + Chooping.FloorYpos
+                        tab[2] = Vector(0,0)
+                        tab[5] = 0
+                    end
+                    tab[3]:Render(Chooping.RenderPos + tab[1])
+                    tab[3].Scale = tab[3].Scale * 0.95
+
+                    tab[4] = tab[4] - 1
+                    if tab[4] <= 0 then
+                        table.remove(Chooping.list, i)
+                    end
+                end
+                --Isaac.DrawLine(Vector(Chooping.RenderPos.X - 55, Chooping.FloorYpos), Vector(Chooping.RenderPos.X + 55, Chooping.FloorYpos),
+                --    KColor(2,1,1,1), KColor(2,1,1,1), 2 )
             end
         end
     end
