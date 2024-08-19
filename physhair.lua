@@ -820,9 +820,9 @@ return function (mod)
                         local tail1 = taildata
                         local hap1 --= playerPos+hairPos1 --(Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
                         if isreflect then
-                            hap1 = playerPos+Vector(hairPos.X,-hairPos.Y)+offset
+                            hap1 = playerPos+Vector(hairPos.X,-hairPos.Y) --+offset
                             if cdat.reflectOffset then
-                                hap1 = hap1 - cdat.reflectOffset
+                                --hap1 = hap1 - cdat.reflectOffset
                                 if not pause then
                                     hap1 = hap1 + player.Velocity * Wtr
                                 end

@@ -408,7 +408,18 @@ function mod.HStyles.salon.NewRoom()
         end
 
         salon.IsRoom = true
-        salon.bg = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "New Animation")
+        
+        if room:HasWater() then
+            salon.bg = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "flooded")
+            salon.bgFloor = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "flooded")
+            salon.bgFloor:SetCustomShader("shaders/water_v2_hairsalon")
+            --salon.bg:GetLayer(1):SetCustomShader("shaders/water_v2_hairsalon")
+            salon.bgFloor.Color:SetOffset(.2,0,0)
+            salon.bgFloor.Color:SetColorize(0.3,0.3,0.8,.1)
+            salon.HasWater = true
+        else
+            salon.bg = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "New Animation")
+        end
 
         
         salon.EnterPos = room:GetGridPosition(useIndex)
@@ -448,6 +459,11 @@ function mod.HStyles.salon.NewRoom()
             --keep:GetSprite():Play("sleep", true)
         end
         salon.Chranya.Ref:GetSprite():Play("sleep", true)
+
+        --[[if room:HasWater() then
+            salon.bg:SetCustomShader("shaders/water_v2_hairsalon")
+            salon.bg.Color:SetColorize(1,1,1,.1)
+        end]]
     end
 end
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.salon.NewRoom)
@@ -582,7 +598,25 @@ do
                     --room:GetCamera():SetFocusPosition(salon.CameraFocusPos)
                 end
 
-                salon.bg:Render( Isaac.WorldToScreen(salon.TopLeftPos) )
+                if salon.HasWater then
+                    --[[local col = salon.bg:GetLayer("b1"):GetColor()
+                    col:SetColorize(0,0,0, game:GetFrameCount() % 10000)
+                    salon.bg:GetLayer("b1"):SetColor( col )
+                    salon.bg:GetLayer("b2"):SetColor( col )]]
+                    local watercolor = room:GetFXParams().WaterColorMultiplier
+                    salon.bgFloor.Color:SetColorize(watercolor.Red*0.8,watercolor.Green*0.8,watercolor.Blue*0.8, game:GetFrameCount() * 1.5 % 10000)
+                    
+                    local renderpos = Isaac.WorldToScreen(salon.TopLeftPos)
+                    --salon.bg:RenderLayer(2, renderpos)
+                    salon.bgFloor:RenderLayer(1,renderpos)
+                    --salon.bg.Color:SetColorize(0,0,0, 0)
+                    salon.bg:RenderLayer(2, renderpos)
+
+                    --salon.bg:Render( Isaac.WorldToScreen(salon.TopLeftPos) )
+                else
+                    salon.bg:Render( Isaac.WorldToScreen(salon.TopLeftPos) )
+                end
+                
 
                 local corpos = Isaac.GetPlayer().Position - salon.TopLeftPos
                 local index = corpos.X // 40 + corpos.Y // 40 * 11
@@ -612,15 +646,19 @@ do
         spr:SetFrame(rng:RandomInt(4))
         spr.Color = col
         spr.Rotation = rng:RandomInt(360)
-        return {pos, vec, spr, 40, (rng:RandomFloat()-.5)*5}
+        return {pos, vec, spr, 40, (rng:RandomFloat()-.5)*45}
     end
 
     local mrandom = function (rng, a, b)
         return a + rng:RandomInt(b-a)
     end
 
+
+
     function mod.HStyles.salon.RenderHairChoop(_, player, renderPos)
-        --print(BethHair.DoChoopEffect)
+        if game:GetRoom():GetRenderMode() == RenderMode.RENDER_WATER_REFLECT then
+            return
+        end
         if mod.DoChoopEffect and mod.StyleMenu.TargetPlayer and
         GetPtrHash(mod.StyleMenu.TargetPlayer) == GetPtrHash(player) then
             
@@ -638,7 +676,6 @@ do
                         if not tarcost.pos or tarcost.pos == pos then
                             ---@type Sprite
                             local cspr = csd:GetSprite()
-                            print(cspr:GetAnimation())
 
                             local renderPos = data._BethsHairCord.RealHeadPos
                             cspr:Render(renderPos)
@@ -713,22 +750,30 @@ do
         if mod.HStyles.Chooping then
             local Chooping = mod.HStyles.Chooping
             if Chooping.list and #Chooping.list > 0 then
-                for i = #Chooping.list, 1, -1 do
-                    local tab = Chooping.list[i]
-                    tab[1] = tab[1] + tab[2]
-                    tab[3].Rotation = tab[3].Rotation + tab[5]
-                    tab[2].Y = tab[2].Y + 0.1
-                    if Chooping.RenderPos.Y + tab[1].Y > Chooping.FloorYpos then
-                        --tab[1].Y = Chooping.RenderPos.Y + Chooping.FloorYpos
-                        tab[2] = Vector(0,0)
-                        tab[5] = 0
+                if game:IsPaused() then
+                    for i = #Chooping.list, 1, -1 do
+                        local tab = Chooping.list[i]
+                        tab[3]:Render(Chooping.RenderPos + tab[1])
                     end
-                    tab[3]:Render(Chooping.RenderPos + tab[1])
-                    tab[3].Scale = tab[3].Scale * 0.95
+                else
+                    for i = #Chooping.list, 1, -1 do
+                        local tab = Chooping.list[i]
+                        tab[1] = tab[1] + tab[2]
+                        tab[3].Rotation = tab[3].Rotation + tab[5]
+                        tab[2].Y = tab[2].Y + 0.1
+                        tab[3].Scale = tab[3].Scale * 0.95
+                        if Chooping.RenderPos.Y + tab[1].Y > Chooping.FloorYpos then
+                            --tab[1].Y = Chooping.RenderPos.Y + Chooping.FloorYpos
+                            tab[2] = Vector(0,0)
+                            tab[5] = 0
+                        end
 
-                    tab[4] = tab[4] - 1
-                    if tab[4] <= 0 then
-                        table.remove(Chooping.list, i)
+                        tab[3]:Render(Chooping.RenderPos + tab[1])
+
+                        tab[4] = tab[4] - 1
+                        if tab[4] <= 0 then
+                            table.remove(Chooping.list, i)
+                        end
                     end
                 end
                 --Isaac.DrawLine(Vector(Chooping.RenderPos.X - 55, Chooping.FloorYpos), Vector(Chooping.RenderPos.X + 55, Chooping.FloorYpos),
