@@ -409,7 +409,8 @@ function mod.HStyles.salon.NewRoom()
 
         salon.IsRoom = true
         
-        if room:HasWater() then
+        salon.HasWater = room:HasWater()
+        if salon.HasWater then
             salon.bg = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "flooded")
             salon.bgFloor = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "flooded")
             salon.bgFloor:SetCustomShader("shaders/water_v2_hairsalon")
@@ -419,6 +420,7 @@ function mod.HStyles.salon.NewRoom()
             salon.HasWater = true
         else
             salon.bg = GenSprite("gfx/backdrop/hairsalon_backdrop.anm2", "New Animation")
+            salon.bgFloor = nil
         end
 
         

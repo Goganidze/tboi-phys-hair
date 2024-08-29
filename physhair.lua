@@ -764,7 +764,7 @@ return function (mod)
                 BackSpr.Color = playerCol
                 BackSpr:SetFrame(spr:GetOverlayAnimation(), spr:GetOverlayFrame())
                 if isreflect then
-                    BackSpr:Render(playerPos + offset)
+                    BackSpr:Render(playerPos )
                 else
                     BackSpr:Render(playerPos)
                 end
@@ -904,6 +904,10 @@ return function (mod)
             local playerPos = offset
             local isreflect = Room:GetRenderMode() == RenderMode.RENDER_WATER_REFLECT
 
+            if data._BethsHairCord.RealHeadPos then
+                playerPos = data._BethsHairCord.RealHeadPos
+            end
+
             ---@type Sprite
             local Back2Spr = cdat.Back2Spr
             if Back2Spr then
@@ -927,7 +931,7 @@ return function (mod)
                 Back2Spr.Color = playerCol
                 Back2Spr:SetFrame(spr:GetOverlayAnimation(), spr:GetOverlayFrame())
                 if isreflect then
-                    Back2Spr:Render(playerPos + offset)
+                    Back2Spr:Render(playerPos )
                 else
                     Back2Spr:Render(playerPos)
                 end
