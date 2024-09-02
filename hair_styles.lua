@@ -314,6 +314,11 @@ function mod.HStyles.HairKeeper.update(_, ent)
     elseif spr:IsFinished("scisor_end") then
         spr:Play("idle", true)
         data.faceAngle = nil
+    elseif spr:IsFinished("scisor2_start") then
+        spr:Play("scisor2_loop", true)
+        data.scisor2_delay = 5
+    elseif spr:IsFinished("scisor2_end") then
+        spr:Play("scisor_loop", true)
     end
 
     local overName = spr:GetOverlayAnimation()
@@ -324,6 +329,7 @@ function mod.HStyles.HairKeeper.update(_, ent)
 
     if ent.Target then
         data.room = data.room or game:GetRoom()
+        local SelBtn = mod.WGA and mod.WGA.ManualSelectedButton
 
         if spr:IsPlaying("scisor_loop") then
             local prefaceAngle = data.faceAngle
@@ -333,6 +339,37 @@ function mod.HStyles.HairKeeper.update(_, ent)
             end
             spr:SetOverlayFrame(spr:GetFrame())
             --data.faceAngle = ent.Target:GetSprite().Scale.Y > 1.2 and 1 or 0
+
+            if SelBtn then
+                ---@type EditorButton
+                local btn = SelBtn[1]
+                if btn and btn.IsHairStyleMenu and btn.IsSelected then
+                    spr:Play("scisor2_start")
+                    data.faceAngle = nil
+                    spr:RemoveOverlay()
+                end
+            end
+        elseif spr:IsPlaying("scisor2_loop") or spr:IsPlaying("scisor2_start") then
+            if not SelBtn or not SelBtn[1] or not SelBtn[1].IsHairStyleMenu or not SelBtn[1].IsSelected then
+                if data.scisor2_delay then
+                    data.scisor2_delay = data.scisor2_delay - 1
+                    if data.scisor2_delay <= 0 then
+                        data.scisor2_delay = nil
+                        spr:Play("scisor2_end", true)
+                    end
+                else
+                    if spr:IsPlaying("scisor2_start") then
+                        local lastframe = spr:GetAnimationData("scisor2_end"):GetLength()
+                        local setfraem = lastframe - spr:GetFrame() - 3
+                        spr:Play("scisor2_end", true)
+                        spr:SetFrame(setfraem)
+                    else
+                        spr:Play("scisor2_end", true)
+                    end
+                end
+            elseif spr:IsPlaying("scisor2_loop") then
+                data.scisor2_delay = 5
+            end
         end
 
         if not data.removedwall then

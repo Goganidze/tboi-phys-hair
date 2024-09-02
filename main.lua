@@ -1639,6 +1639,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                         --wga.RenderCustomButton2(pos, self)
                 end)
             
+            self.IsHairStyleMenu = true
             self.row = xy.Y
             self.HintText = hintText
             self.posfunc = function ()
