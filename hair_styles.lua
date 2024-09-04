@@ -319,6 +319,8 @@ function mod.HStyles.HairKeeper.update(_, ent)
         data.scisor2_delay = 5
     elseif spr:IsFinished("scisor2_end") then
         spr:Play("scisor_loop", true)
+    elseif spr:IsFinished("scisor2_чик") then
+        spr:Play("scisor2_loop", true)
     end
 
     local overName = spr:GetOverlayAnimation()
@@ -328,6 +330,10 @@ function mod.HStyles.HairKeeper.update(_, ent)
     end
 
     if ent.Target then
+        if not salon.Chranya or not salon.Chranya.Ref then
+            salon.Chranya = EntityPtr(ent)
+        end
+
         data.room = data.room or game:GetRoom()
         local SelBtn = mod.WGA and mod.WGA.ManualSelectedButton
 
@@ -407,8 +413,8 @@ function mod.HStyles.HairKeeper.coll(_, ent, col)
             local bhpd = BethHair.HairStylesData.playerdata
             if bhpd[ptype] then
                 ent.Target = player
-                BethHair.StyleMenu.TargetPlayer = player
-                BethHair.StyleMenu.TargetHairKeeper = ent
+                BethHair.StyleMenu.TargetPlayer = EntityPtr(player)
+                BethHair.StyleMenu.TargetHairKeeper = EntityPtr(ent)
                 BethHair.StyleMenu.ShowWindow()
 
                 ent:GetSprite():Play("scisor_start", true)
@@ -626,7 +632,7 @@ do
                 if not paused then
                     salon.Alpha = salon.Alpha * 0.9 + 0.1
                     local tar
-                    if mod.StyleMenu.TargetPlayer then
+                    if mod.StyleMenu.TargetPlayer and mod.StyleMenu.TargetPlayer.Ref then
                         --tar = mod.StyleMenu.TargetPlayer.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0)
                     else
                         tar = salon.TopLeftPos+Vector(40*6+0,40*4+0)
@@ -676,6 +682,71 @@ do
     end
     mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.HStyles.salon.RenderRoom, mod.HStyles.salon.BGEntVar)
 
+
+    function mod.HStyles.salon.ChangeHairStyle(player, stylename, StyleMode)
+        salon.DoChoopEffect = true
+        --mod.StyleMenu.TargetHairKeeper
+        local data = player:GetData()
+        salon.CachedPlayerHairData = data._BethsHairCord
+
+        local stdata = HairStylesData.styles[data._PhysHair_HairStyle.StyleName]
+
+        local tarcost = stdata.data.TargetCostume
+
+        if tarcost then
+            local pos = 0
+            for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+                local conf = csd:GetItemConfig()
+                if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
+                    if not tarcost.pos or tarcost.pos == pos then
+                        ---@type Sprite
+                        local cspr = csd:GetSprite()
+                        salon.CachedPhayerHairSpr = GenSprite(cspr:GetFilename(), cspr:GetAnimation())
+                        local CachedSpr = salon.CachedPhayerHairSpr
+                        for j, layer in pairs(cspr:GetAllLayers()) do
+                            CachedSpr:ReplaceSpritesheet(j, layer:GetSpritesheetPath())
+                        end
+                        CachedSpr:LoadGraphics()
+                        CachedSpr.Color = cspr.Color
+                    end
+                end
+            end
+        end
+
+        local sheep = stdata.data.NullposRefSpr
+        local finalPath = data._BethsHairCord.FinalCostumePath
+
+        if sheep and finalPath then
+            local cspr = salon.CachedPhayerHairSpr
+            --print( sheep:GetFilename() )
+            local anim = cspr:GetAnimation()
+            cspr:Load(sheep:GetFilename(), true)
+            cspr:Play(anim)
+            for i=0, cspr:GetLayerCount()-1 do
+                --print(i, cspr:GetLayer(i):GetSpritesheetPath())
+                local shpa = sheep:GetLayer(i)
+                if shpa then
+                    --print(i, shpa:GetSpritesheetPath())
+                    cspr:ReplaceSpritesheet(i, finalPath[i])
+                    print( finalPath[i] )
+                end
+            end
+            cspr:LoadGraphics()
+        end
+
+        if salon.Chranya and salon.Chranya.Ref then
+            salon.Chranya.Ref:GetSprite():Play("scisor2_чик", true)
+        end
+
+        local renderPos = salon.CachedPlayerHairData.RealHeadPos
+        local rng = RNG(Isaac.GetFrameCount(), 35)
+        mod.HStyles.Chooping = {rng = rng, list = {}, RenderPos = renderPos, FloorYpos = Isaac.WorldToScreen(player.Position).Y,
+            RefSpr = salon.CachedPhayerHairSpr}
+
+        mod.HStyles.SetStyleToPlayer(player, stylename, StyleMode)
+    end
+
+
     ---@param rng RNG
     local trowHairpiecy = function(rng, pos, col)
         local vec = rng:RandomVector()
@@ -693,14 +764,13 @@ do
     end
 
 
-
     function mod.HStyles.salon.RenderHairChoop(_, player, renderPos)
         if game:GetRoom():GetRenderMode() == RenderMode.RENDER_WATER_REFLECT then
             return
         end
-        if mod.DoChoopEffect and mod.StyleMenu.TargetPlayer and
-        GetPtrHash(mod.StyleMenu.TargetPlayer) == GetPtrHash(player) then
-            
+        if salon.DoChoopEffect and mod.StyleMenu.TargetPlayer and mod.StyleMenu.TargetPlayer.Ref and
+        GetPtrHash(mod.StyleMenu.TargetPlayer.Ref) == GetPtrHash(player) then
+            --[[
             --BethHair.DoChoopEffect = false
             local data = player:GetData()
             local stdata = HairStylesData.styles[data._PhysHair_HairStyle.StyleName]
@@ -777,11 +847,79 @@ do
                                     --end
                                 end
                             end
-                            mod.DoChoopEffect = nil
+                            salon.DoChoopEffect = nil
 
                         elseif tarcost.pos > pos then
                             pos = pos + 1
                         end
+                    end
+                end
+            end]]
+
+            local Chooping = mod.HStyles.Chooping
+            local rng = Chooping.rng
+            local cspr = Chooping.RefSpr
+            local procent = (salon.Chranya.Ref:GetSprite():GetFrame()-1) / 10
+
+            local layer = cspr:GetCurrentAnimationData():GetLayer(0):GetFrame(cspr:GetFrame())
+                cspr:Render(Chooping.RenderPos, Vector(layer:GetWidth()*procent, 0))
+
+            if procent > 1 then
+                salon.DoChoopEffect = nil
+            elseif procent > 0 and not game:IsPaused() and Isaac.GetFrameCount()%2 == 0 then
+
+                --print(1 + math.floor(procent*14), 15 - math.floor((1-procent)*14))
+                for x = 1 + math.floor(procent*14), 15 - math.floor((1-procent)*14) do
+                    for y = 1, 15 do
+                        local layerID = rng:RandomInt(cspr:GetLayerCount())
+                        local layer = cspr:GetCurrentAnimationData():GetLayer(layerID):GetFrame(cspr:GetFrame()) 
+
+                        if layer then
+                            local pos = Vector(
+                                --mrandom(rng, layer:GetPos().X - layer:GetPivot().X, layer:GetPos().X - layer:GetPivot().X +layer:GetWidth()), 
+                                --mrandom(rng, layer:GetPos().Y - layer:GetPivot().Y, layer:GetPos().Y - layer:GetPivot().Y +layer:GetHeight())
+                                layer:GetPos().X - layer:GetPivot().X + x/15 * layer:GetWidth() + mrandom(rng, -1,1),
+                                layer:GetPos().Y - layer:GetPivot().Y + y/15 * layer:GetHeight() + mrandom(rng, -1,1)
+                            )
+
+                            ---@type KColor
+                            local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
+                            local r,g,b = tex.Red, tex.Green, tex.Blue
+                                --print(pos, tex, tex and tex.Alpha)
+                            if tex and tex.Alpha > 0 and r+g+b > 0.1 then
+
+                                local midR, midG, midB = 1,1,1
+                                local isHasColor = false
+                                for xi = -2, 2 do
+                                    for yi = -2, 2 do
+                                        ---@type KColor
+                                        local tex = cspr:GetTexel(pos+Vector(xi,yi), Vector.Zero, 0.5, layerID)
+                                        if tex and tex.Alpha > 0 then
+                                            local r,g,b = tex.Red, tex.Green, tex.Blue
+                                            if r+g+b > 0.1 then
+                                                midR = (midR + r) / 2
+                                                midG = (midG + g) / 2
+                                                midB = (midB + b) / 2
+                                            end
+                                        end
+                                        isHasColor = true
+                                    end
+                                end
+                                if isHasColor then
+                                    ----@type KColor
+                                    --local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
+                                    --print(pos, tex, tex and tex.Alpha)
+                                    --if tex and tex.Alpha > 0 then
+                                        local refColor = Color(1,1,1,1,0,0,0, midR, midG, midB, 1)
+                                    -- refColor:SetColorize()
+                                        Chooping.list[#Chooping.list+1] = trowHairpiecy(rng, pos, refColor)
+                                    --end
+                                end
+                            end
+                        end
+                        --if #Chooping.list > 10 then
+                        --    break
+                        --end
                     end
                 end
             end

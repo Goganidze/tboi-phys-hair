@@ -410,6 +410,7 @@ return function (mod)
                     local defSpriteSheep = data._PhysHairExtra and data._PhysHairExtra.DefCostumetSheetPath
                     cdat.CostumeReplaced = true
                     cdat.OrigCostume = {}
+                    cdat.FinalCostumePath = {}
                     local pos = 0
                     
                     --Isaac.RunCallbackWithParam(_HairCordData.Callbacks.PRE_HAIR_COLOR_CHANGE, ptype, player, bodcol, refsting)
@@ -457,6 +458,7 @@ return function (mod)
                                             end
 
                                             cspr:ReplaceSpritesheet(id, finalpath)
+                                            cdat.FinalCostumePath[id] = finalpath
                                         end
                                         cspr:LoadGraphics()
                                     else
@@ -493,6 +495,7 @@ return function (mod)
                                             end
                                             
                                             cspr:ReplaceSpritesheet(id, finalpath) -- refsting .. (suffix or "") .. ".png")  -- rep)
+                                            cdat.FinalCostumePath[id] = finalpath
                                         end
                                         cspr:LoadGraphics()
                                     end

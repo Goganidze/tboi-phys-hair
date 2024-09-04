@@ -1285,8 +1285,8 @@ function BethHair.StyleMenu.HUDRender()
             preMousePos = pos
 
             local wind = smenu.wind
-            local player = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:ToPlayer()
-            local keeper = BethHair.StyleMenu.TargetHairKeeper
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer()
+            local keeper = smenu.TargetHairKeeper and smenu.TargetHairKeeper.Ref
 
             if not wind.custinit then
                 wind.custinit = true
@@ -1395,7 +1395,7 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
         wga.DrawMultilineText(1, text, x + 105,y + offset, 1,1, 2)
     end
 
-    local player = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:ToPlayer()
+    local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer()
 
     if player then
 
@@ -1552,7 +1552,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
     mdata.navmap = navmap
     navmap.collums = {}
 
-    local playerdata = (BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()):GetData()
+    local playerdata = (smenu.TargetPlayer and smenu.TargetPlayer.Ref or Isaac.GetPlayer()):GetData()
     smenu.PrevStyleName = playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName
 
     local hspd = BethHair.HairStylesData.playerdata
@@ -1614,9 +1614,10 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             self = wga.AddButton(smenu.name, "style" .. i, pos,
              40, 40, nilspr,
                 function (button)
-                    local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
-                    BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.SetStyleMode)
-                    BethHair.DoChoopEffect = true
+                    local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
+                    --BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.SetStyleMode)
+                    mod.HStyles.salon.ChangeHairStyle(player, stylename, smenu.SetStyleMode)
+                    --BethHair.DoChoopEffect = true
                     
                 end, function (pos, visible)
                     spr:SetFrame(self.IsSelected and 1 or 0)
@@ -1650,8 +1651,8 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
                 self.canPressed = self.scrollupcrop < 32 and self.scrolldwoncrop < 40
                 
-                if smenu.TargetPlayer then
-                    local playerdata = smenu.TargetPlayer:GetData()
+                if smenu.TargetPlayer and smenu.TargetPlayer.Ref then
+                    local playerdata = smenu.TargetPlayer.Ref:GetData()
                     if playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName == stylename then
                         if not self.DoGreen then
                             self.DoGreen = true
@@ -1749,7 +1750,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 BethHair.StyleMenu.setphysspr:SetFrame(1)
             end
 
-            local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref or Isaac.GetPlayer()
             local _PhysHair_HairStyle = player:GetData()._PhysHair_HairStyle
             BethHair.HStyles.SetStyleToPlayer(player, _PhysHair_HairStyle and _PhysHair_HairStyle.StyleName, smenu.SetStyleMode)
         end, function (pos, visible)
@@ -1771,7 +1772,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
         function (button)
             BethHair.StyleMenu.CloseWindow()
 
-            local player = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
             if smenu.PrevStyleName then
                 BethHair.HStyles.SetStyleToPlayer(player, smenu.PrevStyleName, smenu.SetStyleMode)
             else
@@ -1957,11 +1958,11 @@ function BethHair.StyleMenu.ShowWindow()
     smenu.wind.backcolor = Color(1,1,1,1)
     smenu.wind.backcolornfocus = Color(1,1,1,1)
 
-    BethHair.StyleMenu.TargetPlayer = BethHair.StyleMenu.TargetPlayer or Isaac.GetPlayer()
+    BethHair.StyleMenu.TargetPlayer = smenu.TargetPlayer or EntityPtr(Isaac.GetPlayer())
 
-    wga.SetControlType(wga.enum.ControlType.CONTROLLER, BethHair.StyleMenu.TargetPlayer )
+    wga.SetControlType(wga.enum.ControlType.CONTROLLER, smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer() )
 
-    local ptype = BethHair.StyleMenu.TargetPlayer and BethHair.StyleMenu.TargetPlayer:GetPlayerType()
+    local ptype = smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer():GetPlayerType()
         or Isaac.GetPlayer():GetPlayerType()
     BethHair.StyleMenu.GenWindowBtns(ptype)
 
@@ -2035,3 +2036,41 @@ if debugmultiplayer and WORSTDEBUGMENU then
     end)
 end
 
+
+--[[
+
+local textColor = {54/256, 47/256, 45/256}
+local seedfont = Font()
+seedfont:Load("font/teammeatfont12.fnt")
+mod:AddCallback(ModCallbacks.MC_PRE_PAUSE_SCREEN_RENDER, function(_, name)
+    if PauseMenu.GetState() ~= 2 then
+        local centerPos = Vector(Isaac.GetScreenWidth()/2, Isaac.GetScreenHeight()/2)
+
+        ---@type Sprite
+        local spr = PauseMenu.GetSprite()
+        spr:Render(centerPos + Vector(57.5,0))
+
+        local statSpr = PauseMenu.GetStatsSprite()
+        statSpr:Render(centerPos + Vector(57.5,0))
+
+        local compSpr = PauseMenu.GetCompletionMarksSprite()
+        compSpr:Render(centerPos + Vector(57.5,0) + spr:GetNullFrame("CompletionWidget"):GetPos()) -- -62.5,-84
+
+        local seed = game:GetSeeds()
+        local seedstr = Seeds.Seed2String(seed:GetStartSeed())
+        local textoffset = spr:GetCurrentAnimationData():GetLayer(5):GetFrame(spr:GetFrame()):GetPos()
+        local textRPos = centerPos + textoffset + Vector(57.5-35,0-40) --+ Vector(-149.5,-75)
+
+        local seedstr1,seedstr2 = seedstr:sub(1,5), seedstr:sub(6,10)
+
+        seedfont:DrawStringScaledUTF8(seedstr1, textRPos.X,textRPos.Y, 1,1, 
+            KColor(textColor[1],textColor[2],textColor[3],spr.Color.A), 0, false)
+        seedfont:DrawStringScaledUTF8(seedstr2, textRPos.X,textRPos.Y + seedfont:GetLineHeight()-4, 1,1, 
+            KColor(textColor[1],textColor[2],textColor[3],spr.Color.A), 0, false)
+
+        if Isaac.GetFrameCount() % 30 < 15 then
+        return true
+        end
+    end
+end)
+]]
