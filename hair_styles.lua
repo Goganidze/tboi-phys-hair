@@ -728,7 +728,6 @@ do
                 if shpa then
                     --print(i, shpa:GetSpritesheetPath())
                     cspr:ReplaceSpritesheet(i, finalPath[i])
-                    print( finalPath[i] )
                 end
             end
             cspr:LoadGraphics()
