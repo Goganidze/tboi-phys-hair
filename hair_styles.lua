@@ -99,6 +99,7 @@ local cacheNoHairColor = {}
 function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
     if player and style_name then
         local stdata = HairStylesData.styles[style_name]
+        player = player:ToPlayer()
         local ptype = player:GetPlayerType()
         if stdata and stdata.ID == ptype then
             --mod.SetHairStyleData(ptype, stdata)
@@ -130,7 +131,6 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
         if orig then
             orig = orig:match(".+/(.-)%.png")
             local path = skinsheet .. orig .. ( bodycolor[bodcol] or "") .. ".png"
-            --print(path)
             for i=0, spr:GetLayerCount()-1 do
                 spr:ReplaceSpritesheet(i,path)
             end
@@ -225,7 +225,9 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                             dcsp[id] = finalpath
                         end
                         cspr:LoadGraphics()
-                    end]]
+                    end]] 
+                else
+                    pos = pos + 1
                 end
             end
         end
@@ -252,7 +254,6 @@ function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
                 if orig then
                     orig = orig:match(".+/(.-)%.png")
                     local path = skinsheet .. orig .. ( refstring or "") .. ".png"
-                    --print(path)
                     for i=0, spr:GetLayerCount()-1 do
                         spr:ReplaceSpritesheet(i,path)
                     end
@@ -263,6 +264,54 @@ function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
     end
 end
 mod:AddCallback(mod.HairLib.Callbacks.PRE_COLOR_CHANGE, mod.HStyles.BodyColorTracker)
+
+
+local PlayerTypeToTargetCostume = {
+    [PlayerType.PLAYER_MAGDALENE]=NullItemID.ID_MAGDALENE, [PlayerType.PLAYER_CAIN]=NullItemID.ID_CAIN, [PlayerType.PLAYER_JUDAS]=NullItemID.ID_JUDAS,
+    [PlayerType.PLAYER_EVE]=NullItemID.ID_EVE, [PlayerType.PLAYER_AZAZEL]=NullItemID.ID_AZAZEL, [PlayerType.PLAYER_EDEN]=NullItemID.ID_EDEN,
+    [PlayerType.PLAYER_SAMSON]=NullItemID.ID_SAMSON, [PlayerType.PLAYER_LAZARUS]=NullItemID.ID_LAZARUS, [PlayerType.PLAYER_LAZARUS2]=NullItemID.ID_LAZARUS2,
+    [PlayerType.PLAYER_LILITH]=NullItemID.ID_LILITH, [PlayerType.PLAYER_APOLLYON]=NullItemID.ID_APOLLYON, [PlayerType.PLAYER_BETHANY]=NullItemID.ID_BETHANY,
+    [PlayerType.PLAYER_KEEPER]= NullItemID.ID_KEEPER, [PlayerType.PLAYER_THEFORGOTTEN]=NullItemID.ID_FORGOTTEN,
+    [PlayerType.PLAYER_JACOB]=NullItemID.ID_JACOB, [PlayerType.PLAYER_ESAU]=NullItemID.ID_ESAU, [PlayerType.PLAYER_ISAAC_B]=NullItemID.ID_ISAAC_B,
+    [PlayerType.PLAYER_MAGDALENE_B]=NullItemID.ID_MAGDALENE_B, [PlayerType.PLAYER_CAIN_B]=NullItemID.ID_CAIN_B, [PlayerType.PLAYER_JUDAS_B]=NullItemID.ID_JUDAS_B,
+    [PlayerType.PLAYER_BLUEBABY_B]=NullItemID.ID_BLUEBABY_B, [PlayerType.PLAYER_EVE_B]=NullItemID.ID_EVE_B, [PlayerType.PLAYER_SAMSON_B]=NullItemID.ID_SAMSON_B,
+    [PlayerType.PLAYER_AZAZEL_B]=NullItemID.ID_AZAZEL_B, [PlayerType.PLAYER_LAZARUS_B]=NullItemID.ID_LAZARUS_B, [PlayerType.PLAYER_LAZARUS2_B]=NullItemID.ID_LAZARUS2_B,
+    [PlayerType.PLAYER_EDEN_B]=NullItemID.ID_EDEN_B, [PlayerType.PLAYER_THELOST_B]=NullItemID.ID_LOST_B, [PlayerType.PLAYER_LILITH_B]=NullItemID.ID_LILITH_B,
+    [PlayerType.PLAYER_KEEPER_B]=NullItemID.ID_KEEPER_B, [PlayerType.PLAYER_APOLLYON_B]=NullItemID.ID_APOLLYON_B, [PlayerType.PLAYER_THEFORGOTTEN_B]=NullItemID.ID_FORGOTTEN_B,
+    [PlayerType.PLAYER_BETHANY_B]=NullItemID.ID_BETHANY_B, [PlayerType.PLAYER_JACOB2_B]=NullItemID.ID_JACOB2_B, [PlayerType.PLAYER_THESOUL]=NullItemID.ID_SOUL_FORGOTTEN,
+    [PlayerType.PLAYER_THESOUL_B]=NullItemID.ID_SOUL_B,
+}
+
+function mod.HStyles.GetTargetCostume(playerType, style_name)
+    if style_name and HairStylesData.styles[style_name] then
+        local stdata = HairStylesData.styles[style_name]
+        local tarcost = stdata.data.TargetCostume
+        return tarcost
+    elseif playerType then
+        return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL, pos = 0}
+    end
+
+end
+
+
+function mod.HStyles.GetHairCostumeSpr(player)
+    
+    local data = player:GetData()._PhysHair_HairStyle
+    local tarcost = mod.HStyles.GetTargetCostume(player:GetPlayerType(), data and data.StyleName)
+
+    local pos = 0
+    for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+        local conf = csd:GetItemConfig()
+        if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
+            if not tarcost.pos or tarcost.pos == pos then
+                return csd:GetSprite()
+            else
+                pos = pos + 1
+            end
+
+        end
+    end
+end
 
 
 
@@ -682,6 +731,9 @@ do
     end
     mod:AddCallback(ModCallbacks.MC_POST_EFFECT_RENDER, mod.HStyles.salon.RenderRoom, mod.HStyles.salon.BGEntVar)
 
+    local ScreenToWorld = function(x)
+        return (-Isaac.WorldToScreen(Vector.Zero) + x)/(1/Wtr)
+    end
 
     function mod.HStyles.salon.ChangeHairStyle(player, stylename, StyleMode)
         salon.DoChoopEffect = true
@@ -689,6 +741,7 @@ do
         local data = player:GetData()
         salon.CachedPlayerHairData = data._BethsHairCord
 
+        --[[
         local stdata = HairStylesData.styles[data._PhysHair_HairStyle.StyleName]
 
         local tarcost = stdata.data.TargetCostume
@@ -712,36 +765,70 @@ do
                 end
             end
         end
+        ]]
+        if not data._PhysHair_HairStyle or not data._PhysHair_HairStyle.StyleName 
+        or not HairStylesData.styles[data._PhysHair_HairStyle.StyleName] then
+            salon.CachedPhayerHairSpr = mod.HStyles.GetHairCostumeSpr(player)
+        else
+            local stdata = HairStylesData.styles[data._PhysHair_HairStyle.StyleName]
 
-        local sheep = stdata.data.NullposRefSpr
-        local finalPath = data._BethsHairCord.FinalCostumePath
-
-        if sheep and finalPath then
-            local cspr = salon.CachedPhayerHairSpr
-            --print( sheep:GetFilename() )
-            local anim = cspr:GetAnimation()
-            cspr:Load(sheep:GetFilename(), true)
-            cspr:Play(anim)
-            for i=0, cspr:GetLayerCount()-1 do
-                --print(i, cspr:GetLayer(i):GetSpritesheetPath())
-                local shpa = sheep:GetLayer(i)
-                if shpa then
-                    --print(i, shpa:GetSpritesheetPath())
-                    cspr:ReplaceSpritesheet(i, finalPath[i])
-                end
+            local cspr = mod.HStyles.GetHairCostumeSpr(player)
+            salon.CachedPhayerHairSpr = GenSprite(cspr:GetFilename(), cspr:GetAnimation())
+            local CachedSpr = salon.CachedPhayerHairSpr
+            for j, layer in pairs(cspr:GetAllLayers()) do
+                CachedSpr:ReplaceSpritesheet(j, layer:GetSpritesheetPath())
             end
-            cspr:LoadGraphics()
+            CachedSpr:LoadGraphics()
+            CachedSpr.Color = cspr.Color
+
+            local sheep = stdata.data.NullposRefSpr
+            local finalPath = data._BethsHairCord.FinalCostumePath
+            if sheep and finalPath then
+                --local cspr2 = salon.CachedPhayerHairSpr
+                local anim = cspr:GetAnimation()
+                CachedSpr:Load(sheep:GetFilename(), true)
+                CachedSpr:Play(anim, true)
+                for i=0, CachedSpr:GetLayerCount()-1 do
+                    local shpa = sheep:GetLayer(i)
+                    if shpa then
+                        CachedSpr:ReplaceSpritesheet(i, finalPath[i])
+                    end
+                end
+                CachedSpr:LoadGraphics()
+            else
+                --local cspr2 = salon.CachedPhayerHairSpr
+                for i=0, CachedSpr:GetLayerCount()-1 do
+                    --local shpa = cspr:GetLayer(i)
+                    --if shpa then
+                        CachedSpr:ReplaceSpritesheet(i, finalPath[i])
+                    --end
+                end
+                CachedSpr:LoadGraphics()
+            end
         end
 
         if salon.Chranya and salon.Chranya.Ref then
             salon.Chranya.Ref:GetSprite():Play("scisor2_чик", true)
         end
-
-        local renderPos = salon.CachedPlayerHairData.RealHeadPos
+        if salon.CachedPhayerHairSpr:GetAnimation() == "" then
+            salon.CachedPhayerHairSpr:Play("HeadDown", true)
+        end
+        
+        --local renderPos = salon.CachedPlayerHairData and salon.CachedPlayerHairData.RealHeadPos 
+        --    or (Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
+        local renderPos = salon.CachedPlayerHairData and salon.CachedPlayerHairData.RealHeadPos and (ScreenToWorld(salon.CachedPlayerHairData.RealHeadPos))
+            or (player.Position + player:GetFlyingOffset()/(1/Wtr))
+        
         local rng = RNG(Isaac.GetFrameCount(), 35)
-        mod.HStyles.Chooping = {rng = rng, list = {}, RenderPos = renderPos, FloorYpos = Isaac.WorldToScreen(player.Position).Y,
-            RefSpr = salon.CachedPhayerHairSpr}
-
+        local prelist = mod.HStyles.Chooping and mod.HStyles.Chooping.list or {}
+        mod.HStyles.Chooping = {rng = rng, list = prelist, extralist = {}, RenderPos = renderPos, FloorYpos = Isaac.WorldToScreen(player.Position).Y,
+            RefSpr = salon.CachedPhayerHairSpr,
+            HPS = GenSprite("gfx/editor/parechmacher.anm2", "hair_piece"),
+            CHIK = GenSprite("gfx/editor/parechmacher.anm2", "чик"),
+            SWIG = GenSprite("gfx/editor/parechmacher.anm2", "свиг")
+        }
+        mod.HStyles.Chooping.SWIG.Scale = Vector(1.5, 1.5)
+        
         mod.HStyles.SetStyleToPlayer(player, stylename, StyleMode)
     end
 
@@ -749,12 +836,14 @@ do
     ---@param rng RNG
     local trowHairpiecy = function(rng, pos, col)
         local vec = rng:RandomVector()
-        vec.X = vec.X * .2
-        vec.Y = vec.Y + .5
-        local spr = GenSprite("gfx/editor/parechmacher.anm2", "hair_piece")
+        vec.X = vec.X * 1.2
+        vec.Y = (vec.Y - .5) * 1.4
+        --[[local spr = GenSprite("gfx/editor/parechmacher.anm2", "hair_piece")
         spr:SetFrame(rng:RandomInt(4))
         spr.Color = col
-        spr.Rotation = rng:RandomInt(360)
+        spr.Rotation = rng:RandomInt(360)]]
+        local spr = {Color = col, Rotation = rng:RandomInt(360), Frame = rng:RandomInt(4), Scale = Vector(1,1)}
+
         return {pos, vec, spr, 40, (rng:RandomFloat()-.5)*45}
     end
 
@@ -762,6 +851,10 @@ do
         return a + rng:RandomInt(b-a)
     end
 
+    local hasChik = false
+    local chikx = 0
+    local hasSwig = false
+    local swigx = 0
 
     function mod.HStyles.salon.RenderHairChoop(_, player, renderPos)
         if game:GetRoom():GetRenderMode() == RenderMode.RENDER_WATER_REFLECT then
@@ -860,96 +953,169 @@ do
             local cspr = Chooping.RefSpr
             local procent = (salon.Chranya.Ref:GetSprite():GetFrame()-1) / 10
 
-            local layer = cspr:GetCurrentAnimationData():GetLayer(0):GetFrame(cspr:GetFrame())
-                cspr:Render(Chooping.RenderPos, Vector(layer:GetWidth()*procent, 0))
+            local layer 
+            for i = 0, cspr:GetLayerCount()-1 do
+                layer = cspr:GetCurrentAnimationData():GetLayer(i):GetFrame(cspr:GetFrame())
+                if layer then
+                    break
+                end
+            end
+
+            local RenderPos = Isaac.WorldToScreen(Chooping.RenderPos)
+
+            cspr:Render(RenderPos, Vector(layer:GetWidth()*procent, 0))
 
             if procent > 1 then
                 salon.DoChoopEffect = nil
             elseif procent > 0 and not game:IsPaused() and Isaac.GetFrameCount()%2 == 0 then
 
-                --print(1 + math.floor(procent*14), 15 - math.floor((1-procent)*14))
+                
                 for x = 1 + math.floor(procent*14), 15 - math.floor((1-procent)*14) do
                     for y = 1, 15 do
-                        local layerID = rng:RandomInt(cspr:GetLayerCount())
-                        local layer = cspr:GetCurrentAnimationData():GetLayer(layerID):GetFrame(cspr:GetFrame()) 
+                        if rng:RandomInt(3) > 0 then
+                            local layerID = rng:RandomInt(cspr:GetLayerCount())
+                            local layer = cspr:GetCurrentAnimationData():GetLayer(layerID):GetFrame(cspr:GetFrame()) 
 
-                        if layer then
-                            local pos = Vector(
-                                --mrandom(rng, layer:GetPos().X - layer:GetPivot().X, layer:GetPos().X - layer:GetPivot().X +layer:GetWidth()), 
-                                --mrandom(rng, layer:GetPos().Y - layer:GetPivot().Y, layer:GetPos().Y - layer:GetPivot().Y +layer:GetHeight())
-                                layer:GetPos().X - layer:GetPivot().X + x/15 * layer:GetWidth() + mrandom(rng, -1,1),
-                                layer:GetPos().Y - layer:GetPivot().Y + y/15 * layer:GetHeight() + mrandom(rng, -1,1)
-                            )
+                            if layer then
+                                local pos = Vector(
+                                    --mrandom(rng, layer:GetPos().X - layer:GetPivot().X, layer:GetPos().X - layer:GetPivot().X +layer:GetWidth()), 
+                                    --mrandom(rng, layer:GetPos().Y - layer:GetPivot().Y, layer:GetPos().Y - layer:GetPivot().Y +layer:GetHeight())
+                                    layer:GetPos().X - layer:GetPivot().X + x/15 * layer:GetWidth() + mrandom(rng, -1,1),
+                                    layer:GetPos().Y - layer:GetPivot().Y + y/15 * layer:GetHeight() + mrandom(rng, -1,1)
+                                )
 
-                            ---@type KColor
-                            local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
-                            local r,g,b = tex.Red, tex.Green, tex.Blue
-                                --print(pos, tex, tex and tex.Alpha)
-                            if tex and tex.Alpha > 0 and r+g+b > 0.1 then
+                                ---@type KColor
+                                local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
+                                local r,g,b = tex.Red, tex.Green, tex.Blue
+                                    --print(pos, tex, tex and tex.Alpha)
+                                if tex and tex.Alpha > 0 and r+g+b > 0.1 then
 
-                                local midR, midG, midB = 1,1,1
-                                local isHasColor = false
-                                for xi = -2, 2 do
-                                    for yi = -2, 2 do
-                                        ---@type KColor
-                                        local tex = cspr:GetTexel(pos+Vector(xi,yi), Vector.Zero, 0.5, layerID)
-                                        if tex and tex.Alpha > 0 then
-                                            local r,g,b = tex.Red, tex.Green, tex.Blue
-                                            if r+g+b > 0.1 then
-                                                midR = (midR + r) / 2
-                                                midG = (midG + g) / 2
-                                                midB = (midB + b) / 2
+                                    local midR, midG, midB = 1,1,1
+                                    local isHasColor = false
+                                    for xi = -2, 2 do
+                                        for yi = -2, 2 do
+                                            ---@type KColor
+                                            local tex = cspr:GetTexel(pos+Vector(xi,yi), Vector.Zero, 0.5, layerID)
+                                            if tex and tex.Alpha > 0 then
+                                                local r,g,b = tex.Red, tex.Green, tex.Blue
+                                                if r+g+b > 0.1 then
+                                                    midR = (midR + r) / 2
+                                                    midG = (midG + g) / 2
+                                                    midB = (midB + b) / 2
+                                                end
                                             end
+                                            isHasColor = true
                                         end
-                                        isHasColor = true
+                                    end
+                                    if isHasColor then
+                                        ----@type KColor
+                                        --local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
+                                        --print(pos, tex, tex and tex.Alpha)
+                                        --if tex and tex.Alpha > 0 then
+                                            local refColor = Color(1,1,1,1,0,0,0, midR, midG, midB, 1)
+                                        -- refColor:SetColorize()
+                                            Chooping.list[#Chooping.list+1] = trowHairpiecy(rng, pos, refColor)
+                                        --end
+                                        
+                                        if hasChik then
+                                            if chikx ~= x then
+                                                hasChik = hasChik - 1
+                                                if hasChik <= 0 then
+                                                    hasChik = false
+                                                end
+                                            end
+                                        elseif not hasSwig then
+                                            hasChik = 3
+                                            chikx = x
+                                            Chooping.extralist[#Chooping.extralist+1] = {Chooping.CHIK, 0, rng:RandomInt(360), pos}
+                                        end
+
+                                        if hasSwig then
+                                            if swigx ~= x then
+                                                hasSwig = hasSwig - 1
+                                                if hasSwig <= 0 then
+                                                    hasSwig = false
+                                                end
+                                            end
+                                        elseif not hasChik then
+                                            hasSwig = 3
+                                            swigx = x
+                                            Chooping.extralist[#Chooping.extralist+1] = {Chooping.SWIG, 0, rng:RandomInt(360), pos}
+                                        end
                                     end
                                 end
-                                if isHasColor then
-                                    ----@type KColor
-                                    --local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
-                                    --print(pos, tex, tex and tex.Alpha)
-                                    --if tex and tex.Alpha > 0 then
-                                        local refColor = Color(1,1,1,1,0,0,0, midR, midG, midB, 1)
-                                    -- refColor:SetColorize()
-                                        Chooping.list[#Chooping.list+1] = trowHairpiecy(rng, pos, refColor)
-                                    --end
-                                end
                             end
+                            --if #Chooping.list > 10 then
+                            --    break
+                            --end
                         end
-                        --if #Chooping.list > 10 then
-                        --    break
-                        --end
                     end
                 end
             end
         end
         if mod.HStyles.Chooping then
             local Chooping = mod.HStyles.Chooping
+            local hairPieceSpr = Chooping.HPS
+            local RenderPos = Isaac.WorldToScreen(Chooping.RenderPos)
             if Chooping.list and #Chooping.list > 0 then
                 if game:IsPaused() then
                     for i = #Chooping.list, 1, -1 do
                         local tab = Chooping.list[i]
-                        tab[3]:Render(Chooping.RenderPos + tab[1])
+                        local spr = tab[3]
+                        hairPieceSpr:SetFrame(spr.Frame)
+                        hairPieceSpr.Rotation = spr.Rotation
+                        hairPieceSpr.Color = spr.Color
+                        hairPieceSpr:Render(RenderPos + tab[1])
+                    end
+                    for i = #Chooping.extralist, 1, -1 do
+                        local tab = Chooping.extralist[i]
+                        local spr = tab[1]
+                        spr.Rotation = tab[3]
+                        spr:SetFrame(tab[2])
+                        spr:Render(RenderPos + tab[4])
                     end
                 else
+                    --if #Chooping.list == 0 then
+                    --    mod.HStyles.Chooping = nil
+                    --end
                     for i = #Chooping.list, 1, -1 do
                         local tab = Chooping.list[i]
+                        local spr = tab[3]
+
                         tab[1] = tab[1] + tab[2]
-                        tab[3].Rotation = tab[3].Rotation + tab[5]
+                        tab[2].X = tab[2].X * 0.99
+                        spr.Rotation = spr.Rotation + tab[5]
+                        hairPieceSpr.Rotation = spr.Rotation
                         tab[2].Y = tab[2].Y + 0.1
-                        tab[3].Scale = tab[3].Scale * 0.95
-                        if Chooping.RenderPos.Y + tab[1].Y > Chooping.FloorYpos then
+                        local sc = math.min(40,tab[4])/40 
+                        spr.Scale = Vector.One/(1/sc)  -- spr.Scale * 0.95
+                        hairPieceSpr.Scale = spr.Scale
+                        if RenderPos.Y + tab[1].Y > Chooping.FloorYpos then
                             --tab[1].Y = Chooping.RenderPos.Y + Chooping.FloorYpos
                             tab[2] = Vector(0,0)
                             tab[5] = 0
+                            tab[4] = tab[4] - 1
                         end
 
-                        tab[3]:Render(Chooping.RenderPos + tab[1])
+                        hairPieceSpr.Color = spr.Color
+                        hairPieceSpr:SetFrame(spr.Frame)
+                        hairPieceSpr:Render(RenderPos + tab[1])
 
-                        tab[4] = tab[4] - 1
+                        --tab[4] = tab[4] - 1
                         if tab[4] <= 0 then
                             table.remove(Chooping.list, i)
                         end
+                    end
+                    for i = #Chooping.extralist, 1, -1 do
+                        local tab = Chooping.extralist[i]
+                        local spr = tab[1]
+                        spr.Rotation = tab[3]
+                        spr:SetFrame(tab[2])
+                        spr:Render(RenderPos + tab[4])
+                        if spr:GetCurrentAnimationData():GetLength() == tab[2] then
+                            table.remove(Chooping.extralist, i)
+                        end
+                        tab[2] = tab[2] + 1
                     end
                 end
                 --Isaac.DrawLine(Vector(Chooping.RenderPos.X - 55, Chooping.FloorYpos), Vector(Chooping.RenderPos.X + 55, Chooping.FloorYpos),
@@ -1042,6 +1208,14 @@ end
 
 
 ------------       поиск респрайтов       -------------
+local PlayerTypeToHairPos = {
+    [PlayerType.PLAYER_APOLLYON]=1,
+    [PlayerType.PLAYER_APOLLYON_B]=1,
+    [PlayerType.PLAYER_LAZARUS_B]=1,
+    [PlayerType.PLAYER_LAZARUS2_B]=1,
+    [PlayerType.PLAYER_BLUEBABY_B]=1,
+}
+
 
 local strings = {
     frommod = {
@@ -1054,6 +1228,39 @@ local function GetStr(str)
     end
 end
 
+local function FindOriginal(resources, path, costumepath, playerid, nullid, CostumeSheep, anm2)
+    local hairpath = resources .. "/" .. path
+    local res = pcall(Renderer.LoadImage, hairpath)
+    if res then
+        local fullCostumeSheep = resources .. "/" .. CostumeSheep
+        local tab = {
+            TargetCostume = {ID = nullid, Type = ItemType.ITEM_NULL},
+            TailCostumeSheep = fullCostumeSheep,
+            ReplaceCostumeSheep = fullCostumeSheep,
+            NullposRefSpr = GenSprite(anm2),
+            --SkinFolderSuffics = costumepath,
+            
+        }
+        if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
+            tab.SkinFolderSuffics = costumepath
+        end
+        if PlayerTypeToHairPos[playerid] then
+            tab.TargetCostume.pos = PlayerTypeToHairPos[playerid]
+        end
+        
+        tab.NullposRefSpr:ReplaceSpritesheet(0, 
+            tab.TailCostumeSheep)
+        tab.NullposRefSpr:LoadGraphics()
+        tab.NullposRefSpr:ReplaceSpritesheet(1, 
+            tab.TailCostumeSheep)
+
+        mod.HStyles.AddStyle(playerid.."_original", playerid, tab)
+        
+        return true
+    end
+    
+end
+
 local function FindResprites(modfoldername, resources, path, costumepath, playerid, nullid, CostumeSheep, anm2, modd)
     local hairpath = "mods/" .. modfoldername .. path
     local res = pcall(Renderer.LoadImage, hairpath)
@@ -1064,9 +1271,16 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
             TailCostumeSheep = fullCostumeSheep,
             ReplaceCostumeSheep = fullCostumeSheep,
             NullposRefSpr = GenSprite(anm2),
-            SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath,
+            --SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath,
         }
-        --print(modfoldername, "|", "mods/" .. modfoldername .. "/" .. resources .. tab.TailCostumeSheep)
+
+        if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
+            tab.SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath
+        end
+        if PlayerTypeToHairPos[playerid] then
+            tab.TargetCostume.pos = PlayerTypeToHairPos[playerid]
+        end
+        
         tab.NullposRefSpr:ReplaceSpritesheet(0, 
             "mods/" .. modfoldername .. "/" .. resources .. "/" .. tab.TailCostumeSheep)
         tab.NullposRefSpr:LoadGraphics()
@@ -1081,7 +1295,107 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
 end
 
 
+local PlayeeTypeToHairAnm2 = {
+    [PlayerType.PLAYER_MAGDALENE]="gfx/characters/character_002_magdalenehead.anm2",
+    [PlayerType.PLAYER_CAIN]="gfx/characters/character_003_cainseyepatch.anm2", 
+    [PlayerType.PLAYER_JUDAS]="gfx/characters/character_004_judasfez.anm2",
+    --[PlayerType.PLAYER_EVE]="gfx/characters/character_005_evehead.anm2",
+    --[PlayerType.PLAYER_AZAZEL]="gfx/characters/character_003_cainseyepatch",
+    --[PlayerType.PLAYER_EDEN]="gfx/characters/character_003_cainseyepatch",
+    [PlayerType.PLAYER_SAMSON]="gfx/characters/character_007_samsonhead.anm2",
+    [PlayerType.PLAYER_KEEPER]="gfx/characters/character_014_keepernoose.anm2",
+    [PlayerType.PLAYER_LAZARUS]="gfx/characters/character_lazarushair1.anm2", 
+    [PlayerType.PLAYER_LAZARUS2]="gfx/characters/character_lazarushair2.anm2",
+    [PlayerType.PLAYER_LILITH]="gfx/characters/character_lilithhair.anm2", 
+    [PlayerType.PLAYER_APOLLYON]="gfx/characters/character_015_apollyonbody.anm2", 
+    --[PlayerType.PLAYER_THEFORGOTTEN]="gfx/characters/character_016_theforgottenbody.anm2",
+    --[PlayerType.PLAYER_BETHANY]="gfx/characters/character_001x_bethanyhead.anm2",
+    [PlayerType.PLAYER_JACOB]="gfx/characters/character_002x_jacobhead.anm2", 
+    [PlayerType.PLAYER_ESAU]="gfx/characters/character_003x_esauhead.anm2", 
+    [PlayerType.PLAYER_ISAAC_B]="gfx/characters/character_b01_isaac.anm2",
+    [PlayerType.PLAYER_MAGDALENE_B]="gfx/characters/character_b02_magdalene.anm2", 
+    [PlayerType.PLAYER_CAIN_B]="gfx/characters/character_b03_cain.anm2", 
+    [PlayerType.PLAYER_JUDAS_B]="gfx/characters/character_b04_judas.anm2",
+    [PlayerType.PLAYER_BLUEBABY_B]="gfx/characters/character_b05_bluebaby.anm2", 
+    [PlayerType.PLAYER_EVE_B]="gfx/characters/character_b06_eve.anm2", 
+    [PlayerType.PLAYER_SAMSON_B]="gfx/characters/character_b07_samson.anm2",
+    --[PlayerType.PLAYER_AZAZEL_B]="/gfx/characters/", 
+    [PlayerType.PLAYER_LAZARUS_B]="gfx/characters/character_b09_lazarus.anm2", 
+    [PlayerType.PLAYER_LAZARUS2_B]="gfx/characters/character_b09_lazarus2.anm2",
+    --[PlayerType.PLAYER_EDEN_B]="/gfx/characters/", 
+    [PlayerType.PLAYER_THELOST_B]="gfx/characters/character_b11_thelost.anm2", 
+    [PlayerType.PLAYER_LILITH_B]="gfx/characters/character_b12_lilith.anm2",
+    [PlayerType.PLAYER_KEEPER_B]="gfx/characters/character_b13_keeper.anm2", 
+    --[PlayerType.PLAYER_APOLLYON_B]="gfx/characters/character_b14_apollyon.anm2", 
+    [PlayerType.PLAYER_THEFORGOTTEN_B]="gfx/characters/character_b15_theforgotten.anm2",
+    [PlayerType.PLAYER_BETHANY_B]="gfx/characters/character_b16_bethany.anm2",
+    [PlayerType.PLAYER_JACOB_B]="gfx/characters/character_b17_jacob2.png", 
+    [PlayerType.PLAYER_JACOB2_B]="gfx/characters/character_b17_jacob2.anm2", 
+    [PlayerType.PLAYER_THESOUL]="gfx/characters/character_b15_thesoul.anm2",
+    [PlayerType.PLAYER_THESOUL_B]="gfx/characters/character_b17_jacob2.anm2",
+}
+
+local PlayeeTypeToHairPath = {
+    [PlayerType.PLAYER_MAGDALENE]="gfx/characters/costumes/character_002_maggiesbeautifulgoldenlocks.png",
+    [PlayerType.PLAYER_CAIN]="gfx/characters/costumes/character_003_cainseyepatch.png", 
+    [PlayerType.PLAYER_JUDAS]="gfx/characters/costumes/character_004_judasfez.png",
+    --[PlayerType.PLAYER_EVE]="gfx/characters/costumes/character_005_evehead.png",
+    --[PlayerType.PLAYER_AZAZEL]="gfx/characters/costumes/character_003_cainseyepatch",
+    --[PlayerType.PLAYER_EDEN]="gfx/characters/costumes/character_003_cainseyepatch",
+    [PlayerType.PLAYER_SAMSON]="gfx/characters/costumes/character_007_samsonshairandbandanna.png",
+    [PlayerType.PLAYER_KEEPER]="gfx/characters/costumes/character_015_keepernoose.png",
+    [PlayerType.PLAYER_LAZARUS]="gfx/characters/costumes/character_009_lazarushair.png", 
+    [PlayerType.PLAYER_LAZARUS2]="gfx/characters/costumes/character_009_lazarushair2.png",
+    [PlayerType.PLAYER_LILITH]="gfx/characters/costumes/character_014_lilithhair.png", 
+    [PlayerType.PLAYER_APOLLYON]="gfx/characters/costumes/character_016_apollyonhorns.png", 
+    --[PlayerType.PLAYER_THEFORGOTTEN]="gfx/characters/costumes/character_016_theforgottenbody.anm2",
+    --[PlayerType.PLAYER_BETHANY]="gfx/characters/costumes/character_001x_bethshair.png",
+    [PlayerType.PLAYER_JACOB]="gfx/characters/costumes/character_002x_jacobhair.png", 
+    [PlayerType.PLAYER_ESAU]="gfx/characters/costumes/character_003x_esauhair.png", 
+    [PlayerType.PLAYER_ISAAC_B]="gfx/characters/costumes/character_001b_isaacsscars.png",
+    [PlayerType.PLAYER_MAGDALENE_B]="gfx/characters/costumes/character_002b_maggiesnotsobeautifulgoldenlocks.png", 
+    [PlayerType.PLAYER_CAIN_B]="gfx/characters/costumes/character_003b_cainsbloodyeyepatch.png", 
+    [PlayerType.PLAYER_JUDAS_B]="gfx/characters/costumes/character_004b_judasfez.png",
+    [PlayerType.PLAYER_BLUEBABY_B]="gfx/characters/costumes/character_005b_bluebabyhead.png", 
+    [PlayerType.PLAYER_EVE_B]="gfx/characters/costumes/character_006b_evehead.png", 
+    [PlayerType.PLAYER_SAMSON_B]="gfx/characters/costumes/character_007b_samsonshair.png",
+    --[PlayerType.PLAYER_AZAZEL_B]="gfx/characters/costumes/", 
+    [PlayerType.PLAYER_LAZARUS_B]="gfx/characters/costumes/character_009b_lazarushair.png", 
+    [PlayerType.PLAYER_LAZARUS2_B]="gfx/characters/costumes/character_009b_lazarus2hair.png",
+    --[PlayerType.PLAYER_EDEN_B]="gfx/characters/costumes/", 
+    [PlayerType.PLAYER_THELOST_B]="gfx/characters/costumes/character_012b_lostcobwebs.png", 
+    [PlayerType.PLAYER_LILITH_B]="gfx/characters/costumes/character_014b_lilithhair.png",
+    [PlayerType.PLAYER_KEEPER_B]="gfx/characters/costumes/character_015b_keeperisgreedier.png", 
+    --[PlayerType.PLAYER_APOLLYON_B]="gfx/characters/costumes/character_016b_apollyonvoid.png", 
+    [PlayerType.PLAYER_THEFORGOTTEN_B]="gfx/characters/costumes/character_016b_theforgottencracks.png",
+    [PlayerType.PLAYER_BETHANY_B]="gfx/characters/costumes/character_018b_bethshair.png", 
+    [PlayerType.PLAYER_JACOB_B]="gfx/characters/costumes/character_019b_jacobhair.png", 
+    [PlayerType.PLAYER_JACOB2_B]="gfx/characters/costumes/character_019b_jacob2hair.png", 
+    --[PlayerType.PLAYER_THESOUL]="gfx/characters/costumes/character_017b_thesoulshood.png",
+    [PlayerType.PLAYER_THESOUL_B]="gfx/characters/costumes/character_017b_thesoulshood.png",
+}
+
 CachedModXMLData = CachedModXMLData or {}
+
+for ptype, _ in pairs(PlayeeTypeToHairPath) do
+    --if PlayeeTypeToHairPath[ptype] then
+        local hairpath = PlayeeTypeToHairPath[ptype]
+        --local fixedBodyColor = EntityConfig.GetPlayer(ptype):GetSkinColor() ~= -1
+        if not FindOriginal("resources-dlc3",
+            hairpath, 
+            "resources-dlc3/gfx/characters/costumes/", 
+            ptype,PlayerTypeToTargetCostume[ptype], 
+            hairpath, PlayeeTypeToHairAnm2[ptype]) 
+        then
+
+            FindOriginal("resources", 
+                hairpath, 
+                "resources/gfx/characters/costumes/", 
+                ptype,PlayerTypeToTargetCostume[ptype], 
+                hairpath, PlayeeTypeToHairAnm2[ptype])
+        end
+    --end
+end
 
 for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     local mod = XMLData.GetEntryById(XMLNode.MOD, i)
@@ -1159,6 +1473,28 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
                 mod
             )
+            
+            for ptype in pairs(PlayeeTypeToHairPath) do
+                --if PlayeeTypeToHairPath[ptype] then
+                    local hairpath = PlayeeTypeToHairPath[ptype]
+
+                    FindResprites(dir, "resources-dlc3",
+                        "/resources-dlc3/" .. hairpath,
+                        "/resources-dlc3/gfx/characters/costumes/",
+                        ptype,  PlayerTypeToTargetCostume[ptype], 
+                        hairpath, PlayeeTypeToHairAnm2[ptype],
+                        mod
+                    )
+
+                    FindResprites(dir, "resources",
+                        "/resources/" .. hairpath,
+                        "/resources/gfx/characters/costumes/",
+                        ptype,  PlayerTypeToTargetCostume[ptype], 
+                        hairpath, PlayeeTypeToHairAnm2[ptype],
+                        mod
+                    )
+                --end
+            end
 
         end
     end

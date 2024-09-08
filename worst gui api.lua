@@ -2161,6 +2161,11 @@ elseif not Isaac.GetPlayer() and Options.MouseControl == false then
 	menuTab.AutoFakeMouseSprite = true
 end
 
+local function GetPtrPlayer()
+	local p = menuTab.input.TargetPlayer
+	return p and p.Ref and p.Ref:ToPlayer()
+end
+
 menuTab.input = {}
 function menuTab.input.IsActionTriggered(action)
 	local conind = menuTab.input.TargetControllerIndex or Isaac.GetPlayer().ControllerIndex
@@ -2178,7 +2183,7 @@ menuTab.input.preMoveVector = Vector(0,0)
 menuTab.input.moveVector = Vector(0,0)
 function menuTab.input.GetMoveVector()
 	local ret = Vector(0,0)
-	local p = menuTab.input.TargetPlayer or Isaac.GetPlayer()
+	local p = GetPtrPlayer() or Isaac.GetPlayer()
 	local controllerIndex = menuTab.input.TargetControllerIndex or p.controllerIndex
 	if controllerIndex == 0 then
 		menuTab.input.moveVector = p:GetShootingJoystick()
@@ -2203,7 +2208,7 @@ function menuTab.input.GetMoveVector()
 	return ret
 end
 function menuTab.input.GetRefMoveVector()
-	local p = menuTab.input.TargetPlayer or Isaac.GetPlayer()
+	local p = GetPtrPlayer() or Isaac.GetPlayer()
 	if p.ControllerIndex == 0 then
 		return p:GetShootingJoystick()
 	else
@@ -2216,7 +2221,7 @@ function menuTab.SetControlType(ttype, targetplayer)
 	if type(targetplayer) == "number" then
 		menuTab.input.TargetControllerIndex = targetplayer
 	else
-		menuTab.input.TargetPlayer = targetplayer
+		menuTab.input.TargetPlayer = EntityPtr(targetplayer)
 		menuTab.input.TargetControllerIndex = targetplayer.ControllerIndex
 	end
 end

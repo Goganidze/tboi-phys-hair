@@ -756,10 +756,12 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         [2] = 2, --1 << 1
     }
 
-    mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS, {
+    --mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS, {
+    mod.HStyles.AddStyle("JudasDef", PlayerType.PLAYER_JUDAS, {
         TargetCostume = {ID = NullItemID.ID_JUDAS, Type = ItemType.ITEM_NULL},
         --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_004_judasfez_notails.png",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_004_judasfez_notails.png",
+        TailCostumeSheep = "gfx/characters/costumes/character_004_judasfez.png",
         --[[[1] = {
             DotCount = 3,
             Scretch = scretch*.75,
@@ -781,9 +783,11 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             --sprScale = Vector(1,2),
         },
     })
-    mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS_B, {
+    --mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS_B, {
+    mod.HStyles.AddStyle("JudasBDef", PlayerType.PLAYER_JUDAS_B, {
         TargetCostume = {ID = NullItemID.ID_JUDAS_B, Type = ItemType.ITEM_NULL},
         ReplaceCostumeSheep = "gfx/characters/costumes/character_004b_judasfez_notails.png",
+        TailCostumeSheep = "gfx/characters/costumes/character_004_judasfez.png",
         --[[[1] = {
             DotCount = 3,
             Scretch = scretch*.75,
@@ -847,6 +851,10 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         [PlayerType.PLAYER_JUDAS] = mod.JudasFexCordSpr,
         [PlayerType.PLAYER_JUDAS_B] = mod.JudasFexCordSprB,
     }
+    local judasFezStyleName = {
+        ["JudasDef"] = true,
+        ["JudasBDef"] = true,
+    }
 
     function mod.JudasJunkUpdate(_, player)
         local data = player:GetData()
@@ -872,13 +880,14 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         if not judasFezSpr[ptype] or not player:IsExtraAnimationFinished() then
             return
         end
+        local hsdat = data._PhysHair_HairStyle
 
-        if not data._JudasFezFakeCord then
+        if not data._JudasFezFakeCord or not judasFezStyleName[hsdat and hsdat.StyleName] then
         elseif JudasFezheadDirToRender[player:GetHeadDirection()] & 1 == 1 then
             if judasFezSpr[ptype] ~= data._JudasFezFakeCord.anm2 then
                 data._JudasFezFakeCord.anm2 = judasFezSpr[ptype]
             end
-            stupidShit.MegaShitReflectFix()
+            --stupidShit.MegaShitReflectFix()
 
 
             local cdat = data._BethsHairCord
@@ -899,7 +908,10 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         if not judasFezSpr[player:GetPlayerType()] or not player:IsExtraAnimationFinished() then
             return
         end
-
+        local hsdat = data._PhysHair_HairStyle
+        if not judasFezStyleName[hsdat and hsdat.StyleName] then
+            return
+        end
         if not data._JudasFezFakeCord then
             data._JudasFezFakeCord = {
                 ["anm"] = judasFezSpr[player:GetPlayerType()],
@@ -1385,6 +1397,7 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
 
     if smenu.HintText then
         local htpos = pos+smenu.hinttextoffset
+        htpos.Y = math.min(Isaac.GetScreenHeight()-26, htpos.Y)
         BethHair.StyleMenu.paperrender( htpos-Vector(0,5), 
             Vector(210, 40), 
             Color.Default)
@@ -1586,7 +1599,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             local hairgfx = styledt and styledt.data and styledt.data.TailCostumeSheep
             local hintText-- = wga.stringMultiline(text)
             if styleexdt and styleexdt.menuHintText then
-                hintText = wga.stringMultiline(styleexdt.menuHintText, 200)
+                hintText = wga.stringMultiline(styleexdt.menuHintText, 150)
             end
             
             local hairspr
@@ -1986,6 +1999,7 @@ function BethHair.StyleMenu.CloseWindow()
     if BethHair.HStyles.salon.Chranya.Ref then
         BethHair.HStyles.salon.Chranya.Ref:GetSprite():Play("scisor_end", true)
     end
+    --BethHair.HStyles.Chooping = nil
 end
 
 
