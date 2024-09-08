@@ -519,13 +519,14 @@ function mod.HStyles.salon.NewRoom()
         salon.EnterPos = room:GetGridPosition(useIndex)
         salon.TopLeftPos = room:GetGridPosition(TopLeftRefIndex) + Vector(-20, 20 + 60)
 
-        local ef = Isaac.Spawn(1000,6,0, 
-        salon.EnterPos - Vector(0,42), Vector(0,0), nil)
+        local ef = Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.BACKDROP_DECORATION,0, 
+        salon.EnterPos - Vector(0,20), Vector(0,0), nil)
         local spr = ef:GetSprite()
-        spr:Load("gfx/grid/door_01_normaldoor.anm2", true) 
-        spr:Play("Opened", true)
+        spr:Load("gfx/backdrop/hairsalon_backdrop.anm2", true) 
+        spr:Play("door", true)
         spr.FlipY = true
-        ef:AddEntityFlags(EntityFlag.FLAG_RENDER_WALL)
+        --ef:AddEntityFlags(EntityFlag.FLAG_RENDER_WALL)
+        ef.SortingLayer = SortingLayer.SORTING_DOOR
         ef:Update()
 
         local grid = room:GetGridEntityFromPos(salon.EnterPos)
