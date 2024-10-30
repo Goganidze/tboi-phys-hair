@@ -714,11 +714,67 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     mod.HStyles.AddStyle("EvePonyTail", PlayerType.PLAYER_EVE, {
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
-        --SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "resources/gfx/characters/costumes/eve_styles/ponytail",
-        ReplaceCostumeSheep = "gfx/characters/costumes/eve_styles/ponytail/character_005_evehead.png",
+        SyncWithCostumeBodyColor = true,
+        SkinFolderSuffics = "gfx/characters/costumes/eve_styles/ponytail/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/eve_styles/ponytail/character_005_evehead_notail.png",
         TailCostumeSheep = "gfx/characters/costumes/eve_styles/ponytail/character_005_evehead.png",
-    })
+        NullposRefSpr = GenSprite("gfx/characters/costumes/eve_styles/ponytail/evehead_ponytail.anm2"),
+        [1] = {
+            Scretch = scretch * 1.4,
+            DotCount = 3,
+            CordSpr = BeamR("gfx/characters/costumes/eve_styles/ponytail/evehair_tail_cord.anm2", 
+                "cord", "body", false, false, 3),
+            RenderLayers = { [3] = 0, [0] = 3, [1] = 0, [2] = 3 },
+            CostumeNullpos = "bethshair_cord1",
+            StartHeight = 1,
+            Length = 27,
+            Mass = 13,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
+            PreUpdate = function(player, taildata)
+                local spranim = player:GetSprite():GetOverlayAnimation()
+                local cordspr = taildata.Cord:GetSprite()
+                if spranim == "HeadLeft" then
+                    cordspr.FlipX = true
+                else
+                    cordspr.FlipX = false
+                end
+                local curanim = cordspr:GetAnimation()
+                if spranim == "HeadUp" and curanim ~= "cord2" then
+                    cordspr:Play("cord2")
+                elseif spranim ~= "HeadUp" and curanim == "cord2" then
+                    cordspr:Play("cord")
+                end
+            end,
+            Bounce = 0.5,
+        },
+        [2] = {
+            Scretch = scretch * 1.5,
+            DotCount = 4,
+            CordSpr = BeamR("gfx/characters/costumes/eve_styles/ponytail/evehair_tail_cord.anm2", 
+                "cord2", "body", false, false, 3),
+            RenderLayers = { [3] = 0, [0] = 0, [1] = 3, [2] = 0 },
+            CostumeNullpos = "bethshair_cord1",
+            StartHeight = 1,
+            Length = 31,
+            Mass = 15,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
+            CS = {[0]=31/4*1, 31/4*2, 31/4*3}
+        }
+    },
+    {modfolder = defaultmodfolder, })
+
+    mod.HStyles.AddStyle("EveICANTWRITEAGOODFEMALECHARACTER", PlayerType.PLAYER_EVE, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "gfx/characters/costumes/eve_styles/icantwritegoodfemalecharacter/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/eve_styles/icantwritegoodfemalecharacter/character_005_evehead.png",
+        TailCostumeSheep = "gfx/characters/costumes/eve_styles/icantwritegoodfemalecharacter/character_005_evehead.png",
+    },
+    {modfolder = defaultmodfolder, })
+
+
+
 
 
 

@@ -4,6 +4,7 @@ local Isaac = Isaac
 local game = Game()
 local Room 
 local Wtr = 20/13
+local sfx = SFXManager()
 
 local function GenSprite(gfx, anim, frame)
     if gfx then
@@ -20,10 +21,14 @@ local function GenSprite(gfx, anim, frame)
     end
 end
 
-mod.HStyles = {}
+mod.HStyles = {
+    Sfx = {
+        swing = Isaac.GetSoundIdByName("PhysHair_Swing"),
+    },
+}
 
 mod.HairStylesData = {
-    playerdata = {}, styles = {}
+    playerdata = {}, styles = {},
 }
 local HairStylesData = mod.HairStylesData
 
@@ -1029,6 +1034,8 @@ do
                                             hasChik = 3
                                             chikx = x
                                             Chooping.extralist[#Chooping.extralist+1] = {Chooping.CHIK, 0, rng:RandomInt(360), pos}
+
+                                            sfx:Play(mod.HStyles.Sfx.swing, 1, 0, false, 1.5)
                                         end
 
                                         if hasSwig then

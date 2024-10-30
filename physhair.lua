@@ -129,10 +129,14 @@ return function (mod)
                 SkinFolderSuffics = data.SkinFolderSuffics,
                 ExtraAnimHairLayer = data.ExtraAnimHairLayer,
             }
+            local ignorelist = {
+                CordSpr = true, Scretch = true, DotCount = true, TailCount = true, RenderLayers = true, CostumeNullpos = true, Length = true,
+                Mass = true, StartHeight = true, CS = true,  }
+            
             for i = 1, #data do
                 local dd = data[i]
                 ---@type HairData
-                PlayerData[playertype][i] = {
+                local NewTailData = {
                     Cord = dd.CordSpr,
                     PhysFunc = dd.PhysFunc,
                     Scretch = dd.Scretch or scretch,
@@ -144,6 +148,12 @@ return function (mod)
                     STH = dd.StartHeight or 5.0,
                     CS = dd.CS,
                 }
+                for k, v in pairs(dd) do
+                    if not ignorelist[k] then
+                        NewTailData[k] = v
+                    end
+                end
+                PlayerData[playertype][i] = NewTailData
             end
 
         end
@@ -395,7 +405,7 @@ return function (mod)
                                     if not havecolorver then
                                         finalpath = shep:sub(0, shep:len()-4) .. ".png"
                                     end
-
+                                    print(finalpath)
                                     spr:ReplaceSpritesheet(layer, finalpath ) --shep:sub(0, shep:len()-4) .. refsting .. ".png")
                                 end
                                 spr:LoadGraphics()
@@ -456,7 +466,7 @@ return function (mod)
                                             if not havecolorver then
                                                 finalpath = refsting .. gfx .. ".png"
                                             end
-
+                                            print(2, finalpath)
                                             cspr:ReplaceSpritesheet(id, finalpath)
                                             cdat.FinalCostumePath[id] = finalpath
                                         end
@@ -482,8 +492,9 @@ return function (mod)
                                                     break
                                                 end
                                             end]]
-                                            local finalpath = refsting .. colorsuf .. (suffix or "") .. ".png"
+                                            local finalpath = refsting .. (suffix or "") .. colorsuf .. ".png"
                                             local havecolorver = false
+                                            print(3, colorsuf, refsting, "|", suffix, "|", finalpath, havecolorver)
                                             if not cacheNoHairColor[finalpath] then
                                                 havecolorver = pcall(Renderer.LoadImage, finalpath)
                                                 cacheNoHairColor[finalpath] = havecolorver
@@ -493,7 +504,7 @@ return function (mod)
                                             if not havecolorver then
                                                 finalpath = refsting .. (suffix or "") .. ".png"
                                             end
-                                            
+                                            print(2, finalpath, havecolorver)
                                             cspr:ReplaceSpritesheet(id, finalpath) -- refsting .. (suffix or "") .. ".png")  -- rep)
                                             cdat.FinalCostumePath[id] = finalpath
                                         end
@@ -588,6 +599,15 @@ return function (mod)
     end
     mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, _HairCordData.playerUpdate)
 
+    function _HairCordData.HairPreUpdate(_,player, taildata)
+        if taildata then
+            if taildata.PreUpdate then
+                taildata.PreUpdate(player, taildata)
+            end
+        end
+    end
+    mod:AddCallback(_HairCordData.Callbacks.HAIRPHYS_PRE_UPDATE, _HairCordData.HairPreUpdate)
+
     function _HairCordData.InitHairData(player, data, ptype, mode)
         if player then
             data = data or player:GetData()
@@ -641,14 +661,21 @@ return function (mod)
                     ---@type HairData
                     local taildata = cdat[tail]
                     for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
-                        cdat[tail][i] = {playerPos + Vector(0,taildata.Length/taildata.DotCount*i), Vector(0,0), taildata.Length/taildata.DotCount*i+(12)-i*2}
+                        taildata[i] = {playerPos + Vector(0,taildata.Length/taildata.DotCount*i), Vector(0,0), taildata.Length/taildata.DotCount*i+(12)-i*2}
                     end
                     local cs = taildata.CS
                     if cs then
                         for i=0, taildata.DotCount-1 do
                             if cs[i] then
-                                cdat[tail][i][3] = cs[i]
+                                taildata[i][3] = cs[i]
                             end
+                        end
+                    end
+
+                    local ignorelist = {Cord=1, PhysFunc=1, RL=1, Null=1, Scretch=1, DotCount=1, Length=1, Mass=1, STH=1, CS=1}
+                    for k, v in pairs(tld) do
+                        if not ignorelist[k] then
+                            taildata[k] = v
                         end
                     end
                 end
@@ -862,7 +889,7 @@ return function (mod)
             end
     
             if mod.DR then
-                local tail1 = cdat[7]
+                local tail1 = cdat[mod.DR]
                 local hairPos = player:GetCostumeNullPos(tail1.Null, true, Vector(0,0))
                 local hap1 --= playerPos+hairPos1 --(Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
                 if isreflect then
@@ -1041,6 +1068,7 @@ return function (mod)
         local plpos1 = StartPos
         local scretch = cdat.Scretch
         local Mmass = 10 / cdat.Mass   --/ 10
+        local Bounce = cdat.Bounce or 1
 
         local headdir = player:GetHeadDirection()
         local headpospushpower = (headdir == 1 or headdir == 2) and .8 or 1.9
@@ -1073,7 +1101,7 @@ return function (mod)
                     --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
                 end
                 
-                local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp))
+                local vel = (prep-lpos):Resized(math.max(-1,bttdis*Bounce-scretch*lerp))
                 
                 cur[2] = (cur[2]* lerp + vel * (1-lerp))
                 --cur[2] = cur[2] * 0.2 + vel * .8
@@ -1081,6 +1109,12 @@ return function (mod)
             if nextp then
                 --local bttdis = lpos:Distance(nextp)
     
+                --if bttdis > scretch*3 then
+                    --cur[1] = nextp-(nextp-lpos):Resized(scretch*1*scale)
+                    --lpos = cur[1]
+                    --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+                --end
+
                 --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
                 --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
                 --cur[2] = (cur[2] + vel)* .68
