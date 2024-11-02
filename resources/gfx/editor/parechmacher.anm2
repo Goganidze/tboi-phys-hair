@@ -1,5 +1,5 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="08.09.2024 12:50:31" Version="47" Fps="45"/>
+	<Info CreatedBy="Unknown" CreatedOn="03.11.2024 2:21:34" Version="51" Fps="45"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="keeper_parefmafer.png" Id="0"/>
@@ -10,7 +10,10 @@
 			<Layer Name="эффекты" Id="2" SpritesheetId="0"/>
 		</Layers>
 		<Nulls/>
-		<Events/>
+		<Events>
+			<Event Name="sound" Id="0"/>
+			<Event Name="sound2" Id="1"/>
+		</Events>
 	</Content>
 	<Animations DefaultAnimation="idle">
 		<Animation Name="kep" FrameNum="1" Loop="false">
@@ -50,7 +53,10 @@
 				<LayerAnimation LayerId="2" Visible="true"/>
 			</LayerAnimations>
 			<NullAnimations/>
-			<Triggers/>
+			<Triggers>
+				<Trigger EventId="0" AtFrame="11"/>
+				<Trigger EventId="0" AtFrame="38"/>
+			</Triggers>
 		</Animation>
 		<Animation Name="Appear" FrameNum="22" Loop="false">
 			<RootAnimation>
@@ -85,7 +91,10 @@
 				<LayerAnimation LayerId="2" Visible="true"/>
 			</LayerAnimations>
 			<NullAnimations/>
-			<Triggers/>
+			<Triggers>
+				<Trigger EventId="0" AtFrame="5"/>
+				<Trigger EventId="0" AtFrame="12"/>
+			</Triggers>
 		</Animation>
 		<Animation Name="sleep" FrameNum="1" Loop="false">
 			<RootAnimation>
@@ -127,7 +136,10 @@
 				<LayerAnimation LayerId="2" Visible="true"/>
 			</LayerAnimations>
 			<NullAnimations/>
-			<Triggers/>
+			<Triggers>
+				<Trigger EventId="0" AtFrame="8"/>
+				<Trigger EventId="1" AtFrame="14"/>
+			</Triggers>
 		</Animation>
 		<Animation Name="scisor_end" FrameNum="21" Loop="false">
 			<RootAnimation>
@@ -153,7 +165,9 @@
 				<LayerAnimation LayerId="2" Visible="true"/>
 			</LayerAnimations>
 			<NullAnimations/>
-			<Triggers/>
+			<Triggers>
+				<Trigger EventId="0" AtFrame="9"/>
+			</Triggers>
 		</Animation>
 		<Animation Name="scisor_loop" FrameNum="48" Loop="true">
 			<RootAnimation>

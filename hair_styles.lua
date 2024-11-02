@@ -24,6 +24,10 @@ end
 mod.HStyles = {
     Sfx = {
         swing = Isaac.GetSoundIdByName("PhysHair_Swing"),
+        doorbell = Isaac.GetSoundIdByName("PhysHair_Doorsbell"),
+        Chr_appear = Isaac.GetSoundIdByName("PhysHair_Chr_appear"),
+        scisors_swing = Isaac.GetSoundIdByName("PhysHair_Scisors_Swing"),
+        chair_creaks = Isaac.GetSoundIdByName("PhysHair_Chair_creaks"),
     },
 }
 
@@ -361,20 +365,57 @@ function mod.HStyles.HairKeeper.update(_, ent)
         end
     end
 
-    if spr:IsFinished("Appear") then
-        spr:Play("idle", true)
-    elseif spr:IsFinished("scisor_start") then
-        spr:Play("scisor_loop", true)
-    elseif spr:IsFinished("scisor_end") then
-        spr:Play("idle", true)
-        data.faceAngle = nil
-    elseif spr:IsFinished("scisor2_start") then
-        spr:Play("scisor2_loop", true)
-        data.scisor2_delay = 5
-    elseif spr:IsFinished("scisor2_end") then
-        spr:Play("scisor_loop", true)
-    elseif spr:IsFinished("scisor2_чик") then
-        spr:Play("scisor2_loop", true)
+    local sprIsFinished = spr:IsFinished()
+    local isAnim = spr:GetAnimation()
+
+    if sprIsFinished then
+        if isAnim == "Appear" then
+            spr:Play("idle", true)
+        elseif isAnim == "scisor_start" then
+            spr:Play("scisor_loop", true)
+        elseif isAnim == "scisor_end" then
+            spr:Play("idle", true)
+            data.faceAngle = nil
+        elseif isAnim == "scisor2_start" then
+            spr:Play("scisor2_loop", true)
+            data.scisor2_delay = 5
+        elseif isAnim == "scisor2_end" then
+            spr:Play("scisor_loop", true)
+        elseif isAnim == "scisor2_чик" then
+            spr:Play("scisor2_loop", true)
+            --sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume * 3.3, 0, false, 2.1)
+        end
+    else
+        if salon.Entered then
+            if isAnim == "Appear" then
+                if spr:IsEventTriggered("sound") and spr:GetFrame() < 10 then
+                    sfx:Play(mod.HStyles.Sfx.Chr_appear, Options.SFXVolume * 2.4, 5, false, 1.0)
+                end
+            elseif isAnim == "idle" then
+                if spr:IsEventTriggered("sound") then
+                    sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume * 2.5, 0, false, 2.2)
+                end
+            elseif isAnim == "scisor2_start" then
+                if spr:GetFrame() == 2 then
+                    sfx:Play(SoundEffect.SOUND_COIN_SLOT, Options.SFXVolume * 0.15, 5, false, 2.5)
+                end
+            elseif isAnim == "scisor_start" then
+                if spr:IsEventTriggered("sound") then
+                    sfx:Play(SoundEffect.SOUND_ANGEL_WING, Options.SFXVolume * 0.3, 0, false, 0.8) 
+                    --sfx:Play(SoundEffect.SOUND_BIRD_FLAP, Options.SFXVolume * 0.4, 0, false, 1.2)
+                elseif spr:IsEventTriggered("sound2") then
+                    sfx:Play(SoundEffect.SOUND_FETUS_JUMP, Options.SFXVolume * 0.5, 5, false, 1.1)
+                end
+            elseif isAnim == "scisor_end" then
+                if spr:IsEventTriggered("sound") then
+                    sfx:Play(SoundEffect.SOUND_FETUS_JUMP, Options.SFXVolume * 0.2, 0, false, 0.5)
+                end
+            elseif isAnim == "scisor2_чик" then
+                if spr:GetFrame() == 7 or spr:GetFrame() == 19 then
+                    sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume * 3.3, 0, false, 2.1)
+                end
+            end
+        end
     end
 
     local overName = spr:GetOverlayAnimation()
@@ -407,6 +448,9 @@ function mod.HStyles.HairKeeper.update(_, ent)
                     spr:Play("scisor2_start")
                     data.faceAngle = nil
                     spr:RemoveOverlay()
+                    sfx:Play(mod.HStyles.Sfx.swing, Options.SFXVolume * 0.8, 5, false, 1.3)
+                    sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume * 3, 0, false, 2.1)
+                    --sfx:Play(SoundEffect.SOUND_COIN_SLOT, Options.SFXVolume * 0.3, 5, false, 2.5)
                 end
             end
         elseif spr:IsPlaying("scisor2_loop") or spr:IsPlaying("scisor2_start") then
@@ -637,6 +681,7 @@ function mod.HStyles.salon.EnterSalon()
             end, 13, 1)
         end
         
+        sfx:Play(mod.HStyles.Sfx.doorbell, Options.SFXVolume * 1.0, 5, false, 1.3)
     end
 end
 
@@ -668,6 +713,8 @@ function mod.HStyles.salon.ExitSalon()
         salon.Entered = false
 
         salon.ReturnSettings = {}
+
+        sfx:Play(mod.HStyles.Sfx.doorbell, Options.SFXVolume * 1.0, 5, false, 1.28)
     end
 end
 
@@ -815,6 +862,7 @@ do
 
         if salon.Chranya and salon.Chranya.Ref then
             salon.Chranya.Ref:GetSprite():Play("scisor2_чик", true)
+            sfx:Play(mod.HStyles.Sfx.scisors_swing, Options.SFXVolume * 2, 0, false, 1.0)
         end
         if salon.CachedPhayerHairSpr:GetAnimation() == "" then
             salon.CachedPhayerHairSpr:Play("HeadDown", true)
@@ -973,6 +1021,7 @@ do
 
             if procent > 1 then
                 salon.DoChoopEffect = nil
+                sfx:Play(mod.HStyles.Sfx.swing, 1, 0, false, 1.5)
             elseif procent > 0 and not game:IsPaused() and Isaac.GetFrameCount()%2 == 0 then
 
                 
@@ -1035,7 +1084,7 @@ do
                                             chikx = x
                                             Chooping.extralist[#Chooping.extralist+1] = {Chooping.CHIK, 0, rng:RandomInt(360), pos}
 
-                                            sfx:Play(mod.HStyles.Sfx.swing, 1, 0, false, 1.5)
+                                            sfx:Play(mod.HStyles.Sfx.scisors_swing, Options.SFXVolume * 1.4, 0, false, 1.0)
                                         end
 
                                         if hasSwig then
@@ -1049,6 +1098,7 @@ do
                                             hasSwig = 3
                                             swigx = x
                                             Chooping.extralist[#Chooping.extralist+1] = {Chooping.SWIG, 0, rng:RandomInt(360), pos}
+                                            sfx:Play(mod.HStyles.Sfx.swing, 1, 0, false, 1.7)
                                         end
                                     end
                                 end
@@ -1280,6 +1330,7 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
             ReplaceCostumeSheep = fullCostumeSheep,
             NullposRefSpr = GenSprite(anm2),
             --SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath,
+            SyncWithCostumeBodyColor = true,
         }
 
         if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then

@@ -260,6 +260,18 @@ return function (mod)
         end
     end 
 
+    local function TryDeleteColorFromPath(str)
+        if str then
+            for i=0, #bodycolor do
+                local st, en = str:find(bodycolor[i])
+                if st and en then
+                    return str:sub(1, st-1) .. str:sub(en+1)
+                end
+            end
+            return str
+        end
+    end
+
     local cacheNoHairColor = {}
 
     ---@param player EntityPlayer
@@ -388,6 +400,7 @@ return function (mod)
                                 local spr = cord:GetSprite()
                                 for layer = 0, spr:GetLayerCount()-1 do
                                     local shep = spr:GetLayer(layer):GetSpritesheetPath()
+                                    shep = TryDeleteColorFromPath(shep)
                                     if not OrigCordSheep[layer] then
                                         OrigCordSheep[layer] = shep
                                     else
@@ -405,7 +418,7 @@ return function (mod)
                                     if not havecolorver then
                                         finalpath = shep:sub(0, shep:len()-4) .. ".png"
                                     end
-                                    print(finalpath)
+                                    print("gsgs",finalpath, refsting)
                                     spr:ReplaceSpritesheet(layer, finalpath ) --shep:sub(0, shep:len()-4) .. refsting .. ".png")
                                 end
                                 spr:LoadGraphics()

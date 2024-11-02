@@ -2,4 +2,17 @@
 	<sound name="PhysHair_Swing">
 		<sample weight="1" path="swing_test.wav" />
 	</sound>
+	<sound name="PhysHair_Scisors_Swing">
+		<sample weight="1" path="scisors_swing.wav" />
+	</sound>
+	<sound name="PhysHair_Doorsbell">
+		<sample weight="1" path="salondoorsbell.wav" />
+	</sound>
+	<sound name="PhysHair_Chr_appear">
+		<sample weight="1" path="hairkeeper_appear2.wav" />
+	</sound>
+	<sound name="PhysHair_Chair_creaks">
+		<sample weight="1" path="RockingChair1.wav" />
+		<sample weight="1" path="RockingChair2.wav" />
+	</sound>
 </sounds>
