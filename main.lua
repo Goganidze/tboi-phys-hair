@@ -773,6 +773,67 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     },
     {modfolder = defaultmodfolder, })
 
+    mod.HStyles.AddStyle("EveMiku", PlayerType.PLAYER_EVE, {
+        HeadBack2Spr = GenSprite("gfx/characters/costumes/eve_styles/miku/backhair.anm2", "HeadDown"),
+        TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "gfx/characters/costumes/eve_styles/miku/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/eve_styles/miku/character_005_evehead_notail.png",
+        TailCostumeSheep = "gfx/characters/costumes/eve_styles/miku/character_005_evehead.png",
+        NullposRefSpr = GenSprite("gfx/characters/costumes/eve_styles/miku/evehead_mikutail.anm2"),
+        [1] = {
+            Scretch = scretch * 2,
+            DotCount = 3,
+            CordSpr = BeamR("gfx/characters/costumes/eve_styles/miku/evehair_tail_cord.anm2", 
+                "cord", "body", false, false, 3),
+            RenderLayers = { [3] = 2, [0] = 0, [1] = 3, [2] = 2 },
+            CostumeNullpos = "bethshair_cord1",
+            StartHeight = 2,
+            Length = 31,
+            Mass = 13,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
+            PreUpdate = function(player, taildata)
+                local spranim = player:GetSprite():GetOverlayAnimation()
+                local cordspr = taildata.Cord:GetSprite()
+
+                local curanim = cordspr:GetAnimation()
+                if (spranim == "HeadLeft" or spranim == "HeadRight") and curanim ~= "cord2" then
+                    cordspr:Play("cord2")
+                elseif spranim ~= "HeadLeft" and spranim ~= "HeadRight" and curanim == "cord2" then
+                    cordspr:Play("cord")
+                end
+            end,
+            Bounce = 0.5,
+            CS = {[0]=31/3*1, 31/3*2, 31/3*3}
+        },
+        [2] = {
+            Scretch = scretch * 2,
+            DotCount = 3,
+            CordSpr = BeamR("gfx/characters/costumes/eve_styles/miku/evehair_tail_cord.anm2", 
+                "cordb", "body", false, false, 3),
+            RenderLayers = { [3] = 2, [0] = 2, [1] = 3, [2] = 0 },
+            CostumeNullpos = "bethshair_cord2",
+            StartHeight = 2,
+            Length = 31,
+            Mass = 13,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
+            PreUpdate = function(player, taildata)
+                local spranim = player:GetSprite():GetOverlayAnimation()
+                local cordspr = taildata.Cord:GetSprite()
+                
+                local curanim = cordspr:GetAnimation()
+                if (spranim == "HeadLeft" or spranim == "HeadRight") and curanim ~= "cord2b" then
+                    cordspr:Play("cord2b")
+                elseif spranim ~= "HeadLeft" and spranim ~= "HeadRight" and curanim == "cord2b" then
+                    cordspr:Play("cordb")
+                end
+            end,
+            Bounce = 0.5,
+            CS = {[0]=31/3*1, 31/3*2, 31/3*3}
+        },
+    },
+    {modfolder = defaultmodfolder, })
+
 
 
 

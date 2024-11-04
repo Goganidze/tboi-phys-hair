@@ -355,6 +355,18 @@ function mod.HStyles.HairKeeper.update(_, ent)
         ent.TargetPosition = ent.Position
     end
 
+    if salon.Alpha then
+        local col = ent:GetColor()
+        col.A = salon.Alpha
+        ent.Color = col
+
+        if salon.Alpha < .8 then
+            ent.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+        else
+            ent.EntityCollisionClass = EntityCollisionClass.ENTCOLL_ALL
+        end
+    end
+
     if salon.FakeCollision then
         local nearP = game:GetNearestPlayer(ent.Position)
         if nearP.Position:Distance(ent.Position) < nearP.Size+ent.Size then
@@ -392,8 +404,8 @@ function mod.HStyles.HairKeeper.update(_, ent)
                     sfx:Play(mod.HStyles.Sfx.Chr_appear, Options.SFXVolume * 2.4, 5, false, 1.0)
                 end
             elseif isAnim == "idle" then
-                if spr:IsEventTriggered("sound") then
-                    sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume * 2.5, 0, false, 2.2)
+                if spr:IsEventTriggered("sound") and ent:GetDropRNG():RandomFloat() < 0.3 then
+                    sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume , 0, false, 2.2)
                 end
             elseif isAnim == "scisor2_start" then
                 if spr:GetFrame() == 2 then
@@ -411,7 +423,7 @@ function mod.HStyles.HairKeeper.update(_, ent)
                     sfx:Play(SoundEffect.SOUND_FETUS_JUMP, Options.SFXVolume * 0.2, 0, false, 0.5)
                 end
             elseif isAnim == "scisor2_чик" then
-                if spr:GetFrame() == 7 or spr:GetFrame() == 19 then
+                if spr:GetFrame() == 7  then --or spr:GetFrame() == 19
                     sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume * 3.3, 0, false, 2.1)
                 end
             end
@@ -501,6 +513,15 @@ function mod.HStyles.HairKeeper.update(_, ent)
     ent.Velocity = (ent.TargetPosition - ent.Position) / 5
 end
 mod:AddCallback(ModCallbacks.MC_POST_SLOT_UPDATE, mod.HStyles.HairKeeper.update, mod.HStyles.HairKeeper.VAR)
+
+---@param ent EntitySlot
+function mod.HStyles.HairKeeper.preupdate(_, ent)
+    --mod.HStyles.HairKeeper.update(_, ent)
+    ent:SetState(0)
+    ent.GridCollisionClass = 0
+    return false
+end
+mod:AddCallback(ModCallbacks.MC_PRE_SLOT_CREATE_EXPLOSION_DROPS, mod.HStyles.HairKeeper.preupdate, mod.HStyles.HairKeeper.VAR)
 
 ---@param ent EntitySlot
 function mod.HStyles.HairKeeper.coll(_, ent, col)
@@ -765,9 +786,9 @@ do
                 end
                 
 
-                local corpos = Isaac.GetPlayer().Position - salon.TopLeftPos
-                local index = corpos.X // 40 + corpos.Y // 40 * 11
-                Isaac.RenderText(tostring(index),50,50,1,1,1,1)
+                --local corpos = Isaac.GetPlayer().Position - salon.TopLeftPos
+                --local index = corpos.X // 40 + corpos.Y // 40 * 11
+                --Isaac.RenderText(tostring(index),50,50,1,1,1,1)
             else
                 if not paused then
                     salon.Alpha = salon.Alpha * 0.90

@@ -418,10 +418,32 @@ return function (mod)
                                     if not havecolorver then
                                         finalpath = shep:sub(0, shep:len()-4) .. ".png"
                                     end
-                                    print("gsgs",finalpath, refsting)
+                                    --print("gsgs",finalpath, refsting)
                                     spr:ReplaceSpritesheet(layer, finalpath ) --shep:sub(0, shep:len()-4) .. refsting .. ".png")
                                 end
                                 spr:LoadGraphics()
+                            end
+                           
+                            if cdat.BackSpr then
+                                local cspr = cdat.BackSpr
+                                for id=0, cspr:GetLayerCount()-1 do
+                                    local shep = cspr:GetLayer(id):GetSpritesheetPath()
+                                    shep = TryDeleteColorFromPath(shep)
+
+                                    local finalpath = shep:sub(0, shep:len()-4) .. refsting .. ".png"
+                                    local havecolorver = false
+                                    if not cacheNoHairColor[finalpath] then
+                                        havecolorver = pcall(Renderer.LoadImage, finalpath)
+                                        cacheNoHairColor[finalpath] = havecolorver
+                                    else
+                                        havecolorver = cacheNoHairColor[finalpath]
+                                    end
+                                    if not havecolorver then
+                                        finalpath = shep:sub(0, shep:len()-4) .. ".png"
+                                    end
+                                    
+                                    cspr:ReplaceSpritesheet(id, finalpath)
+                                end
                             end
                         end
                     end
