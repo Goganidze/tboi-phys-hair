@@ -2186,9 +2186,9 @@ function menuTab.input.GetMoveVector()
 	local p = GetPtrPlayer() or Isaac.GetPlayer()
 	local controllerIndex = menuTab.input.TargetControllerIndex or p.controllerIndex
 	if controllerIndex == 0 then
-		menuTab.input.moveVector = p:GetShootingJoystick()
+		menuTab.input.moveVector = p:GetShootingJoystick() / 1
 	else
-		menuTab.input.moveVector = p:GetMovementJoystick()
+		menuTab.input.moveVector = p:GetMovementJoystick() / 1
 	end
 
 	if menuTab.input.preMoveVector:Length() < 0.2 then
@@ -2205,15 +2205,24 @@ function menuTab.input.GetMoveVector()
 	end
 
 	menuTab.input.preMoveVector = menuTab.input.moveVector
+	if game:GetRoom():IsMirrorWorld() then
+		ret.X = -ret.X
+	end
 	return ret
 end
 function menuTab.input.GetRefMoveVector()
 	local p = GetPtrPlayer() or Isaac.GetPlayer()
+	local ret
 	if p.ControllerIndex == 0 then
-		return p:GetShootingJoystick()
+		ret = p:GetShootingJoystick() / 1
 	else
-		return p:GetMovementJoystick()
+		ret = p:GetMovementJoystick() / 1
 	end
+
+	if game:GetRoom():IsMirrorWorld() then
+		ret.X = -ret.X
+	end
+	return ret
 end
 
 function menuTab.SetControlType(ttype, targetplayer)
@@ -2257,14 +2266,14 @@ function menuTab.MouseButtonDetect(onceTouch)
 					local mwz = k.MouseWheelZone
 					if not somethingmousewheel and mwz then
 						local menupos = k.pos - k.posref
-						local st = menupos + mwz.vec
+						--[[local st = menupos + mwz.vec
 						menuTab.DelayRender(function()
 							Isaac.DrawQuad(st, st + Vector(mwz.size.X,0),
 								st + Vector(0, mwz.size.Y), st + mwz.size, 
 								KColor(1,1,1,1), 4
 							)
 							end, menuTab.Callbacks.WINDOW_POST_RENDER
-						)
+						)]]
 						--Isaac.DrawLine(k.pos + mwz.vec, k.pos +mwz.vec + mwz.size, 
 						--KColor(1,1,1,1), KColor(1,1,1,1), 2)
 						--print(mousePos, k.pos + mwz.vec, k.pos +mwz.vec + mwz.size)

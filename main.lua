@@ -767,7 +767,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
         SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "gfx/characters/costumes/eve_styles/icantwritegoodfemalecharacter/",
+        SkinFolderSuffics = "gfx/characters/costumes/eve_styles/icantwritegoodfemalecharacter/",
         ReplaceCostumeSheep = "gfx/characters/costumes/eve_styles/icantwritegoodfemalecharacter/character_005_evehead.png",
         TailCostumeSheep = "gfx/characters/costumes/eve_styles/icantwritegoodfemalecharacter/character_005_evehead.png",
     },
@@ -777,7 +777,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         HeadBack2Spr = GenSprite("gfx/characters/costumes/eve_styles/miku/backhair.anm2", "HeadDown"),
         TargetCostume = {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL},
         SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "gfx/characters/costumes/eve_styles/miku/",
+        SkinFolderSuffics = "gfx/characters/costumes/eve_styles/miku/",
         ReplaceCostumeSheep = "gfx/characters/costumes/eve_styles/miku/character_005_evehead_notail.png",
         TailCostumeSheep = "gfx/characters/costumes/eve_styles/miku/character_005_evehead.png",
         NullposRefSpr = GenSprite("gfx/characters/costumes/eve_styles/miku/evehead_mikutail.anm2"),
@@ -1419,13 +1419,18 @@ function BethHair.StyleMenu.HUDRender()
 
             if not wind.custinit then
                 wind.custinit = true
-                wind.pos = wind.pos + Vector(80, 400)
+                if game:GetRoom():IsMirrorWorld() then
+                    wind.pos = wind.pos + Vector(-80, 400)
+                else
+                    wind.pos = wind.pos + Vector(80, 400)
+                end
                 if player then
                     player.Velocity = Vector(0, 0)
                     player.Position = keeper.Position + Vector(-70, 0)
                 end
             else
-                local targetpos = Vector(Isaac.GetScreenWidth()/2+80, Isaac.GetScreenHeight()/2) - smenu.size/2
+                local xshift = game:GetRoom():IsMirrorWorld() and -80 or 80
+                local targetpos = Vector(Isaac.GetScreenWidth()/2+xshift, Isaac.GetScreenHeight()/2) - smenu.size/2
                 wind.pos = wind.pos * 0.9 + targetpos * 0.1
 
                 if wga.ControlType == wga.enum.ControlType.CONTROLLER then
@@ -1546,6 +1551,9 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
         local sprs = smenu.spr
 
         local centerPos = Vector(sw/4, pos.Y + smenu.size.Y * 0.7 )
+        if game:GetRoom():IsMirrorWorld() then
+            centerPos.X = sw*3/4
+        end
         
         local Xscale = sw/4 / 100
         local charrotateBtnL_offset = smenu.charrotateBtnL_offset/1

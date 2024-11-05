@@ -122,7 +122,7 @@ function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
     end
 end
 
-function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local skinsheet = stdata.data.SkinFolderSuffics
     local bodcol = player:GetBodyColor()
 
@@ -146,6 +146,34 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
             spr:LoadGraphics()
         end
     end
+end
+
+function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+    --[[local skinsheet = stdata.data.SkinFolderSuffics
+    local bodcol = player:GetBodyColor()
+
+    if skinsheet then
+        local spr = player:GetSprite()
+        ---@type string
+        --local orig = spr:GetLayer(0):GetDefaultSpritesheetPath()
+        --orig = orig:match(".+/(.-)%.png")
+        local orig
+        local pconf = EntityConfig.GetPlayer(stdata.ID)
+        if pconf then
+            orig = pconf:GetSkinPath()
+        end
+
+        if orig then
+            orig = orig:match(".+/(.-)%.png")
+            local path = skinsheet .. orig .. ( bodycolor[bodcol] or "") .. ".png"
+            for i=0, spr:GetLayerCount()-1 do
+                spr:ReplaceSpritesheet(i,path)
+            end
+            spr:LoadGraphics()
+        end
+    end]]
+    mod.HStyles.UpdatePlayerSkin(player, data, stdata)
+    local bodcol = player:GetBodyColor()
 
     local sheep = stdata.data.NullposRefSpr   --stdata.data.TailCostumeSheep
     local tarcost = stdata.data.TargetCostume
@@ -175,9 +203,28 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                         --print(i, cspr:GetLayer(i):GetSpritesheetPath())
                         local shpa = sheep:GetLayer(i)
                         if shpa then
-                            --print(i, shpa:GetSpritesheetPath())
-                            cspr:ReplaceSpritesheet(i, shpa:GetSpritesheetPath())
-                            --print("layer", shpa:GetSpritesheetPath())
+                            
+                            --cspr:ReplaceSpritesheet(i, shpa:GetSpritesheetPath())
+                            
+                            local orig = shpa:GetSpritesheetPath()
+                            local refsting = orig:sub(0, orig:len()-4)
+
+                            local colorsuf = bodycolor[bodcol] or ""
+                            local finalpath = refsting .. colorsuf .. ".png"
+                            
+                            local havecolorver = false
+                            if not cacheNoHairColor[finalpath] then
+                                havecolorver = pcall(Renderer.LoadImage, finalpath)
+                                cacheNoHairColor[finalpath] = havecolorver
+                            else
+                                havecolorver = cacheNoHairColor[finalpath]
+                            end
+                            if not havecolorver then
+                                finalpath = refsting .. ".png"
+                            end
+                            
+                            cspr:ReplaceSpritesheet(i, finalpath)
+
                             --foc[i] = shpa:GetSpritesheetPath()
                             dcsp[i] = shpa:GetSpritesheetPath()
                         end
@@ -242,6 +289,25 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
         end
     end
 end
+
+function mod.HStyles.PostRoomUpdateHair(_)
+    Isaac.CreateTimer(function ()
+        for i = 0, game:GetNumPlayers()-1 do
+            local player = Isaac.GetPlayer(i)
+
+            local ptype = player:GetPlayerType()
+            local data = player:GetData()
+            local PHSdata = data._PhysHair_HairStyle
+            if not PHSdata.PlayerType or PHSdata.PlayerType == ptype then
+                local stdata = HairStylesData.styles[PHSdata.StyleName]
+                
+                --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                mod.HStyles.UpdatePlayerSkin(player, data, stdata)
+            end
+        end
+    end, 1, 1, false)
+end
+mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.PostRoomUpdateHair)
 
 function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
     local PHSdata = player:GetData()._PhysHair_HairStyle
@@ -854,6 +920,7 @@ do
             end
             CachedSpr:LoadGraphics()
             CachedSpr.Color = cspr.Color
+            CachedSpr.Scale = cspr.Scale
 
             local sheep = stdata.data.NullposRefSpr
             local finalPath = data._BethsHairCord.FinalCostumePath

@@ -524,7 +524,7 @@ return function (mod)
                                             if not havecolorver then
                                                 finalpath = refsting .. gfx .. ".png"
                                             end
-                                            print(2, finalpath)
+                                             
                                             cspr:ReplaceSpritesheet(id, finalpath)
                                             cdat.FinalCostumePath[id] = finalpath
                                         end
@@ -552,7 +552,7 @@ return function (mod)
                                             end]]
                                             local finalpath = refsting .. (suffix or "") .. colorsuf .. ".png"
                                             local havecolorver = false
-                                            print(3, colorsuf, refsting, "|", suffix, "|", finalpath, havecolorver)
+                                             
                                             if not cacheNoHairColor[finalpath] then
                                                 havecolorver = pcall(Renderer.LoadImage, finalpath)
                                                 cacheNoHairColor[finalpath] = havecolorver
@@ -562,7 +562,7 @@ return function (mod)
                                             if not havecolorver then
                                                 finalpath = refsting .. (suffix or "") .. ".png"
                                             end
-                                            print(2, finalpath, havecolorver)
+                                             
                                             cspr:ReplaceSpritesheet(id, finalpath) -- refsting .. (suffix or "") .. ".png")  -- rep)
                                             cdat.FinalCostumePath[id] = finalpath
                                         end
