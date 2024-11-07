@@ -838,6 +838,26 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
 
 
+    ------------ САМСОН ----------------
+
+    mod.HStyles.AddStyle("SamsonFlatTop", PlayerType.PLAYER_SAMSON, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/flattop/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
+        TailCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
+    },
+    {modfolder = defaultmodfolder, })
+
+
+
+
+
+
+
+
+
 
 
 
