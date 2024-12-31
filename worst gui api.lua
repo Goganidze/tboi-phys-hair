@@ -2246,7 +2246,7 @@ end
 function menuTab.MouseButtonDetect(onceTouch)
 	local mousePos = menuTab.MousePos
 	local onceTouch = onceTouch or false
-	menuTab.OnFreePos = true
+	menuTab.OnFreePos = not onceTouch -- true
 	local isMB0, isMB1 = menuTab.IsMouseBtnTriggered(0), menuTab.IsMouseBtnTriggered(1)
 
 	for ahhoh = #DetectSelectedButtonBuffer, 1,-1 do
@@ -3561,6 +3561,11 @@ if WORSTGUI then
 					menus.DetectSelectedButtonActualeActuale(mousetouch)
 					mousetouch = menus.MouseSomethighTouch
 				end
+				for i = #WORSTGUI.CachedDetect, 1, -1 do
+					local menus = WORSTGUI.CachedDetect[i]
+					menus.OnFreePos = not mousetouch
+				end
+				--print("phys",mousetouch)
 				WORSTGUI.CachedDetect = {}
 			end
 		end
@@ -3603,6 +3608,11 @@ else
 				menus.DetectSelectedButtonActualeActuale(mousetouch)
 				mousetouch = menus.MouseSomethighTouch
 			end
+			for i = #WORSTGUI.CachedDetect, 1, -1 do
+				local menus = WORSTGUI.CachedDetect[i]
+				menus.OnFreePos = not mousetouch
+			end
+			--print("phys2",mousetouch)
 			WORSTGUI.CachedDetect = {}
 		end
 	end

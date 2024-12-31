@@ -56,6 +56,12 @@ function BethHair.HStyles.GetStyleData(name)
 end
 
 function mod.SetHairStyleData(player, playerType, style_data)
+    --local copy
+    --print("SetHairStyleData", playerType, style_data.ID)
+    if not style_data.TargetCostume then
+        style_data.TargetCostume = mod.HStyles.GetTargetCostume(playerType)
+        --playerType = player:GetPlayerType()
+    end
     mod.HairLib.SetHairData(playerType,  style_data)
 end
 
@@ -66,12 +72,12 @@ function mod.HairPreInit(_, player)
         local data = player:GetData()
         if data._PhysHair_HairStyle then
             local PHSdata = data._PhysHair_HairStyle
-            if PHSdata.PlayerType and PHSdata.PlayerType ~= ptype then
+            if PHSdata.PlayerType and PHSdata.PlayerType ~= -1 and PHSdata.PlayerType ~= ptype then
                 data._PhysHair_HairStyle = nil
             else
                 local stdata = HairStylesData.styles[PHSdata.StyleName]
                 if stdata then
-                    if stdata.ID == ptype then
+                    if stdata.ID == ptype or stdata.ID == -1 then
                         mod.SetHairStyleData(player,ptype, stdata.data)
                         mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                     end
@@ -110,7 +116,7 @@ function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
         local stdata = HairStylesData.styles[style_name]
         player = player:ToPlayer()
         local ptype = player:GetPlayerType()
-        if stdata and stdata.ID == ptype then
+        if stdata and (stdata.ID == ptype or stdata.ID == -1) then
             --mod.SetHairStyleData(ptype, stdata)
             local data = player:GetData()
             --data._PhysHair_HairStyle = style_name
@@ -121,6 +127,8 @@ function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
         end
     end
 end
+
+local cacheSkinsColor = {}
 
 function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local skinsheet = stdata.data.SkinFolderSuffics
@@ -140,6 +148,18 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
         if orig then
             orig = orig:match(".+/(.-)%.png")
             local path = skinsheet .. orig .. ( bodycolor[bodcol] or "") .. ".png"
+            
+            local havecolorver = false
+            if not cacheSkinsColor[path] then
+                havecolorver = pcall(Renderer.LoadImage, path)
+                cacheSkinsColor[path] = havecolorver
+            else
+                havecolorver = cacheSkinsColor[path]
+            end
+            if not havecolorver then
+                path = skinsheet .. orig .. ".png"
+            end
+
             for i=0, spr:GetLayerCount()-1 do
                 spr:ReplaceSpritesheet(i,path)
             end
@@ -316,7 +336,7 @@ function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
         if stdata then
             local skinsheet = stdata.data.SkinFolderSuffics
             if skinsheet then
-                local spr = player:GetSprite()
+                --[[local spr = player:GetSprite()
                 ---@type string
                 --local orig = spr:GetLayer(0):GetDefaultSpritesheetPath()
                 --orig = orig:match(".+/(.-)%.png")
@@ -333,7 +353,8 @@ function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
                         spr:ReplaceSpritesheet(i,path)
                     end
                     spr:LoadGraphics()
-                end
+                end]]
+                mod.HStyles.UpdatePlayerSkin(player, player:GetData(), stdata)
             end
         end
     end
@@ -357,13 +378,17 @@ local PlayerTypeToTargetCostume = {
     [PlayerType.PLAYER_THESOUL_B]=NullItemID.ID_SOUL_B,
 }
 
+local PlayerTypeToTargetCostumePos = {
+    [PlayerType.PLAYER_AZAZEL]=1,
+}
+
 function mod.HStyles.GetTargetCostume(playerType, style_name)
     if style_name and HairStylesData.styles[style_name] then
         local stdata = HairStylesData.styles[style_name]
         local tarcost = stdata.data.TargetCostume
         return tarcost
     elseif playerType then
-        return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL, pos = 0}
+        return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL, pos = PlayerTypeToTargetCostumePos[playerType] or 0}
     end
 
 end
@@ -728,9 +753,12 @@ function mod.HStyles.salon.EnterSalon()
         local level = game:GetLevel()
         salon.ReturnSettings = {
             CameraStyle = Options.CameraStyle,
-            NoWall = level:GetCurrentRoomDesc().Flags & RoomDescriptor.FLAG_NO_WALLS
+            NoWall = level:GetCurrentRoomDesc().Flags & RoomDescriptor.FLAG_NO_WALLS,
+            MusicVolume = Options.MusicVolume,
         }
         Options.CameraStyle = CameraStyle.ACTIVE_CAM_OFF
+        MusicManager():VolumeSlide(0.5 , 0.08)
+        
         local crds = level:GetCurrentRoomDesc()
         crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
 
@@ -796,6 +824,9 @@ function mod.HStyles.salon.ExitSalon()
             local crds = game:GetLevel():GetCurrentRoomDesc()
             crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
         end
+
+        MusicManager():VolumeSlide(1, 0.08)
+        MusicManager():UpdateVolume()
 
         salon.Entered = false
 
@@ -1117,7 +1148,9 @@ do
                     for y = 1, 15 do
                         if rng:RandomInt(3) > 0 then
                             local layerID = rng:RandomInt(cspr:GetLayerCount())
-                            local layer = cspr:GetCurrentAnimationData():GetLayer(layerID):GetFrame(cspr:GetFrame()) 
+                            
+                            local animdata = cspr:GetCurrentAnimationData()
+                            local layer = (animdata:GetLayer(layerID) or animdata:GetLayer(0) or animdata:GetLayer(1)):GetFrame(cspr:GetFrame()) 
 
                             if layer then
                                 local pos = Vector(
@@ -1128,7 +1161,7 @@ do
                                 )
 
                                 ---@type KColor
-                                local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
+                                local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, -1) --layerID
                                 local r,g,b = tex.Red, tex.Green, tex.Blue
                                     --print(pos, tex, tex and tex.Alpha)
                                 if tex and tex.Alpha > 0 and r+g+b > 0.1 then
@@ -1138,7 +1171,7 @@ do
                                     for xi = -2, 2 do
                                         for yi = -2, 2 do
                                             ---@type KColor
-                                            local tex = cspr:GetTexel(pos+Vector(xi,yi), Vector.Zero, 0.5, layerID)
+                                            local tex = cspr:GetTexel(pos+Vector(xi,yi), Vector.Zero, 0.5, -1)
                                             if tex and tex.Alpha > 0 then
                                                 local r,g,b = tex.Red, tex.Green, tex.Blue
                                                 if r+g+b > 0.1 then
@@ -1355,6 +1388,7 @@ end
 
 ------------       поиск респрайтов       -------------
 local PlayerTypeToHairPos = {
+    [PlayerType.PLAYER_AZAZEL]=1,
     [PlayerType.PLAYER_APOLLYON]=1,
     [PlayerType.PLAYER_APOLLYON_B]=1,
     [PlayerType.PLAYER_LAZARUS_B]=1,
@@ -1447,7 +1481,7 @@ local PlayeeTypeToHairAnm2 = {
     [PlayerType.PLAYER_CAIN]="gfx/characters/character_003_cainseyepatch.anm2", 
     [PlayerType.PLAYER_JUDAS]="gfx/characters/character_004_judasfez.anm2",
     --[PlayerType.PLAYER_EVE]="gfx/characters/character_005_evehead.anm2",
-    --[PlayerType.PLAYER_AZAZEL]="gfx/characters/character_003_cainseyepatch",
+    [PlayerType.PLAYER_AZAZEL]="gfx/characters/character_008_azazelhead.anm2",
     --[PlayerType.PLAYER_EDEN]="gfx/characters/character_003_cainseyepatch",
     [PlayerType.PLAYER_SAMSON]="gfx/characters/character_007_samsonhead.anm2",
     [PlayerType.PLAYER_KEEPER]="gfx/characters/character_014_keepernoose.anm2",
@@ -1487,7 +1521,7 @@ local PlayeeTypeToHairPath = {
     [PlayerType.PLAYER_CAIN]="gfx/characters/costumes/character_003_cainseyepatch.png", 
     [PlayerType.PLAYER_JUDAS]="gfx/characters/costumes/character_004_judasfez.png",
     --[PlayerType.PLAYER_EVE]="gfx/characters/costumes/character_005_evehead.png",
-    --[PlayerType.PLAYER_AZAZEL]="gfx/characters/costumes/character_003_cainseyepatch",
+    [PlayerType.PLAYER_AZAZEL]="gfx/characters/costumes/character_008_azazelhead.png",
     --[PlayerType.PLAYER_EDEN]="gfx/characters/costumes/character_003_cainseyepatch",
     [PlayerType.PLAYER_SAMSON]="gfx/characters/costumes/character_007_samsonshairandbandanna.png",
     [PlayerType.PLAYER_KEEPER]="gfx/characters/costumes/character_015_keepernoose.png",

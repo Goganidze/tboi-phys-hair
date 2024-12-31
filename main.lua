@@ -199,6 +199,7 @@ local headDirToRender2 = {
 
 
 local defaultmodfolder = "mods/" .. mod.Foldername .. "/resources"
+mod.defaultmodfolder = defaultmodfolder
 
 --mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
 mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
@@ -834,7 +835,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     },
     {modfolder = defaultmodfolder, })
 
-
+--#endregion 
 
 
 
@@ -849,6 +850,36 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
     },
     {modfolder = defaultmodfolder, })
+
+
+
+
+
+
+    ------------ АЗАЗЕЛЬ ----------------
+
+    mod.HStyles.AddStyle("AzazelSlicked", PlayerType.PLAYER_AZAZEL, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_AZAZEL, Type = ItemType.ITEM_NULL, pos = 1},
+        SyncWithCostumeBodyColor = true,
+        SkinFolderSuffics = "gfx/characters/costumes/azazel_styles/slicked/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/azazel_styles/slicked/character_008_azazelhead.png",
+        TailCostumeSheep = "gfx/characters/costumes/azazel_styles/slicked/character_008_azazelhead.png",
+    },
+    {modfolder = defaultmodfolder, })
+
+    mod.HStyles.AddStyle("AzazelPunk", PlayerType.PLAYER_AZAZEL, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_AZAZEL, Type = ItemType.ITEM_NULL, pos = 1},
+        SyncWithCostumeBodyColor = true,
+        SkinFolderSuffics = "gfx/characters/costumes/azazel_styles/punk/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/azazel_styles/punk/character_008_azazelhead.png",
+        TailCostumeSheep = "gfx/characters/costumes/azazel_styles/punk/character_008_azazelhead.png",
+    },
+    {modfolder = defaultmodfolder, }) 
+
+
+
 
 
 
@@ -879,7 +910,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         end
     end)
 
---#endregion 
+
 
 
 
@@ -1077,6 +1108,11 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         end
     end
     mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_RENDER, mod.JudasJunkPreRender)
+
+    include("stylesVariants")
+
+
+
 
     local json = require("json")
     local function updateSaveData()
@@ -1339,8 +1375,8 @@ BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240),
     hairbtnsoffset = 0,
     hinttextoffset = Vector(0,240),
 
-    charrotateBtnL_offset = Vector(-50, 30),
-    charrotateBtnR_offset = Vector(50, 30),
+    charrotateBtnL_offset = Vector(-40, 20),
+    charrotateBtnR_offset = Vector(40, 20),
 }
 local smenu = BethHair.StyleMenu
 local preMousePos = Vector(0,0)
@@ -1772,6 +1808,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             self = wga.AddButton(smenu.name, "style" .. i, pos,
              40, 40, nilspr,
                 function (button)
+                    print("PHYSHAIR")
                     local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
                     --BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.SetStyleMode)
                     mod.HStyles.salon.ChangeHairStyle(player, stylename, smenu.SetStyleMode)
@@ -2112,7 +2149,7 @@ function BethHair.StyleMenu.ShowWindow()
     local center = Vector(Isaac.GetScreenWidth()/2, Isaac.GetScreenHeight()/2)
     smenu.wind = wga.ShowWindow(smenu.name, center-smenu.size/2, smenu.size)
     smenu.wind.RenderCustomMenuBack = BethHair.StyleMenu.windowbackrender
-    smenu.wind.unuser = true
+    --smenu.wind.unuser = true
     smenu.wind.backcolor = Color(1,1,1,1)
     smenu.wind.backcolornfocus = Color(1,1,1,1)
 

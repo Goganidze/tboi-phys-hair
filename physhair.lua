@@ -110,6 +110,7 @@ return function (mod)
 
     ---@param data SetHairDataParam
     function _HairCordData.SetHairData(playertype, data)
+        print(playertype, data, data.TargetCostume.ID)
         if playertype then
             PlayerData[playertype] = {
                 --CordSpr = data.CordSpr,
@@ -673,6 +674,7 @@ return function (mod)
             data._PhysHair_HairMode = mode
             Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_PRE_INIT, ptype, player)
             local datattab = PlayerData[ptype]
+            --print(datattab)
             --print("INIT", datattab, ptype, mode)
             
             if mode == 1 then
@@ -718,7 +720,12 @@ return function (mod)
                     
                     ---@type HairData
                     local taildata = cdat[tail]
-                    for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
+                    for i=0, taildata.DotCount-1 do
+                        ---@class TailData
+                        ---@field [1] Vector pos
+                        ---@field [2] Vector velocity
+                        ---@field [3] number length
+                                         --pos                         velocity,     длина
                         taildata[i] = {playerPos + Vector(0,taildata.Length/taildata.DotCount*i), Vector(0,0), taildata.Length/taildata.DotCount*i+(12)-i*2}
                     end
                     local cs = taildata.CS
@@ -904,6 +911,21 @@ return function (mod)
         
                     local rlt = taildata.RL[hdir]
                     
+                    --[[
+                    for gg = 0, 4 do
+                        local p = playerPos + Vector(gg * 20,0)
+                        local s = ((gg-2)%3)*32
+                        Isaac.RenderScaledText(s, p.X,p.Y-5, .5, .5, 1,1,1,1)
+                        cord:Add(p, s, 1)
+                    end
+                    cord:Render(true)
+
+                    for gg = 0, 4 do
+                        cord:Add(playerPos + Vector(gg * 20,40), 0, 1)
+                    end
+                    cord:Render(true)
+                    ]]
+
                     if rlt & 2 == 2 and rlt & 1 == 1 then
                         local tail1 = taildata
                         local hap1 --= playerPos+hairPos1 --(Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
@@ -923,8 +945,9 @@ return function (mod)
                         
                         cord:GetSprite().Color = playerCol
 
+                        local StartWidth = taildata.StartWidth or 1
                         --cord:Add(hap1 + off, player.SpriteScale.X*.95*cordspr.Scale.X, 5 , playerCol)
-                        cord:Add(hap1 + off, taildata.STH or 5,  player.SpriteScale.X*.95*cordspr.Scale.X , playerCol)
+                        cord:Add(hap1 + off, taildata.STH or 5,  player.SpriteScale.X*.95*cordspr.Scale.X * StartWidth, playerCol)
                         
                         for i=0, #tail1 do
                             local cur = tail1[i]
@@ -937,9 +960,15 @@ return function (mod)
                                     pos = pos - cdat.reflectOffset
                                 end
                             end
+
+                            local DotCol = playerCol
+                            if cur.c then
+                                DotCol = Color.Lerp(playerCol, cur.c, cur.cmulti or .5)
+                            end
+                            local Dotscale = cur.sc or 1
                             
                             --cord:Add(pos,player.SpriteScale.X*cordspr.Scale.X,cur[3]+2 , playerCol)
-                            cord:Add(pos,cur[3]+2 ,player.SpriteScale.X*cordspr.Scale.X, playerCol)
+                            cord:Add(pos,cur[3]+2 ,player.SpriteScale.X*cordspr.Scale.X*Dotscale, DotCol)
                         end
                         cord:Render()
                     end
