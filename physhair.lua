@@ -69,6 +69,7 @@ return function (mod)
     ---@field TargetCostume TargetCostume?
     ---@field ReplaceCostumeSheep string|string[]?
     ---@field SyncBColor boolean?
+    ---@field ItemAlts ItemCostumeAlts_set[]?
 
     ---@class HairData
     ---@field Cord Sprite|Beam|any
@@ -107,10 +108,19 @@ return function (mod)
     ---@field ReplaceCostumeSuffix string|string[]?
     ---@field SyncWithCostumeBodyColor boolean?
     ---@field [integer] HairDataIn
+    ---@field NullposRefSpr Sprite?
+    ---@field SkinFolderSuffics string?
+    ---@field ItemCostumeAlts ItemCostumeAlts_set[]?
+
+    ---@class ItemCostumeAlts_set
+    ---@field ID integer
+    ---@field gfx string|table
+    ---@field pos 0|1?
+    ---@field anm2 string
 
     ---@param data SetHairDataParam
     function _HairCordData.SetHairData(playertype, data)
-        print(playertype, data, data.TargetCostume.ID)
+        --print(playertype, data, data.TargetCostume.ID)
         if playertype then
             PlayerData[playertype] = {
                 --CordSpr = data.CordSpr,
@@ -129,6 +139,7 @@ return function (mod)
                 NullposRefSpr = data.NullposRefSpr,
                 SkinFolderSuffics = data.SkinFolderSuffics,
                 ExtraAnimHairLayer = data.ExtraAnimHairLayer,
+                ItemCostumeAlts = data.ItemCostumeAlts,
             }
             local ignorelist = {
                 CordSpr = true, Scretch = true, DotCount = true, TailCount = true, RenderLayers = true, CostumeNullpos = true, Length = true,
@@ -699,6 +710,7 @@ return function (mod)
                     SyncBColor = datattab.SyncBColor,
                     NPRefSpr = datattab.NullposRefSpr,
                     EXAnim_HL = datattab.ExtraAnimHairLayer,
+                    ItemAlts = datattab.ItemCostumeAlts,
                 }
                 --print("   ", datattab.ReplaceCostumeSheep, "|", datattab.ReplaceCostumeSuffix)
                 local cdat = data._BethsHairCord

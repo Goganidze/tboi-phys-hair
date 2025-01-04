@@ -45,6 +45,14 @@ mod.HairLib = include("physhair")
 ---@type _HairCordData
 mod.HairLib = mod.HairLib(mod)
 
+mod.HStyles = {
+    ---@param name string
+    ---@param playerid PlayerType
+    ---@param data SetHairDataParam
+    ---@param extradata table?
+    AddStyle = function(name, playerid, data, extradata) end
+}
+
 include("hair_styles")
 
 mod.DR = false
@@ -848,6 +856,36 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/flattop/",
         ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
+        ItemCostumeAlts = {
+            {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST, 
+            gfx="gfx/characters/costumes/samson_styles/flattop/costume_081_bloodylust.png",
+            anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"},
+        },
+    },
+    {modfolder = defaultmodfolder, })
+
+    mod.HStyles.AddStyle("SamsonRebirth", PlayerType.PLAYER_SAMSON, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        SkinFolderSuffics = "gfx/characters/costumes/samson_styles/rebirth/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/rebirth/character_007_samsonshairandbandanna.png",
+        TailCostumeSheep = "gfx/characters/costumes/samson_styles/rebirth/character_007_samsonshairandbandanna.png",
+    },
+    {modfolder = defaultmodfolder, })
+
+    mod.HStyles.AddStyle("SamsonRonin", PlayerType.PLAYER_SAMSON, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/flattop/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/ronin/character_007_samsonshairandbandanna.png",
+        TailCostumeSheep = "gfx/characters/costumes/samson_styles/ronin/character_007_samsonshairandbandanna.png",
+        ItemCostumeAlts = {
+            {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST, 
+            gfx="gfx/characters/costumes/samson_styles/ronin/costume_081_bloodylust.png",
+            anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"}
+        },
     },
     {modfolder = defaultmodfolder, })
 

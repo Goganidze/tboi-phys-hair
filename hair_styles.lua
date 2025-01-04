@@ -133,8 +133,10 @@ local cacheSkinsColor = {}
 function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local skinsheet = stdata.data.SkinFolderSuffics
     local bodcol = player:GetBodyColor()
+    data._PhysHairExtra = data._PhysHairExtra or {}
 
     if skinsheet then
+        data._PhysHairExtra.SkinIsChanged = true
         local spr = player:GetSprite()
         ---@type string
         --local orig = spr:GetLayer(0):GetDefaultSpritesheetPath()
@@ -165,9 +167,34 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
             end
             spr:LoadGraphics()
         end
+    elseif data._PhysHairExtra.SkinIsChanged then
+        data._PhysHairExtra.SkinIsChanged = nil
+
+        local spr = player:GetSprite()
+        local orig
+        local pconf = EntityConfig.GetPlayer(stdata.ID)
+        if pconf then
+            orig = pconf:GetSkinPath()
+        end
+
+        if orig then
+            local path = orig:sub(1,-5) .. ( bodycolor[bodcol] or "") .. ".png"
+            local havecolorver = pcall(Renderer.LoadImage, path)
+            if not havecolorver then
+                path = orig .. ".png"
+            end
+            for i=0, spr:GetLayerCount()-1 do
+                spr:ReplaceSpritesheet(i,path)
+            end
+            spr:LoadGraphics()
+        end
     end
 end
+---@class PlayerDataContent
+---@field _BethsHairCord PlayerHairData
+---@field _PhysHairExtra table
 
+---@param data PlayerDataContent
 function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
     --[[local skinsheet = stdata.data.SkinFolderSuffics
     local bodcol = player:GetBodyColor()
@@ -198,6 +225,43 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
     local sheep = stdata.data.NullposRefSpr   --stdata.data.TailCostumeSheep
     local tarcost = stdata.data.TargetCostume
     data._PhysHairExtra = data._PhysHairExtra or {}
+
+
+    -- восстановление костюмов и может быть прочего
+
+    local Preoic = data._PhysHairExtra.OrigItemCostumes
+    if Preoic then
+        local itemaltpos = 0
+        local preItemID = 0
+        for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+            local conf = csd:GetItemConfig()
+
+            local loic = Preoic[conf.ID]
+            if loic then
+                if preItemID ~= conf.ID then
+                    itemaltpos = itemaltpos + 1
+                else
+                    itemaltpos = 0
+                end
+                preItemID = conf.ID
+
+                local lloic = loic[itemaltpos]
+                if lloic then
+                    local cspr = csd:GetSprite()
+                    cspr:Load(lloic.anm2, true)
+
+                    for id, gfx in pairs(lloic.gfx) do
+                        print("restor", id, gfx)
+                        cspr:ReplaceSpritesheet(id-1, gfx)
+                    end
+                    cspr:LoadGraphics()
+
+                end
+            end
+        end
+    end
+
+
 
     --print(stdata.data.NullposRefSpr)
     if sheep and tarcost then
@@ -304,6 +368,89 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                     end]] 
                 else
                     pos = pos + 1
+                end
+            end
+        end
+    end
+
+    --data._PhysHairExtra.OrigItemCostumes = {}
+    data._PhysHairExtra.OrigItemCostumes = {}
+    local oic = data._PhysHairExtra.OrigItemCostumes
+    local ItemCostumeAlts = stdata.data.ItemCostumeAlts
+    if ItemCostumeAlts then
+        --local ItemCostumeAlts = ItemAlts -- data._BethsHairCord and data._BethsHairCord.ItemAlts
+        local hasItemAlts = ItemCostumeAlts and #ItemCostumeAlts > 0
+        ---@type ItemCostumeAlts_set[]
+        local ItemCostumeAltsRevert = {}
+        if hasItemAlts then
+            for i=1, #ItemCostumeAlts do
+                ItemCostumeAltsRevert[ItemCostumeAlts[i].ID] = ItemCostumeAlts[i]
+            end
+        end
+        print("hasItemAlts", ItemCostumeAlts, hasItemAlts)
+
+        local pos = 0
+        local itemaltpos = 0
+        local preItemID = 0
+        for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+            local conf = csd:GetItemConfig()
+        
+            if hasItemAlts then
+                local altsData = ItemCostumeAltsRevert[conf.ID]
+                print("altsData", conf.ID, altsData)
+                if altsData then
+                    if preItemID ~= conf.ID then
+                        itemaltpos = itemaltpos + 1
+                    else
+                        itemaltpos = 0
+                    end
+                    preItemID = conf.ID
+
+                    oic[conf.ID] = oic[conf.ID] or {}
+                    local loic = oic[conf.ID]
+                    if not altsData.pos or altsData.pos == itemaltpos then
+                        loic[itemaltpos] = {}
+                        local lloic = loic[itemaltpos]
+                        local cspr = csd:GetSprite()
+                        local anm2 = altsData.anm2
+
+                        lloic.anm2 = cspr:GetFilename()
+                        lloic.gfx = {}
+                        for j, layer in pairs(cspr:GetAllLayers()) do
+                            lloic.gfx[j] = layer:GetSpritesheetPath()
+                        end
+
+                        local anim = cspr:GetAnimation()
+                        if anm2 then
+                            cspr:Load(anm2, true)
+                        end
+                        cspr:Play(anim, true)
+                        local adgfx = altsData.gfx
+                        local gfxistab = type(adgfx) == "table"
+                        print(adgfx, anm2, cspr:GetDefaultAnimation())
+
+                        for j, layer in pairs(cspr:GetAllLayers()) do
+                            --lloic.gfx[j] = layer:GetSpritesheetPath()
+                            if gfxistab then
+                                cspr:ReplaceSpritesheet(j-1, adgfx[j])
+                            else
+                                print(j-1, layer:GetLayerID())
+                                cspr:ReplaceSpritesheet(j-1, adgfx)
+                            end
+                        end
+                        cspr:LoadGraphics()
+                        --[[if adgfx then
+                            if type(adgfx) == "table" then
+                                for id, gfx in pairs(adgfx) do
+                                    cspr:ReplaceSpritesheet(id, gfx)
+                                end
+                            else
+                                cspr:ReplaceSpritesheet(0, adgfx)
+                            end
+                        end]]
+                    else
+                        --itemaltpos = (itemaltpos + 1) % 2
+                    end
                 end
             end
         end
