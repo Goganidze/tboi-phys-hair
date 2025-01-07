@@ -193,6 +193,7 @@ end
 ---@class PlayerDataContent
 ---@field _BethsHairCord PlayerHairData
 ---@field _PhysHairExtra table
+---@field [string] any
 
 ---@param data PlayerDataContent
 function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
@@ -387,7 +388,6 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                 ItemCostumeAltsRevert[ItemCostumeAlts[i].ID] = ItemCostumeAlts[i]
             end
         end
-        print("hasItemAlts", ItemCostumeAlts, hasItemAlts)
 
         local pos = 0
         local itemaltpos = 0
@@ -397,7 +397,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
         
             if hasItemAlts then
                 local altsData = ItemCostumeAltsRevert[conf.ID]
-                print("altsData", conf.ID, altsData)
+                
                 if altsData then
                     if preItemID ~= conf.ID then
                         itemaltpos = itemaltpos + 1
@@ -427,7 +427,6 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                         cspr:Play(anim, true)
                         local adgfx = altsData.gfx
                         local gfxistab = type(adgfx) == "table"
-                        print(adgfx, anm2, cspr:GetDefaultAnimation())
 
                         for j, layer in pairs(cspr:GetAllLayers()) do
                             --lloic.gfx[j] = layer:GetSpritesheetPath()

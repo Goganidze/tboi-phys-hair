@@ -1238,6 +1238,7 @@ menuTab.Keyboard.SelLang = "en"
 menuTab.Keyboard.Languages = {"en","ru"}
 menuTab.Keyboard.Chars = {}
 
+Keyboard.KEY_0 = 48
 menuTab.Keyboard.Chars.OnlyNumberBtnList = {[48] = 0,[49] = 1,[50] = 2,[51] = 3,[52] = 4,[53] = 5,[54] = 6,[55] = 7,[56] = 8,[57] = 9,
 	[320] = 0,[321] = 1,[322] = 2,[323] = 3,[324] = 4,[325] = 5,[326] = 6,[327] = 7,[328] = 8,[329] = 9,
 	[259] = -1, [261] = -1, [45] = "-", [46] = ".", [333] = "-", [330] = ".", }
@@ -1286,6 +1287,8 @@ menuTab.TextboxPopup = {MenuName = "TextboxPopup", OnlyNumber = false, Text = ""
 	TextPosMoveDelay = 0, errorMes = -1,
 	LongDelay = 20, shortDelay = 3, Delay = 0, DelayOn = true,
 }
+
+-- This function is not used in the current implementation
 
 function menuTab.OpenTextboxPopup(onlyNumber, resultCheckFunc, startText) --tab, key, 
 	local Menuname = menuTab.TextboxPopup.MenuName

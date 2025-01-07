@@ -1130,7 +1130,7 @@ return function (mod)
                     if rlt & 2 == 2 and rlt & 1 == 0 then
                         local tail1 = taildata
                         local hap1 = playerPos+hairPos
-                        local off = Vector(0,0) -- (hap1-tail1[0][1]):Resized(player.SpriteScale.X*scretch*.3)
+                        local off = (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*taildata.Scretch*.16) + game.ScreenShakeOffset  -- Vector(0,0) -- (hap1-tail1[0][1]):Resized(player.SpriteScale.X*scretch*.3)
                         cord:Add(hap1+off, taildata.STH or 5, player.SpriteScale.X*.95*cordSpr.Scale.X, playerCol)
                         for i=0, #tail1 do
                             local cur = tail1[i]
@@ -1200,7 +1200,8 @@ return function (mod)
                     --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
                 end
                 
-                local vel = (prep-lpos):Resized(math.max(-1,bttdis*Bounce-scretch*lerp))
+                --local vel = (prep-lpos):Resized(math.max(-1, (bttdis+(math.max(0, bttdis-scretch) * Bounce)) - scretch*lerp))
+                local vel = (prep-lpos):Resized(math.max(-1, bttdis * Bounce - scretch*lerp))
                 
                 cur[2] = (cur[2]* lerp + vel * (1-lerp))
                 --cur[2] = cur[2] * 0.2 + vel * .8

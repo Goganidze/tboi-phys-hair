@@ -879,13 +879,74 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
         SyncWithCostumeBodyColor = true,
         --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/flattop/",
-        ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/ronin/character_007_samsonshairandbandanna.png",
+        ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/ronin/character_007_samsonshairandbandanna_notails.png",
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/ronin/character_007_samsonshairandbandanna.png",
         ItemCostumeAlts = {
             {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST, 
             gfx="gfx/characters/costumes/samson_styles/ronin/costume_081_bloodylust.png",
             anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"}
         },
+
+        NullposRefSpr = GenSprite("gfx/characters/costumes/samson_styles/ronin/samsonhead_ronin.anm2"),
+        
+        {
+            Scretch = scretch * 1.5,
+            DotCount = 4,
+            CordSpr = BeamR("gfx/characters/costumes/samson_styles/ronin/samsonhair_ronin_cord.anm2", 
+                "cord4", "body", false, false, 3),
+            RenderLayers = { [3] = 0, [0] = 2, [1] = 3, [2] = 2 },
+            CostumeNullpos = "bethshair_cord2",
+            StartHeight = 5,
+            Length = 36,
+            Mass = 7,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
+            PreUpdate = function(player, taildata)
+                local spranim = player:GetSprite():GetOverlayAnimation()
+                local cordspr = taildata.Cord:GetSprite()
+
+                cordspr.FlipX = spranim == "HeadRight"
+                local hairvel = taildata[3][2] + Vector(0, -0.01)
+                
+                cordspr.PlaybackSpeed = math.min(1, hairvel:Length()/3)
+                cordspr:Update()
+            end,
+            Bounce = 0.8,
+            CS = {[0]=36/4*1.5, 36/4*2.5, 36/4*3.5, 36/4*4}
+        },
+        {
+            Scretch = scretch * 1.75,
+            DotCount = 3,
+            CordSpr = BeamR("gfx/characters/costumes/samson_styles/ronin/samsonhair_ronin_cord.anm2", 
+                "cord", "body", false, false, 3),
+            RenderLayers = { [3] = 2, [0] = 3, [1] = 3, [2] = 3 },
+            CostumeNullpos = "bethshair_cord1",
+            StartHeight = 0,
+            Length = 27,
+            Mass = 23,
+            PhysFunc = mod.HairLib.EveheavyHairPhys,
+            PreUpdate = function(player, taildata)
+                local spranim = player:GetSprite():GetOverlayAnimation()
+                local cordspr = taildata.Cord:GetSprite()
+
+                local curanim = cordspr:GetAnimation()
+                if (spranim == "HeadLeft" or spranim == "HeadRight") then
+                    if curanim ~= "cord2" then
+                        cordspr:Play("cord2")
+                    end
+                    cordspr.FlipX = spranim == "HeadLeft"
+                elseif spranim == "HeadDown" and curanim ~= "cord" then
+                    cordspr:Play("cord")
+                    cordspr.FlipX = false
+                elseif spranim == "HeadUp" and curanim ~= "cord3" then
+                    cordspr:Play("cord3")
+                    cordspr.FlipX = false
+                end
+            end,
+            Bounce = 0.4,
+            CS = {[0]=27/3*1, 27/3*2, 27/3*3}
+        },
+
+
     },
     {modfolder = defaultmodfolder, })
 
@@ -1846,7 +1907,6 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
             self = wga.AddButton(smenu.name, "style" .. i, pos,
              40, 40, nilspr,
                 function (button)
-                    print("PHYSHAIR")
                     local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
                     --BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.SetStyleMode)
                     mod.HStyles.salon.ChangeHairStyle(player, stylename, smenu.SetStyleMode)
