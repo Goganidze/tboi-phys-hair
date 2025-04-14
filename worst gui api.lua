@@ -785,9 +785,10 @@ end
 ---@field IsHided boolean
 ---@field hide EditorButton
 ---@field unhide EditorButton
----@field unuser boolean --нельзя перемещать и без кнопок Закрыть и Свернуть
+---@field unuser boolean --нельзя перемещать и без кнопок Закрыть и Свернуть| can't move and don't have Close and Hide buttons
 ---@field backcolor Color
----@field backcolornfocus Color --цвет в не фокусе
+---@field backcolornfocus Color --цвет в не фокусе | color in not focus
+---@field OnTop boolean --Первый в приоритете, не затенён | first in render, not faded
 menuTab.WindowMeta = {}
 menuTab.WindowMetaTable = {__index = menuTab.WindowMeta}
 --TSJDNHC.FGrid.__index = TSJDNHC.Grid
@@ -2905,6 +2906,12 @@ function menuTab.HandleWindowControl()
 		local window = wind.menus[ menuName ]
 		local unuser = window.unuser
 
+		if order == 1 then
+			window.OnTop = true
+		else
+			window.OnTop = false
+		end
+
 		--menuTab.CurrentWindowControl = window
 		if window.IsHided then
 			--menuTab.DetectButtonsList(menuName, {window.close, window.unhide, window.plashka})
@@ -3009,6 +3016,8 @@ function menuTab.HandleWindowControl()
 	end
 end
 
+menuTab.defauldbackcolor = Color(1,1,1,.5)
+menuTab.defauldbackcolorunfocus = Color(.6,.6,.6,.5)
 
 function menuTab.RenderWindows()
 	local mousePos = menuTab.MousePos
@@ -3029,8 +3038,8 @@ function menuTab.RenderWindows()
 			window.OldPos = window.pos/1
 		end
 
-		local bgcolorfocus = backcolor or Color(1,1,1,.5)
-		local bgcolorunfocus = backcolorunfocus or Color(.6,.6,.6,.5)
+		local bgcolorfocus = backcolor or menuTab.defauldbackcolor -- Color(1,1,1,.5)
+		local bgcolorunfocus = backcolorunfocus or menuTab.defauldbackcolorunfocus -- Color(.6,.6,.6,.5)
 
 		menuTab.CallDelayRenders(menuTab.Callbacks.WINDOW_BACK_PRE_RENDER, menuName, window.pos, window)
 		Isaac.RunCallbackWithParam(menuTab.Callbacks.WINDOW_BACK_PRE_RENDER, menuName, window.pos, window)

@@ -135,6 +135,8 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local bodcol = player:GetBodyColor()
     data._PhysHairExtra = data._PhysHairExtra or {}
 
+    
+
     if skinsheet then
         data._PhysHairExtra.SkinIsChanged = true
         local spr = player:GetSprite()
@@ -252,7 +254,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                     cspr:Load(lloic.anm2, true)
 
                     for id, gfx in pairs(lloic.gfx) do
-                        print("restor", id, gfx)
+                        --print("restor", id, gfx)
                         cspr:ReplaceSpritesheet(id-1, gfx)
                     end
                     cspr:LoadGraphics()
@@ -433,7 +435,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                             if gfxistab then
                                 cspr:ReplaceSpritesheet(j-1, adgfx[j])
                             else
-                                print(j-1, layer:GetLayerID())
+                                --print(j-1, layer:GetLayerID())
                                 cspr:ReplaceSpritesheet(j-1, adgfx)
                             end
                         end
@@ -467,13 +469,51 @@ function mod.HStyles.PostRoomUpdateHair(_)
             if not PHSdata.PlayerType or PHSdata.PlayerType == ptype then
                 local stdata = HairStylesData.styles[PHSdata.StyleName]
                 
-                --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
-                mod.HStyles.UpdatePlayerSkin(player, data, stdata)
+                mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+               -- mod.HStyles.UpdatePlayerSkin(player, data, stdata)
             end
         end
     end, 1, 1, false)
 end
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.PostRoomUpdateHair)
+
+function mod.HStyles.PostUpdateHairChecker()
+    if Isaac.GetFrameCount() % 60 == 0 then
+        for _ = 0, game:GetNumPlayers()-1 do
+            local player = Isaac.GetPlayer(_)
+
+            local ptype = player:GetPlayerType()
+            local data = player:GetData()
+            local PHSdata = data._PhysHair_HairStyle
+            if PHSdata then
+                if not PHSdata.PlayerType or PHSdata.PlayerType == ptype then
+                    local stdata = HairStylesData.styles[PHSdata.StyleName]
+
+                    local sheep = stdata.data.NullposRefSpr   --stdata.data.TailCostumeSheep
+                    local tarcost = stdata.data.TargetCostume
+                    if sheep and tarcost then
+                        local pos = 0
+                        for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+                            local conf = csd:GetItemConfig()
+                            if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
+                                if not tarcost.pos or tarcost.pos == pos then
+                                    local cspr = csd:GetSprite()
+                                    if cspr:GetFilename() ~= sheep:GetFilename() then
+                                        mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                                        return
+                                    end
+                                end
+                            else
+                                pos = pos + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.HStyles.PostUpdateHairChecker)
 
 function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
     local PHSdata = player:GetData()._PhysHair_HairStyle
@@ -1092,6 +1132,7 @@ do
             local cspr = mod.HStyles.GetHairCostumeSpr(player)
             salon.CachedPhayerHairSpr = GenSprite(cspr:GetFilename(), cspr:GetAnimation())
             local CachedSpr = salon.CachedPhayerHairSpr
+            print(CachedSpr:GetFilename())
             for j, layer in pairs(cspr:GetAllLayers()) do
                 CachedSpr:ReplaceSpritesheet(j, layer:GetSpritesheetPath())
             end
@@ -1179,8 +1220,12 @@ do
         if game:GetRoom():GetRenderMode() == RenderMode.RENDER_WATER_REFLECT then
             return
         end
-        if salon.DoChoopEffect and mod.StyleMenu.TargetPlayer and mod.StyleMenu.TargetPlayer.Ref and
-        GetPtrHash(mod.StyleMenu.TargetPlayer.Ref) == GetPtrHash(player) then
+
+        local isSamePlayer = mod.StyleMenu.TargetPlayer and mod.StyleMenu.TargetPlayer.Ref
+            and GetPtrHash(mod.StyleMenu.TargetPlayer.Ref) == GetPtrHash(player)
+
+        if salon.DoChoopEffect and isSamePlayer then
+
             --[[
             --BethHair.DoChoopEffect = false
             local data = player:GetData()
@@ -1282,7 +1327,7 @@ do
 
             local RenderPos = Isaac.WorldToScreen(Chooping.RenderPos)
 
-            cspr:Render(RenderPos, Vector(layer:GetWidth()*procent, 0))
+            cspr:Render(RenderPos, Vector((layer and layer:GetWidth() or 0) * procent, 0))
 
             if procent > 1 then
                 salon.DoChoopEffect = nil
@@ -1378,7 +1423,7 @@ do
                 end
             end
         end
-        if mod.HStyles.Chooping then
+        if isSamePlayer and mod.HStyles.Chooping then
             local Chooping = mod.HStyles.Chooping
             local hairPieceSpr = Chooping.HPS
             local RenderPos = Isaac.WorldToScreen(Chooping.RenderPos)

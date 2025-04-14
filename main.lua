@@ -178,13 +178,13 @@ local headDirToRender = {
     [2] = {3,2}, --1 << 1
 }
 local headDirToRender1 = {
-    [3] = 3, -- 3 << 1,
+    [3] = 2, -- 3 << 1,
     [0] = 2, --2 << 1,
     [1] = 3, --3 << 1,
     [2] = 3, --1 << 1
 }
 local headDirToRender2 = {
-    [3] = 3, -- 3 << 1,
+    [3] = 2, -- 3 << 1,
     [0] = 3, --2 << 1,
     [1] = 3, --3 << 1,
     [2] = 2, --1 << 1
@@ -618,9 +618,13 @@ mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
         --TailCount = 2,
         --RenderLayers = headDirToRender,
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
-        HeadBackSpr = BethBBackHair,
+        HeadBack2Spr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_BETHANY_B, Type = ItemType.ITEM_NULL},
-        ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_018b_bethshair_notails.png",
+        --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_018b_bethshair_notails.png",
+        SkinFolderSuffics = "gfx/characters/costumes/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/character_018b_bethshair_notails.png",
+        TailCostumeSheep = "gfx/characters/costumes/character_018b_bethshair.png",
+        NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_b16_bethany.anm2"),
         [1] = {
             Scretch = scretch * 1.2,
             CordSpr = cordSprB,
@@ -633,7 +637,7 @@ mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
             RenderLayers = headDirToRender2,
             CostumeNullpos = "bethshair_cord2",
         },
-    }, {modfolder = "mods/" .. mod.Foldername .. "/resources"})
+    }, {modfolder = "resources"} ) --{modfolder = "mods/" .. mod.Foldername .. "/resources"})
 
 
 --#region EVE стили
@@ -687,7 +691,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
         SkinFolderSuffics = "resources/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_005_evehead_notails.png",
-        TailCostumeSheep = "gfx/characters/costumes/character_005_evehead.png",
+        TailCostumeSheep = "resources/gfx/characters/costumes/character_005_evehead.png",
         NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_005_evehead.anm2"),
 
 
@@ -718,7 +722,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             Mass = 20,
             PhysFunc = mod.HairLib.EveheavyHairPhys,
         },
-    }, {modfolder = "resources"})
+    }, {modfolder = nil}) --resources
 
     mod.HStyles.AddStyle("EvePonyTail", PlayerType.PLAYER_EVE, {
         --HeadBackSpr = BethBBackHair,
@@ -859,6 +863,36 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         ItemCostumeAlts = {
             {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST, 
             gfx="gfx/characters/costumes/samson_styles/flattop/costume_081_bloodylust.png",
+            anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"},
+        },
+    },
+    {modfolder = defaultmodfolder, })
+
+    mod.HStyles.AddStyle("SamsonStallone", PlayerType.PLAYER_SAMSON, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/stallone/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/stallone/character_007_samsonshairandbandanna.png",
+        TailCostumeSheep = "gfx/characters/costumes/samson_styles/stallone/character_007_samsonshairandbandanna.png",
+        ItemCostumeAlts = {
+            {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST, 
+            gfx="gfx/characters/costumes/samson_styles/stallone/costume_081_bloodylust.png",
+            anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"},
+        },
+    },
+    {modfolder = defaultmodfolder, })
+
+    mod.HStyles.AddStyle("SamsonRazormiss", PlayerType.PLAYER_SAMSON, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/razormiss/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/razormiss/character_007_samsonshairandbandanna.png",
+        TailCostumeSheep = "gfx/characters/costumes/samson_styles/razormiss/character_007_samsonshairandbandanna.png",
+        ItemCostumeAlts = {
+            {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST, 
+            gfx="gfx/characters/costumes/samson_styles/razormiss/costume_081_bloodylust.png",
             anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"},
         },
     },
@@ -1469,6 +1503,8 @@ BethHair.WGA = include("worst gui api")
 local wga = BethHair.WGA
 
 BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240), misc = {},
+    submenus = { EntryMenu = "physhair_styleEditorMenu_entrys" },
+
     hairselectoffset = Vector(30,30), hairselectsize = Vector(150, 200),
     hairselectshadowoffset = Vector(-7,7),
     hairbtnsoffset = 0,
@@ -1592,7 +1628,7 @@ function BethHair.StyleMenu.HUDRender()
                     local mdata = wga.GetMenu(smenu.name)
                     local btn = wga.ManualSelectedButton[1]
 
-                    if mdata.CurCollum == 1 and btn and smenu.scrollbtn then
+                    if mdata.CurCollum == 1 and btn and btn.row and smenu.scrollbtn then
                         
                         wga.DraggerSetValue(smenu.scrollbtn, btn.row / (smenu.rowcount), true)
                     end
@@ -1615,6 +1651,16 @@ function BethHair.StyleMenu.HUDRender()
             if wind.Removed then
                 smenu.wind = nil
             end
+
+            --[[for i,k in pairs(wind.SubMenus) do
+                print(i,k, k.visible)
+                local list = wga.GetButtons(i)
+                if list then
+                    for j,h in pairs(list) do
+                        print("|||", j,h)
+                    end
+                end
+            end]]
         end
 
         wga.DetectSelectedButtonActuale()
@@ -1782,8 +1828,10 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
             end
 
             local inputDeviceName = Input.GetDeviceNameByIdx and Input.GetDeviceNameByIdx(ControllerIndex) or "XboxOne"
-            if inputDeviceName and inputDeviceName:find("XInput") then
-                inputDeviceName = "XboxOne"
+            if inputDeviceName then
+                if (inputDeviceName:find("XInput") or inputDeviceName:find"Xbox") then
+                    inputDeviceName = "XboxOne"
+                end
             end
 
             sprs.Buttons:Play(inputDeviceName, true)
@@ -1824,6 +1872,9 @@ smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"
     Buttons = GenSprite("gfx/ui/buttons.anm2"),
     VerySpecialKeyBoardLeftArrow = GenSprite("gfx/editor/hairstyle_menu.anm2", "keyboard_arrow_left"),
     Scisors = GenSprite("gfx/editor/hairstyle_menu.anm2","detail1"),
+
+    Cursor = GenSprite("gfx/editor/hairstyle_menu.anm2","mousewhat"),
+    HeadShadow = GenSprite("gfx/editor/hairstyle_menu.anm2","headshadow"),
 }
 
 smenu.spr.scrollback.Offset = Vector(-2,-2)
@@ -1831,6 +1882,8 @@ if Sprite().SetCustomShader then
     smenu.spr.Buttons:SetCustomShader("shaders/PhysHairWhiteOutline")
     smenu.spr.VerySpecialKeyBoardLeftArrow:SetCustomShader("shaders/PhysHairWhiteOutline")
 end
+smenu.spr.HeadShadow.Scale = Vector(0.85, 0.85)
+smenu.spr.HeadShadow.Offset = Vector(3,3)
 
 local greenbtnColor = Color(78/256, 1, 90/256, 1, 3/256, 30/256, 24/256)
 
@@ -1838,6 +1891,250 @@ greenbtnColor = Color(1,1,1,1, 18/256, 20/256, 7/256)
 greenbtnColor:SetColorize(108/256, 1, 85/256, 1 )
 
 local nilspr = Sprite()
+
+-------------------------------------
+do
+    local CurrentStyleMenuData = {
+        Entrys = {},
+        SelectedEntrySklad = nil,
+        navmapCopys = {},
+
+        BtnMask = GenSprite("gfx/editor/hairstyle_menu.anm2","button_mask"),
+        JustMask = GenSprite("gfx/editor/hairstyle_menu.anm2","justmask"),
+        JustMask2 = GenSprite("gfx/editor/hairstyle_menu.anm2","justmask2"),
+        PusherSpr = GenSprite("gfx/editor/hairstyle_menu.anm2","mousewhat"),
+    }
+    local BtnMask, JustMask, PusherSpr = CurrentStyleMenuData.BtnMask, CurrentStyleMenuData.JustMask, CurrentStyleMenuData.PusherSpr
+    local JustMask2 = CurrentStyleMenuData.JustMask2
+    BtnMask:SetCustomShader("shaders/PhysHairCuttingShadder")
+    JustMask:SetCustomShader("shaders/PhysHairCuttingShadder")
+    JustMask2:SetCustomShader("shaders/PhysHairCuttingShadder")
+
+    BtnMask.Color.A = 0.5
+    JustMask.Color.A = 0.5
+    JustMask2.Color = Color(0,0,0, 0.1)
+    JustMask.Scale = Vector(2.88, 10)
+    JustMask2.Scale = Vector(2.88, 10)
+    PusherSpr.Scale = Vector(0.01, 1)
+    JustMask2.Offset = Vector(0, 40)
+    JustMask.Offset = Vector(0, 224)
+
+    BethHair.StyleMenu.CurrentStyleMenuData = CurrentStyleMenuData
+
+    local navmap
+
+    function BethHair.StyleMenu.ClearEntrys(EntrySklad)
+        if CurrentStyleMenuData.Entrys[EntrySklad] then
+            for i, entry in pairs(CurrentStyleMenuData.Entrys[EntrySklad]) do
+                wga.RemoveButton("physhair_SubMenus"..EntrySklad, entry.data.ButtonName)
+            end
+        end
+        CurrentStyleMenuData.Entrys[EntrySklad] = {}
+        CurrentStyleMenuData.navmapCopys[EntrySklad] = { {},{},{} }
+        local mdata = wga.GetMenu(smenu.name)
+        if CurrentStyleMenuData.SelectedEntrySklad == EntrySklad then
+            if mdata.navmap then
+                mdata.navmap.collums[1] = {{},{},{}}
+                navmap = mdata.navmap
+            else
+                mdata.navmap = {collums = { {{},{},{}} }}
+            end
+            --mdata.navmap = { {{},{},{}} }
+            --navmap = mdata.navmap
+        end
+    end
+
+    function BethHair.StyleMenu.CreateEntrySklad(EntrySklad)
+        CurrentStyleMenuData.Entrys[EntrySklad] = {}
+        CurrentStyleMenuData.navmapCopys[EntrySklad] = {{},{},{}}
+    end
+
+    ---@class BethHairStyleMenu.EntryData
+    ---@field ImageCount integer
+    ---@field EntrySklad string
+    ---@field ButtonName string
+    ---@field BtnBackSpr Sprite
+    ---@field ButtonPressLogic fun(button:integer)
+    ---@field ButtonRenderLogic fun(pos:Vector, visible:boolean)
+    ---@field HintText string
+    ---@field GreenLightCondition fun(btn:EditorButton):boolean
+
+    ---@param data BethHairStyleMenu.EntryData
+    ---@return EditorButton
+    function BethHair.StyleMenu.AddEntry(data)
+        --navmap = navmap or wga.GetMenu(smenu.name).navmap
+        local entry = {}
+        entry.data = data
+        entry.Selected = false
+
+        local entrySklad = data.EntrySklad
+        if not CurrentStyleMenuData.Entrys[entrySklad] then
+            BethHair.StyleMenu.CreateEntrySklad(entrySklad)
+        end
+        local navmap = CurrentStyleMenuData.navmapCopys[entrySklad]
+        
+        local CurIndex = #CurrentStyleMenuData.Entrys[entrySklad] + 1
+        CurrentStyleMenuData.Entrys[entrySklad][CurIndex] = entry
+
+        local ButtonName = data.ButtonName
+        local SubMenu = "physhair_SubMenus"..data.EntrySklad
+        local ButtonPressLogic = data.ButtonPressLogic
+        local ButtonRenderLogic = data.ButtonRenderLogic
+        local HintText = data.HintText
+        local GreenLightCondition = data.GreenLightCondition
+
+
+        local pos = Vector(((CurIndex-1)%3+1)*42,42 * math.floor((CurIndex-1)/3+1))
+        local xyX,xyY = (CurIndex-1)%3+1, math.floor((CurIndex-1)/3)
+        local BtnSpr = data.BtnBackSpr or GenSprite("gfx/editor/hairstyle_menu.anm2","button")
+        local PusherV = Vector(0,0)
+
+        local wind = smenu.wind
+        --local UpCropPos = Vector(0, 20)
+
+        local renderImagesCount = data.ImageCount
+
+        local self
+        self = wga.AddButton(SubMenu, ButtonName, pos,
+            40, 40, nilspr,
+            ButtonPressLogic,
+            function(Rpos, visible)
+                if visible then
+                    local JMcol = JustMask.Color
+                    --JM2col.R = renderImagesCount + 5
+                    JMcol:SetColorize((renderImagesCount+3) * 0.91, 0, 0, 0)
+                    JustMask:Render(wind.pos)
+
+
+                    local JM2col = JustMask2.Color
+                    --JM2col.R = renderImagesCount + 5
+                    JM2col:SetColorize((renderImagesCount+2) * 0.91, 0, 0, 0)
+                    JustMask2:Render(wind.pos)
+
+                    BtnSpr:SetFrame(self.IsSelected and 1 or 0)
+                    BtnSpr:Render(Rpos)
+
+                    local BMcol = BtnMask.Color
+                    --BMcol.R = renderImagesCount    ---:SetTint(renderImagesCount, 1, 1, 1)
+                    BMcol:SetColorize(renderImagesCount, 0, 0, 0)
+                    BtnMask:Render(Rpos)
+
+                    ButtonRenderLogic(Rpos, visible)
+
+                    PusherSpr:Render(PusherV)
+                    PusherSpr:Render(PusherV)
+                    PusherSpr:Render(PusherV)
+                    PusherSpr:Render(PusherV)
+                    PusherSpr:Render(PusherV)
+                end
+            end
+        )
+        
+        self.IsHairStyleMenu = true
+        self.EntrySklad = entrySklad
+        self.navXY = {xyX, xyY}
+        self.row = xyY
+        self.HintText = HintText
+        self.posfunc = function ()
+            self.posref = self.posref * 0.8 +  Vector(self.navXY[1] * 42, (self.navXY[2]+1) * 42 - smenu.hairbtnsoffset) * 0.2
+            --self.posref.Y = pos.Y - smenu.hairbtnsoffset
+            self.pos = smenu.wind.pos + self.posref
+            self.scrollupcrop = -self.posref.Y+40
+            self.scrolldwoncrop = self.posref.Y-180
+
+            self.canPressed = self.scrollupcrop < 32 and self.scrolldwoncrop < 32
+            self.visible = self.scrollupcrop < 38 and self.scrolldwoncrop < 46
+            
+            if smenu.TargetPlayer and smenu.TargetPlayer.Ref then
+                if GreenLightCondition(self) then
+                    if not self.DoGreen then
+                        self.DoGreen = true
+                        BtnSpr.Color = greenbtnColor
+                    end
+                elseif self.DoGreen then
+                    self.DoGreen = nil
+                    BtnSpr.Color = Color.Default
+                end
+            elseif self.DoGreen then
+                self.DoGreen = nil
+                BtnSpr.Color = Color.Default
+            end
+        end
+
+        navmap[xyX][xyY] = self
+
+        smenu.rowcount = math.max(smenu.rowcount or 0, xyY)
+
+        return self
+    end
+
+    function BethHair.StyleMenu.SetCurrentEntrySklad(EntrySklad)
+        --CurrentStyleMenuData.Entrys = {}
+        CurrentStyleMenuData.SelectedEntrySklad = EntrySklad
+        for SkladName, k in pairs(CurrentStyleMenuData.Entrys) do
+			smenu.wind:SetSubMenuVisible("physhair_SubMenus"..SkladName, false)
+		end
+        smenu.wind:SetSubMenuVisible("physhair_SubMenus"..EntrySklad, true)
+        wga.GetMenu(smenu.name).navmap.collums[1] = CurrentStyleMenuData.navmapCopys[EntrySklad]
+
+        wga.GetMenu("physhair_SubMenus"..EntrySklad).NavigationFunc = wga.GetMenu(smenu.name).NavigationFunc
+
+        if #CurrentStyleMenuData.Entrys[EntrySklad] > 12 then
+            --navmap.collums[2] = {}
+
+            local spr = smenu.spr
+            local self
+            self = wga.AddScrollBar(smenu.name, "hairs_scroooolbar", Vector(150+30,34), Vector(16,192),
+            nilspr, nilspr,
+                function(but, val)
+                    if but == 0 then
+                        smenu.hairbtnsoffset = val
+                    end
+                end, function (pos, visible)
+                    --print(self.dragCurPos)
+                    spr.scrollback:SetFrame(self.IsSelected and 1 or 0)
+
+                    spr.scrollback:Render(pos, nil, Vector(0,30))
+
+                    spr.scrollback.Scale = Vector(1, self.y/22)
+                    spr.scrollback:Render(pos+Vector(0,11 - self.y/22 *10), Vector(0,10), Vector(0,10))
+
+                    spr.scrollback.Scale = Vector(1,1)
+                    spr.scrollback:Render(pos + Vector(0,self.y-36), Vector(0,30))
+
+                end, 0, 0, math.ceil(#CurrentStyleMenuData.Entrys[EntrySklad]/3)*43 + 2 )
+            smenu.scrollbtn = self
+            wga.SetMouseWheelZone(self, 
+                Vector(38,35), -- Vector(150+30,34), 
+                Vector(43*4 + 20,43*6 - 31) -- Vector(150+30,34),
+            ) --function (btn,value)
+            --    print(btn,value)
+           -- end)
+
+            self.dragsprRenderFunc = function (self, pos, value, barSize)
+                local fr = self.dragSelected and 1 or 0
+                spr.gragger1:SetFrame(fr)
+                spr.gragger2:SetFrame(fr)
+                spr.gragger3:SetFrame(fr)
+
+                spr.gragger1:Render(pos)
+                
+                for i=1, barSize-1 do
+                    spr.gragger2:Render(pos+Vector(0, i * 2 ))
+                end
+                spr.gragger3:Render(pos+Vector(0, barSize*2 - 2 ))
+            end
+            ---navmap.collums[2][1] = self
+        else
+            smenu.scrollbtn = nil
+            wga.RemoveButton(smenu.name, "hairs_scroooolbar")
+        end
+    end
+
+
+end
+-------------------------------------
+
 
 function BethHair.StyleMenu.GenWindowBtns(ptype)
     local mdata = wga.GetMenu(smenu.name)
@@ -2203,6 +2500,400 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
 end
 
+function BethHair.StyleMenu.GenWindowBtns2(ptype)
+    local mdata = wga.GetMenu(smenu.name)
+    local smenuspr = smenu.spr
+
+    local navmap = {}
+    mdata.navmap = navmap
+    navmap.collums = {}
+
+
+    mdata.NavigationFunc = function (btn, vec)  
+        local x,y = vec.X, vec.Y
+
+        local ismove = vec:Length() > 0.1
+        local ishori = math.abs(x) > math.abs(y)
+        --print(mdata.CurCollum, btn[1].name)
+        if ismove then
+            if mdata.CurCollum == 1 then
+                local navcol1 = navmap.collums[mdata.CurCollum]
+                if ishori then
+                    local add = x > 0 and 1 or -1
+                    local next = mdata.HairSelPos.X + add
+                    
+                    if next > 0 and next < 4 then
+                        if navcol1[mdata.HairSelPos.X + add] 
+                        and navcol1[mdata.HairSelPos.X + add][mdata.HairSelPos.Y] then
+                            mdata.HairSelPos.X = mdata.HairSelPos.X + add
+                            btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                        else
+                            if navmap.collums[mdata.CurCollum+add] then
+                                mdata.CurCollum = mdata.CurCollum+add
+                                btn[1] = navmap.collums[mdata.CurCollum][1]
+                                mdata.PreHairSelPos = mdata.HairSelPos
+                                mdata.HairSelPos = Vector(mdata.CurCollum, 1)
+                            end
+                        end
+                    else
+                        if navmap.collums[mdata.CurCollum+add] then
+                            mdata.CurCollum = mdata.CurCollum+add
+                            btn[1] = navmap.collums[mdata.CurCollum][1]
+                            mdata.PreHairSelPos = mdata.HairSelPos
+                            mdata.HairSelPos = Vector(mdata.CurCollum, 1)
+                        end
+                    end
+                else
+                    local add = y > 0 and 1 or -1
+                    local next = mdata.HairSelPos.Y + add
+                    if navcol1[mdata.HairSelPos.X][next] then
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    elseif navcol1[mdata.HairSelPos.X-1] and navcol1[mdata.HairSelPos.X-1][next] then
+                        mdata.HairSelPos.X = mdata.HairSelPos.X - 1
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    elseif navcol1[mdata.HairSelPos.X-2] and navcol1[mdata.HairSelPos.X-2][next] then
+                        mdata.HairSelPos.X = mdata.HairSelPos.X - 2
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    end
+                end
+
+
+            else
+                if ishori then
+                    local add = x > 0 and 1 or -1
+                    if navmap.collums[mdata.CurCollum+add] then
+                        mdata.CurCollum = mdata.CurCollum+add
+                        if mdata.CurCollum == 1 then
+                            if mdata.PreHairSelPos then
+                                mdata.HairSelPos = mdata.PreHairSelPos
+                            end
+                            btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                            if not btn[1] then
+                                btn[1] = navmap.collums[mdata.CurCollum][1][0]
+                                mdata.HairSelPos = Vector(1, 0)
+                            end
+                            --mdata.HairSelPos = Vector(3,2)
+                        else
+                            btn[1] = navmap.collums[mdata.CurCollum][1]
+                        end
+                    end
+                else
+                    local add = y > 0 and 1 or -1
+                    local next = mdata.HairSelPos.Y + add
+                    if navmap.collums[mdata.CurCollum][next] then
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
+                    else
+                        btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
+                    end
+                end
+            end
+        end
+    end
+
+
+
+
+    local playerdata = (smenu.TargetPlayer and smenu.TargetPlayer.Ref or Isaac.GetPlayer()):GetData()
+    smenu.PrevStyleName = playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName
+
+    local hspd = BethHair.HairStylesData.playerdata
+    local pstyles = hspd[ptype]
+    local hairsprOffset = Vector(32,44-5)
+    local v12 = Vector(-12,-2)
+    local cropup = Vector(15,13)
+    local cropdown = Vector(15,17)
+    if pstyles then
+
+        local stylesdata = BethHair.HairStylesData.styles
+
+        local EntrySklad = "Def_HairStyles"
+        BethHair.StyleMenu.ClearEntrys(EntrySklad)
+
+        for i=1, #pstyles do
+            local stylename = pstyles[i]
+            
+            local spr = GenSprite("gfx/editor/hairstyle_menu.anm2","button")
+            local styledt = stylesdata[stylename]
+            local styleexdt = styledt and styledt.extra
+            local hairgfx = styledt and styledt.data and styledt.data.TailCostumeSheep
+            local hintText-- = wga.stringMultiline(text)
+            if styleexdt and styleexdt.menuHintText then
+                hintText = wga.stringMultiline(styleexdt.menuHintText, 150)
+            end
+            
+            local hairspr
+            if hairgfx then
+                if styleexdt then 
+                    if styleexdt.modfolder then
+                        hairgfx = styledt.extra.modfolder .. "/" .. hairgfx
+                    --elseif styleexdt.useDirectTailCostumeSheepForIcon then
+                        --hairgfx = hairgfx
+                        print(styledt.extra.modfolder, "|", hairgfx)
+                    end
+                end
+
+                hairspr = GenSprite("gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
+                for lr=0, hairspr:GetLayerCount()-1 do
+                    hairspr:ReplaceSpritesheet(lr,hairgfx)
+                end
+                hairspr:LoadGraphics()
+                hairspr.Offset = hairsprOffset
+                hairspr.Scale = Vector(0.85, .85)
+            end
+
+            
+            local self
+            self = BethHair.StyleMenu.AddEntry{
+                ButtonName = "style" .. i,
+                ImageCount = 3,
+                EntrySklad = EntrySklad,
+                BtnBackSpr = spr,
+                ButtonPressLogic = function (button)
+                    local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
+                    mod.HStyles.salon.ChangeHairStyle(player, stylename, smenu.SetStyleMode)
+                    
+                end,
+                ButtonRenderLogic = function (pos, visible)
+                    --spr:SetFrame(self.IsSelected and 1 or 0)
+                    --spr:Render(pos)
+
+                    if hairspr then
+                        smenuspr.HeadShadow:Render(pos)
+                        hairspr:Render(pos+v12)
+                    else
+                         wga.DrawText(1,stylename, pos.X, pos.Y, .5, .5)
+                    end
+                        --wga.RenderCustomButton2(pos, self)
+                end,
+                HintText = hintText,
+                GreenLightCondition = function(btn)
+                    local targetPlayer = smenu.TargetPlayer
+                    if targetPlayer and targetPlayer.Ref then
+                        local playerdata = smenu.TargetPlayer.Ref:GetData()
+                        return playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName == stylename
+                    end
+                end,
+            }
+
+            --[[self = wga.AddButton(smenu.name, "style" .. i, pos,
+             40, 40, nilspr,
+                function (button)
+                    local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
+                    --BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.SetStyleMode)
+                    mod.HStyles.salon.ChangeHairStyle(player, stylename, smenu.SetStyleMode)
+                    --BethHair.DoChoopEffect = true
+                    
+                end, function (pos, visible)
+                    spr:SetFrame(self.IsSelected and 1 or 0)
+                    local scroolupcrop = self.scrollupcrop
+                    local scrolldwoncrop = self.scrolldwoncrop
+
+                    --if self.IsSelected then
+                    --    smenu.HintText = hintText
+                    --end
+
+                    spr:Render(pos, Vector(0, math.max(0, scroolupcrop)), 
+                        Vector(0,math.max(0, scrolldwoncrop) ) )
+
+                    if hairspr then
+                        hairspr:Render(pos+v12,Vector(cropup.X, math.max(cropup.X-2, cropup.X+scroolupcrop-4)),
+                        Vector(cropdown.X, math.max(cropdown.X+2, cropdown.X+scrolldwoncrop-2)) )    --cropdown)
+                    else
+                         wga.DrawText(1,stylename, pos.X, pos.Y, .5, .5)
+                    end
+                        --wga.RenderCustomButton2(pos, self)
+                end)]]
+            
+        end
+        --smenu.rowcount = lastrow
+        smenu.hairbtnsoffset = 0
+
+        BethHair.StyleMenu.SetCurrentEntrySklad(EntrySklad)
+    end
+    smenu.hairscount = #pstyles
+
+    navmap.collums[2] = {}
+
+    BethHair.StyleMenu.closespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "disчёта-там")
+    BethHair.StyleMenu.acceptspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "accept")
+    BethHair.StyleMenu.setphysspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "phys")
+
+    local usephys
+    usephys = wga.AddButton(smenu.name, "usephys", Vector(200,148),
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
+        function (button)
+            if smenu.SetStyleMode then
+                smenu.SetStyleMode = nil
+                BethHair.StyleMenu.setphysspr:SetFrame(0)
+            else
+                smenu.SetStyleMode = 1
+                BethHair.StyleMenu.setphysspr:SetFrame(1)
+            end
+
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref or Isaac.GetPlayer()
+            local _PhysHair_HairStyle = player:GetData()._PhysHair_HairStyle
+            BethHair.HStyles.SetStyleToPlayer(player, _PhysHair_HairStyle and _PhysHair_HairStyle.StyleName, smenu.SetStyleMode)
+        end, function (pos, visible)
+            BethHair.StyleMenu.setphysspr:Render(pos)
+        end)
+
+    local accept
+    accept = wga.AddButton(smenu.name, "accept", Vector(200,174),
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
+        function (button)
+            BethHair.StyleMenu.CloseWindow()
+        end, function (pos, visible)
+            BethHair.StyleMenu.acceptspr:Render(pos)
+        end)
+
+    local close
+    close = wga.AddButton(smenu.name, "disчё", Vector(200,200),
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
+        function (button)
+            BethHair.StyleMenu.CloseWindow()
+
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
+            if smenu.PrevStyleName then
+                BethHair.HStyles.SetStyleToPlayer(player, smenu.PrevStyleName, smenu.SetStyleMode)
+            else
+
+            end
+
+        end, function (pos, visible)
+            BethHair.StyleMenu.closespr:Render(pos)
+        end)
+    wga.ManualSelectedButton = { close, smenu.name }
+    mdata.CurCollum = 2
+    mdata.HairSelPos = Vector(3,2)
+
+    navmap.collums[2][1] = accept
+    navmap.collums[2][2] = close
+    navmap.collums[2][0] = usephys
+
+    ---navigation
+
+    --local mdata = wga.GetMenu(smenu.name)
+    --[[
+    mdata.NavigationFunc = function (btn, vec)
+        local curbtn = btn[1]
+        local menu = btn[2]
+        
+        local x,y = vec.X, vec.Y
+
+        local ismove = vec:Length() > 0.1
+        local ishori = math.abs(x) > math.abs(y)
+        --print(mdata.CurCollum, btn[1].name)
+        if ismove then
+            if mdata.CurCollum == 1 then
+                local navcol1 = navmap.collums[mdata.CurCollum]
+                if ishori then
+                    local add = x > 0 and 1 or -1
+                    local next = mdata.HairSelPos.X + add
+                    
+                    if next > 0 and next < 4 then
+                        if navcol1[mdata.HairSelPos.X + add] 
+                        and navcol1[mdata.HairSelPos.X + add][mdata.HairSelPos.Y] then
+                            mdata.HairSelPos.X = mdata.HairSelPos.X + add
+                            btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                        else
+                            if navmap.collums[mdata.CurCollum+add] then
+                                mdata.CurCollum = mdata.CurCollum+add
+                                btn[1] = navmap.collums[mdata.CurCollum][1]
+                                mdata.PreHairSelPos = mdata.HairSelPos
+                                mdata.HairSelPos = Vector(mdata.CurCollum, 1)
+                            end
+                        end
+                    else
+                        if navmap.collums[mdata.CurCollum+add] then
+                            mdata.CurCollum = mdata.CurCollum+add
+                            btn[1] = navmap.collums[mdata.CurCollum][1]
+                            mdata.PreHairSelPos = mdata.HairSelPos
+                            mdata.HairSelPos = Vector(mdata.CurCollum, 1)
+                        end
+                    end
+                else
+                    local add = y > 0 and 1 or -1
+                    local next = mdata.HairSelPos.Y + add
+                    if navcol1[mdata.HairSelPos.X][next] then
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    elseif navcol1[mdata.HairSelPos.X-1] and navcol1[mdata.HairSelPos.X-1][next] then
+                        mdata.HairSelPos.X = mdata.HairSelPos.X - 1
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    elseif navcol1[mdata.HairSelPos.X-2] and navcol1[mdata.HairSelPos.X-2][next] then
+                        mdata.HairSelPos.X = mdata.HairSelPos.X - 2
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navcol1[mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                    end
+                end
+
+
+            else
+                if ishori then
+                    local add = x > 0 and 1 or -1
+                    if navmap.collums[mdata.CurCollum+add] then
+                        mdata.CurCollum = mdata.CurCollum+add
+                        if mdata.CurCollum == 1 then
+                            if mdata.PreHairSelPos then
+                                mdata.HairSelPos = mdata.PreHairSelPos
+                            end
+                            btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.X][mdata.HairSelPos.Y]
+                            if not btn[1] then
+                                btn[1] = navmap.collums[mdata.CurCollum][1][0]
+                                mdata.HairSelPos = Vector(1, 0)
+                            end
+                            --mdata.HairSelPos = Vector(3,2)
+                        else
+                            btn[1] = navmap.collums[mdata.CurCollum][1]
+                        end
+                    end
+                else
+                    local add = y > 0 and 1 or -1
+                    local next = mdata.HairSelPos.Y + add
+                    if navmap.collums[mdata.CurCollum][next] then
+                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                        btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
+                    else
+                        btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
+                    end
+                end
+            end
+        end
+    end
+    ]]
+
+    smenu.CharHeadDirection = Direction.DOWN
+
+    --local CharRotateL
+    CharRotateBtnL = wga.AddButton(smenu.name, "CharRotateL", Vector(200,200),
+    48, 48, nilspr,
+        function (button)
+            smenu.CharHeadDirection = (smenu.CharHeadDirection + 1) % 4
+        end, function (pos, visible)
+            --wga.RenderCustomButton2(pos, CharRotateBtnL, Color(1,1,1,.25))
+        end)
+    CharRotateBtnL.posfunc = function()
+        CharRotateBtnL.pos = CharRotateBtnL.ForcePos or CharRotateBtnL.pos
+    end
+
+    CharRotateBtnR = wga.AddButton(smenu.name, "CharRotateR", Vector(200,200),
+        48, 48, nilspr,
+            function (button)
+                smenu.CharHeadDirection = (smenu.CharHeadDirection - 1) % 4
+            end, function (pos, visible)
+                --wga.RenderCustomButton2(pos, CharRotateBtnR, Color(1,1,1,.25))
+            end)
+    CharRotateBtnR.posfunc = function()
+        CharRotateBtnR.pos = CharRotateBtnR.ForcePos or CharRotateBtnR.pos
+    end
+
+
+end
 
 --[[
 local self
@@ -2257,7 +2948,7 @@ function BethHair.StyleMenu.ShowWindow()
 
     local ptype = smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer():GetPlayerType()
         or Isaac.GetPlayer():GetPlayerType()
-    BethHair.StyleMenu.GenWindowBtns(ptype)
+    BethHair.StyleMenu.GenWindowBtns2(ptype)
 
     smenu.misc.physPaper = {
         cord = BeamR("gfx/editor/hairstyle_menu.anm2", "physpaper", 0, false, false, 3), start_offset = Vector(80,210),
@@ -2279,6 +2970,7 @@ function BethHair.StyleMenu.CloseWindow()
     if BethHair.HStyles.salon.Chranya.Ref then
         BethHair.HStyles.salon.Chranya.Ref:GetSprite():Play("scisor_end", true)
     end
+    BethHair.HStyles.Chooping = nil
     --BethHair.HStyles.Chooping = nil
 end
 
@@ -2368,3 +3060,17 @@ mod:AddCallback(ModCallbacks.MC_PRE_PAUSE_SCREEN_RENDER, function(_, name)
     end
 end)
 ]]
+
+
+
+DebugFORFABTEST = function ()
+    local satan = Isaac.Spawn(1000,6,0, Vector(322.82, 154.974 - 11 * 1.56), Vector(0,0), nil)
+    satan:Update()
+    satan.SortingLayer = 1
+    satan:GetSprite():Load("gfx/grid/slaughterhouse/doors/slaughter_entrance_door.anm2", true)
+    satan:GetSprite():Play("OpenAlt")
+    satan:GetSprite():GetLayer("idk"):SetCustomShader("gfx/grid/slaughterhouse/doors/slaughterCutShader")
+    satan:GetSprite():GetLayer("idk"):SetColor(Color(1,1,1,0.1,0,0,0))
+    satan:Update()
+    satan:GetSprite().Offset = Vector(0,-11)
+end
