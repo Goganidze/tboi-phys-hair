@@ -857,7 +857,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
         SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/flattop/",
+        SkinFolderSuffics = "gfx/characters/costumes/samson_styles/flattop/",
         ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
         ItemCostumeAlts = {
@@ -866,13 +866,15 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"},
         },
     },
-    {modfolder = defaultmodfolder, })
+    {modfolder = defaultmodfolder, 
+        CustomCharPortrait = "gfx/characters/costumes/samson_styles/flattop/charactermenu.png"
+    })
 
     mod.HStyles.AddStyle("SamsonStallone", PlayerType.PLAYER_SAMSON, {
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
         SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/stallone/",
+        SkinFolderSuffics = "gfx/characters/costumes/samson_styles/stallone/",
         ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/stallone/character_007_samsonshairandbandanna.png",
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/stallone/character_007_samsonshairandbandanna.png",
         ItemCostumeAlts = {
@@ -887,7 +889,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
         SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/razormiss/",
+        SkinFolderSuffics = "gfx/characters/costumes/samson_styles/razormiss/",
         ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/razormiss/character_007_samsonshairandbandanna.png",
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/razormiss/character_007_samsonshairandbandanna.png",
         ItemCostumeAlts = {
@@ -896,7 +898,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"},
         },
     },
-    {modfolder = defaultmodfolder, })
+    {modfolder = defaultmodfolder, 
+        CustomCharPortrait = "gfx/characters/costumes/samson_styles/razormiss/charactermenu.png"})
 
     mod.HStyles.AddStyle("SamsonRebirth", PlayerType.PLAYER_SAMSON, {
         --HeadBackSpr = BethBBackHair,
@@ -912,7 +915,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --HeadBackSpr = BethBBackHair,
         TargetCostume = {ID = NullItemID.ID_SAMSON, Type = ItemType.ITEM_NULL},
         SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "gfx/characters/costumes/samson_styles/flattop/",
+        SkinFolderSuffics = "gfx/characters/costumes/samson_styles/ronin/",
         ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/ronin/character_007_samsonshairandbandanna_notails.png",
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/ronin/character_007_samsonshairandbandanna.png",
         ItemCostumeAlts = {
@@ -982,7 +985,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
 
     },
-    {modfolder = defaultmodfolder, })
+    {modfolder = defaultmodfolder, 
+        CustomCharPortrait = "gfx/characters/costumes/samson_styles/flattop/charactermenu.png"})
 
 
 
@@ -1013,6 +1017,17 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
 
 
+
+    ------------- ЛИЛИТ --------------
+
+    mod.HStyles.AddStyle("LilithSmolImp", PlayerType.PLAYER_LILITH, {
+        TargetCostume = {ID = NullItemID.ID_LILITH, Type = ItemType.ITEM_NULL},
+        SyncWithCostumeBodyColor = true,
+        --SkinFolderSuffics = "gfx/characters/costumes/lilith_styles/smol imp/",
+        ReplaceCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair.png",
+        TailCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair.png",
+    },
+    {modfolder = defaultmodfolder, })
 
 
 
@@ -1063,6 +1078,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_004_judasfez_notails.png",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_004_judasfez_notails.png",
         TailCostumeSheep = "gfx/characters/costumes/character_004_judasfez.png",
+        NullposRefSpr = GenSprite("gfx/characters/character_004_judasfez.anm2"),
         --[[[1] = {
             DotCount = 3,
             Scretch = scretch*.75,
@@ -1430,19 +1446,26 @@ MainMenuStuff.WidgedMapScale = {
     Vector(.8, 1.2), Vector(1.0, 1.0), Vector(1.0, 1.0) , Vector(1, 1)
 }
 
+MainMenuStuff.WidgetBGCrop = {Vector(43, 34), Vector(50, 65)}
+
+local widgetGuideSpr = GenSprite("gfx/ui/main menu/continueprogress_widget.anm2", "Idle")
+local widgetBGSpr = GenSprite("gfx/ui/main menu/continueprogress_widget.anm2", "Character")
+MainMenuStuff.widgetGuideSpr = widgetGuideSpr
+MainMenuStuff.widgetBGSpr = widgetBGSpr
+
 function mod.MainMenuRender()
     if MenuManager.GetActiveMenu() == MainMenuType.GAME then
         local menuPos = Isaac.WorldToMenuPosition(MainMenuType.GAME, Vector(0,0))
 
         local widgetSpr = MainMenu.GetContinueWidgetSprite()
         
-        local charlayer = widgetSpr:GetLayer(0)
+        local charlayer = MainMenuStuff.CharacterWidgetSpr:GetLayer(0)
         --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait, mod.CustomCharPortrait == charlayer:GetSpritesheetPath())
         if mod.CustomCharPortrait and charlayer then
             --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath())
             if mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath() then
 
-                widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
+                --widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
                 MainMenuStuff.RenderCharPort = true
 
                 MainMenuStuff.CharacterWidgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
@@ -1452,6 +1475,20 @@ function mod.MainMenuRender()
 
         if MainMenuStuff.RenderCharPort then
 
+            if widgetGuideSpr:GetAnimation() ~= widgetSpr:GetAnimation() then
+                widgetGuideSpr:Play(widgetSpr:GetAnimation())
+                widgetGuideSpr:SetFrame(widgetSpr:GetFrame())
+            else
+                widgetGuideSpr:SetFrame(widgetSpr:GetFrame())
+            end
+
+            local null = widgetGuideSpr:GetNullFrame("Guide")
+
+            MainMenuStuff.WidgedCurPos = null and null:GetPos() or Vector(0,0)
+
+            MainMenuStuff.WidgedCurScale = null and null:GetScale() or Vector(1, 1)
+
+            --[==[
             if MainMenu.GetSelectedElement() == 1 then
                 if MainMenuStuff.frameoff then
                     MainMenuStuff.frameoff = nil
@@ -1465,13 +1502,21 @@ function mod.MainMenuRender()
                     MainMenuStuff.frameoff = true
                 end
             end
-            MainMenuStuff.WidgedCurPos = MainMenuStuff.WidgedMap[MainMenuStuff.frame] or MainMenuStuff.WidgedMap[0]
-            MainMenuStuff.WidgedCurScale = MainMenuStuff.WidgedMapScale[MainMenuStuff.frame] or MainMenuStuff.WidgedMapScale[0]
+            local widgetframe = widgetSpr:GetFrame() or MainMenuStuff.frame
+            MainMenuStuff.WidgedCurPos = MainMenuStuff.WidgedMap[widgetframe] or MainMenuStuff.WidgedMap[0]
+            MainMenuStuff.WidgedCurScale = MainMenuStuff.WidgedMapScale[widgetframe] or MainMenuStuff.WidgedMapScale[0]
+            ]==]
 
             local wigdedOff = widgetSpr.Offset
             local renderpos = menuPos + MainMenuStuff.WidgetPos + MainMenuStuff.WidgedCurPos + wigdedOff
+            local scale = widgetSpr.Scale * MainMenuStuff.WidgedCurScale
+            local crop = MainMenuStuff.WidgetBGCrop
+            
+            MainMenuStuff.widgetBGSpr.Scale = scale
+            MainMenuStuff.CharacterWidgetSpr.Scale = scale
+
+            MainMenuStuff.widgetBGSpr:RenderLayer(1, renderpos, crop[1], crop[2])
             MainMenuStuff.CharacterWidgetSpr:Render(renderpos)
-            MainMenuStuff.CharacterWidgetSpr.Scale = widgetSpr.Scale * MainMenuStuff.WidgedCurScale
         end
     else
         MainMenuStuff.frame = #MainMenuStuff.WidgedMap
@@ -1644,7 +1689,14 @@ function BethHair.StyleMenu.HUDRender()
             end
             
             if player then
-                player.ControlsCooldown = math.max(player.ControlsCooldown, 3)
+                --player.ControlsCooldown = math.max(player.ControlsCooldown, 3)
+                --local brat = player:GetOtherTwin()
+                for i = 0, game:GetNumPlayers()-1 do
+                    local lplayer = Isaac.GetPlayer(i)
+                    if lplayer.ControllerIndex == player.ControllerIndex then
+                        lplayer.ControlsCooldown = math.max(lplayer.ControlsCooldown, 3)
+                    end
+                end
             end
             
 
@@ -2620,6 +2672,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             local styledt = stylesdata[stylename]
             local styleexdt = styledt and styledt.extra
             local hairgfx = styledt and styledt.data and styledt.data.TailCostumeSheep
+            local hairanm2 = styledt and styledt.data and styledt.data.NullposRefSpr and styledt.data.NullposRefSpr:GetFilename()
             local hintText-- = wga.stringMultiline(text)
             if styleexdt and styleexdt.menuHintText then
                 hintText = wga.stringMultiline(styleexdt.menuHintText, 150)
@@ -2636,7 +2689,11 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
                     end
                 end
 
-                hairspr = GenSprite("gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
+                if not hairanm2 then
+                    hairanm2 = mod.HStyles.GetHairAnm2ByPlayerType(ptype)
+                end
+
+                hairspr = GenSprite(hairanm2 or "gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
                 for lr=0, hairspr:GetLayerCount()-1 do
                     hairspr:ReplaceSpritesheet(lr,hairgfx)
                 end

@@ -1132,7 +1132,7 @@ do
             local cspr = mod.HStyles.GetHairCostumeSpr(player)
             salon.CachedPhayerHairSpr = GenSprite(cspr:GetFilename(), cspr:GetAnimation())
             local CachedSpr = salon.CachedPhayerHairSpr
-            print(CachedSpr:GetFilename())
+            --print(CachedSpr:GetFilename())
             for j, layer in pairs(cspr:GetAllLayers()) do
                 CachedSpr:ReplaceSpritesheet(j, layer:GetSpritesheetPath())
             end
@@ -1533,6 +1533,7 @@ function mod.HStyles.salon.CheckColl(player)
         local pushpower = math.max(0.01, vecLength-.2)
         local map = salon.CollisionMap
         local topush = false
+        local dottoched = 0
 
         for i=1, pointsCount do
             local rotpoint = angleVecP[i]:Resized(entsize)
@@ -1545,10 +1546,12 @@ function mod.HStyles.salon.CheckColl(player)
                     if gridcollpoint.Y < 90 then
                         pushVec = pushVec - angleVecP[i]:Resized(pushpower)
                         topush = true
+                        dottoched = dottoched + 1
                     end
                 else
                     pushVec = pushVec - angleVecP[i]:Resized(pushpower)
                     topush = true
+                    dottoched = dottoched + 1
                 end
             end
         end
@@ -1558,11 +1561,15 @@ function mod.HStyles.salon.CheckColl(player)
             local angle = pushVec:GetAngleDegrees()
             local rotvec = vec:Rotated(-angle)
 
-            player.Position = ps +  pushVec 
+            player.Position = ps + pushVec
        
-            local lenght = vl:Length()
+            --local lenght = vl:Length()
            
             player.Velocity = Vector( math.max(0, rotvec.X ), rotvec.Y ):Rotated(angle)
+            if dottoched > 4 and vecLength < 1 then
+                player.Position = player.Position + pushVec:Resized(1.5)
+            end
+
         end
     end
 end
@@ -1747,6 +1754,10 @@ local PlayeeTypeToHairPath = {
     [PlayerType.PLAYER_THESOUL_B]="gfx/characters/costumes/character_017b_thesoulshood.png",
 }
 
+function mod.HStyles.GetHairAnm2ByPlayerType(ptype)
+    return PlayeeTypeToHairAnm2[ptype]
+end
+
 CachedModXMLData = CachedModXMLData or {}
 
 for ptype, _ in pairs(PlayeeTypeToHairPath) do
@@ -1768,6 +1779,56 @@ for ptype, _ in pairs(PlayeeTypeToHairPath) do
         end
     --end
 end
+
+--#region extracompat
+mod.ExtraModCompat = {}
+local ExtraModCompat = mod.ExtraModCompat
+
+function ExtraModCompat.ExtraHair()
+    for i, k in pairs(Isaac.GetCallbacks(ModCallbacks.MC_POST_PLAYER_INIT)) do
+        if k.Mod.Name == "Extra Hair" then
+            k.Mod:RemoveCallback(ModCallbacks.MC_POST_PLAYER_INIT, k.Mod.ChangeHair)
+        end
+    end
+    local hairList = {
+        {"3402926130_beth", PlayerType.PLAYER_BETHANY, {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL}, 
+            "gfx/characters/costumes/extrahair_bethany_01.png"},
+        {"3402926130_eve", PlayerType.PLAYER_EVE, {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL}, 
+            "gfx/characters/costumes/extrahair_eve_01.png"},
+        --{"3402926130_isaac_1", PlayerType.PLAYER_ISAAC, {ID = NullItemID., Type = ItemType.ITEM_NULL}, 
+        --    "gfx/characters/costumes/extrahair_isaac_01.png"},
+        {"3402926130_judas", PlayerType.PLAYER_JUDAS, {ID = NullItemID.ID_JUDAS, Type = ItemType.ITEM_NULL}, 
+            "gfx/characters/costumes/extrahair_judas_01.png", "gfx/characters/extrahair_judas_01.anm2"},
+        {"3402926130_lararus", PlayerType.PLAYER_LAZARUS, {ID = NullItemID.ID_LAZARUS, Type = ItemType.ITEM_NULL}, 
+            "gfx/characters/costumes/extrahair_lazarus_01.png"},
+        {"3402926130_lararus2", PlayerType.PLAYER_LAZARUS2, {ID = NullItemID.ID_LAZARUS2, Type = ItemType.ITEM_NULL}, 
+            "gfx/characters/costumes/extrahair_lazarus_02.png"},
+        {"3402926130_maggy", PlayerType.PLAYER_MAGDALENE, {ID = NullItemID.ID_MAGDALENE, Type = ItemType.ITEM_NULL},
+            "gfx/characters/costumes/extrahair_maggy_01.png"},
+        
+
+
+    }
+    for i, k in pairs(hairList) do
+        local name = k[1]
+        local playerT = k[2]
+        local targetCostume = k[3]
+        local path = k[4]
+        local nullref = k[5]
+
+        mod.HStyles.AddStyle(name, playerT, {
+            TargetCostume = targetCostume,
+            SyncWithCostumeBodyColor = true,
+            --SkinFolderSuffics = "gfx/characters/costumes/lilith_styles/smol imp/",
+            ReplaceCostumeSheep = path,
+            TailCostumeSheep = path,
+            NullposRefSpr = nullref and GenSprite(nullref),
+        },
+        {menuHintText = GetStr("frommod") .. "Extra Hair", })
+    end
+end
+--#endregion extracompat
+
 
 for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     local mod = XMLData.GetEntryById(XMLNode.MOD, i)
@@ -1868,9 +1929,21 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 --end
             end
 
+            if mod.id == "3402926130" then
+                ExtraModCompat.ExtraHair()
+            end
+
         end
     end
 end
+
+
+
+
+
+
+
+
 
 
 
