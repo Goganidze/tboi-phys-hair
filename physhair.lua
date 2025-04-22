@@ -82,6 +82,7 @@ return function (mod)
     ---@field Mass number?
     ---@field STH number?
     ---@field CS table?
+    ---@field StartOffset number?
 
     ---@class HairDataIn
     ---@field CordSpr Sprite|Beam|any
@@ -94,6 +95,7 @@ return function (mod)
     ---@field Mass number?
     ---@field StartHeight number?
     ---@field CS table?
+    ---@field StartOffset number?
 
     ---@class TargetCostume
     ---@field ID integer
@@ -159,6 +161,7 @@ return function (mod)
                     Mass = dd.Mass or 10,
                     STH = dd.StartHeight or 5.0,
                     CS = dd.CS,
+                    StartOffset = dd.StartOffset,
                 }
                 for k, v in pairs(dd) do
                     if not ignorelist[k] then
@@ -728,7 +731,7 @@ return function (mod)
                     ---@type HairData
                     cdat[tail] = { Cord = tld.Cord, PhysFunc = tld.PhysFunc or physhair,
                         RL = tld.RL, Null = tld.Null, Scretch = tld.Scretch, DotCount = tld.DotCount, Length = tld.Length, Mass = tld.Mass,
-                        STH = tld.STH, CS = tld.CS }
+                        STH = tld.STH, CS = tld.CS, SO = tld.StartOffset }
                     
                     ---@type HairData
                     local taildata = cdat[tail]
@@ -953,7 +956,8 @@ return function (mod)
                             hap1 = playerPos+hairPos  + Vector(0,1)
                         end
                         --local points = {}
-                        local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*taildata.Scretch*.16) + game.ScreenShakeOffset
+                        local startoffset = taildata.SO or (taildata.Scretch*.16)
+                        local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*startoffset) + game.ScreenShakeOffset
                         
                         cord:GetSprite().Color = playerCol
 
@@ -996,8 +1000,9 @@ return function (mod)
                 else
                     hap1 = playerPos+hairPos  + Vector(0,1)
                 end
-                local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*tail1.Scretch*.16) + game.ScreenShakeOffset
-                local pos = hap1 --+ off
+                local startoffset = tail1.SO or (tail1.Scretch*.16)
+                local off =  (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*startoffset) + game.ScreenShakeOffset
+                local pos = hap1 + off
                 Isaac.DrawLine(pos-Vector(.5,0),pos+Vector(.5,0),KColor(1,1,1,1),KColor(1,1,1,1),5)
 
                 for i=0, #tail1 do
@@ -1130,7 +1135,8 @@ return function (mod)
                     if rlt & 2 == 2 and rlt & 1 == 0 then
                         local tail1 = taildata
                         local hap1 = playerPos+hairPos
-                        local off = (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*taildata.Scretch*.16) + game.ScreenShakeOffset  -- Vector(0,0) -- (hap1-tail1[0][1]):Resized(player.SpriteScale.X*scretch*.3)
+                        local startoffset = taildata.SO or (taildata.Scretch*.16)
+                        local off = (hap1-worldToScreen(tail1[0][1])):Resized(player.SpriteScale.X*startoffset) + game.ScreenShakeOffset  -- Vector(0,0) -- (hap1-tail1[0][1]):Resized(player.SpriteScale.X*scretch*.3)
                         cord:Add(hap1+off, taildata.STH or 5, player.SpriteScale.X*.95*cordSpr.Scale.X, playerCol)
                         for i=0, #tail1 do
                             local cur = tail1[i]
@@ -1239,7 +1245,167 @@ return function (mod)
                 bttdis = scretch*scale
             end
         end
-    end 
+    end
+
+    function _HairCordData.SlightlyheavyHairPhys(player, HairData, StartPos, scale, headpos)
+        local cdat = HairData
+        local tail1 = HairData
+        local plpos1 = StartPos
+        local scretch = cdat.Scretch
+        local Mmass = 10 / cdat.Mass   --/ 10
+        local Bounce = cdat.Bounce or 1
+
+        local headdir = player:GetHeadDirection()
+        local headpospushpower = (headdir == 1 or headdir == 2) and .8 or 1.9
+    
+        for i=0, #tail1 do
+            local mass = Mmass * (0.3 + i * 0.7) --(#tail1 - i)
+            local prep, nextp
+            local cur = tail1[i]
+            local lpos = cur[1]
+
+            local srch = cur[3]
+            if i == 0 then
+                prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
+                --scretch = 0
+            else
+                prep = tail1[i-1][1]
+            end
+            --if i < maxcoord-1 then
+            --    nextp = tail1[i+1][1]
+            --end
+            local lerp = 1 - (.12 * mass )
+    
+            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( cdat.Mass/10 * lerp))
+            if prep then
+                local bttdis = lpos:Distance(prep)
+                
+                if bttdis > scretch*3 then
+                    cur[1] = prep-(prep-lpos):Resized(scretch*3*scale)
+                    --lpos = cur[1]
+                    --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+                end
+                
+                --local vel = (prep-lpos):Resized(math.max(-1, (bttdis+(math.max(0, bttdis-scretch) * Bounce)) - scretch*lerp))
+                local vel = (prep-lpos):Resized(math.max(-1, bttdis * Bounce - scretch*lerp))
+                
+                cur[2] = (cur[2]* lerp + vel * (1-lerp))
+                --cur[2] = cur[2] * 0.2 + vel * .8
+            end
+            if nextp then
+                --local bttdis = lpos:Distance(nextp)
+    
+                --if bttdis > scretch*3 then
+                    --cur[1] = nextp-(nextp-lpos):Resized(scretch*1*scale)
+                    --lpos = cur[1]
+                    --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+                --end
+
+                --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
+                --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
+                --cur[2] = (cur[2] + vel)* .68
+                --cur[2] = cur[2]  + vel * .1
+            end
+    
+            if headpos then
+                headpos = headpos + Vector(0,-15)
+                local lerp = (.3 * (#tail1 - i) )
+                local bttdis = lpos:Distance(headpos)/scale
+                
+                local vel = (lpos - headpos):Resized(math.max(0,headsize*0.6-bttdis)*.25)
+                cur[2] = cur[2] *.8 + vel* headpospushpower*lerp
+            end
+    
+            cur[1] = cur[1] + cur[2]
+    
+            local bttdis = cur[1]:Distance(prep)
+            if bttdis > scretch then
+                cur[1] = prep-(prep-cur[1]):Resized(scretch*scale)
+                --lpos = cur[1]
+                bttdis = scretch*scale
+            end
+        end
+    end
+
+    function _HairCordData.RevertheavyHairPhys(player, HairData, StartPos, scale, headpos)
+        local cdat = HairData
+        local tail1 = HairData
+        local plpos1 = StartPos
+        local scretch = cdat.Scretch
+        local Mmass = 10 / cdat.Mass   --/ 10
+        local Bounce = cdat.Bounce or 1
+
+        local headdir = player:GetHeadDirection()
+        local headpospushpower = (headdir == 1 or headdir == 2) and .8 or 1.9
+    
+        for i=0, #tail1 do
+            local mass = Mmass * (#tail1 - i) --(#tail1 - i)
+            local prep, nextp
+            local cur = tail1[i]
+            local lpos = cur[1]
+
+            local srch = cur[3]
+            if i == 0 then
+                prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
+                --scretch = 0
+            else
+                prep = tail1[i-1][1]
+            end
+            --if i < maxcoord-1 then
+            --    nextp = tail1[i+1][1]
+            --end
+            local lerp = 1 - (.12 * mass )
+    
+            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( cdat.Mass/10 * lerp))
+            if prep then
+                local bttdis = lpos:Distance(prep)
+                
+                if bttdis > scretch*3 then
+                    cur[1] = prep-(prep-lpos):Resized(scretch*3*scale)
+                    --lpos = cur[1]
+                    --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+                end
+                
+                --local vel = (prep-lpos):Resized(math.max(-1, (bttdis+(math.max(0, bttdis-scretch) * Bounce)) - scretch*lerp))
+                local vel = (prep-lpos):Resized(math.max(-1, bttdis * Bounce - scretch*lerp))
+                
+                cur[2] = (cur[2]* lerp + vel * (1-lerp))
+                --cur[2] = cur[2] * 0.2 + vel * .8
+            end
+            if nextp then
+                --local bttdis = lpos:Distance(nextp)
+    
+                --if bttdis > scretch*3 then
+                    --cur[1] = nextp-(nextp-lpos):Resized(scretch*1*scale)
+                    --lpos = cur[1]
+                    --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
+                --end
+
+                --local velic = Vector(1,0):Rotated( (nextpos - data._JudasFezFakeCord.pos[i]):GetAngleDegrees() ):Resized( math.max(0,(nextpos:Distance(data._JudasFezFakeCord.pos[i])-Stretch)*0.10) ) --0.07
+                --local vel = (nextp-lpos):Resized(bttdis-cdat.scretch)
+                --cur[2] = (cur[2] + vel)* .68
+                --cur[2] = cur[2]  + vel * .1
+            end
+    
+            if headpos then
+                headpos = headpos + Vector(0,-15)
+                local lerp = (.3 * (#tail1 - i) )
+                local bttdis = lpos:Distance(headpos)/scale
+                
+                local vel = (lpos - headpos):Resized(math.max(0,headsize*0.6-bttdis)*.25)
+                cur[2] = cur[2] *.8 + vel* headpospushpower*lerp
+            end
+    
+            cur[1] = cur[1] + cur[2]
+    
+            local bttdis = cur[1]:Distance(prep)
+            if bttdis > scretch then
+                cur[1] = prep-(prep-cur[1]):Resized(scretch*scale)
+                --lpos = cur[1]
+                bttdis = scretch*scale
+            end
+        end
+    end
 
 
     return _HairCordData

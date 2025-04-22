@@ -986,7 +986,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
     },
     {modfolder = defaultmodfolder, 
-        CustomCharPortrait = "gfx/characters/costumes/samson_styles/flattop/charactermenu.png"})
+        CustomCharPortrait = "gfx/characters/costumes/samson_styles/ronin/charactermenu.png"})
 
 
 
@@ -1020,14 +1020,78 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
     ------------- ЛИЛИТ --------------
 
-    mod.HStyles.AddStyle("LilithSmolImp", PlayerType.PLAYER_LILITH, {
-        TargetCostume = {ID = NullItemID.ID_LILITH, Type = ItemType.ITEM_NULL},
-        SyncWithCostumeBodyColor = true,
-        --SkinFolderSuffics = "gfx/characters/costumes/lilith_styles/smol imp/",
-        ReplaceCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair.png",
-        TailCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair.png",
-    },
-    {modfolder = defaultmodfolder, })
+    do
+        --local cordspr = GenSprite("gfx/characters/costumes/lilith_styles/smol imp/lilith_cord.anm2", "cord")
+        --local cordspr2 = GenSprite("gfx/characters/costumes/lilith_styles/smol imp/lilith_cord.anm2", "cord")
+        local cordspr = BeamR("gfx/characters/costumes/lilith_styles/smol imp/lilith_cord.anm2", "cord", "body", false, false, 2)
+        local cordspr2 = BeamR("gfx/characters/costumes/lilith_styles/smol imp/lilith_cord.anm2", "cordb", "body", false, false, 2)
+        --cordspr2:GetSprite().FlipX = true
+        mod.HStyles.AddStyle("LilithSmolImp", PlayerType.PLAYER_LILITH, {
+            TargetCostume = {ID = NullItemID.ID_LILITH, Type = ItemType.ITEM_NULL},
+            --SyncWithCostumeBodyColor = true,
+            --SkinFolderSuffics = "gfx/characters/costumes/lilith_styles/smol imp/",
+            ReplaceCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair_notails.png",
+            TailCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair.png",
+            NullposRefSpr = GenSprite("gfx/characters/costumes/lilith_styles/smol imp/lilithhead.anm2"),
+            {
+                CordSpr = cordspr,
+                RenderLayers = { [3] = 2, [0] = 1, [1] = 3, [2] = 3 },
+                CostumeNullpos = "bethshair_cord1",
+                DotCount = 2,
+                Length = 18,
+                StartHeight = 0,
+                Scretch = scretch * 1.35,
+                --PhysFunc = mod.HairLib.SlightlyheavyHairPhys,
+                Mass = 12,
+                CS = {[0]=8,15},
+                StartOffset = 4,
+                PreUpdate = function(player, taildata)
+                    local spranim = player:GetSprite():GetOverlayAnimation()
+                    local cordspr = taildata.Cord:GetSprite()
+    
+                    local curanim = cordspr:GetAnimation()
+                    if (spranim == "HeadLeft" or spranim == "HeadRight") then
+                        if curanim ~= "cord2" then    --if curanim:sub(0,-1) ~= "2" then
+                            cordspr:Play("cord2")
+                        end
+                        --cordspr.FlipX = spranim == "HeadLeft"
+                    elseif (spranim == "HeadDown" or spranim == "HeadUp") and curanim ~= "cord" then
+                        cordspr:Play("cord")
+                        --cordspr.FlipX = false
+                    end
+                end,
+            },
+            {
+                CordSpr = cordspr2,
+                RenderLayers = { [3] = 2, [0] = 3, [1] = 3, [2] = 1 },
+                CostumeNullpos = "bethshair_cord2",
+                DotCount = 2,
+                Length = 18,
+                Scretch = scretch * 1.35,
+                --PhysFunc = mod.HairLib.SlightlyheavyHairPhys,
+                StartHeight = 0,
+                Mass = 12,
+                CS = {[0]=8,15},
+                StartOffset = 4,
+                PreUpdate = function(player, taildata)
+                    local spranim = player:GetSprite():GetOverlayAnimation()
+                    local cordspr = taildata.Cord:GetSprite()
+    
+                    local curanim = cordspr:GetAnimation()
+                    if (spranim == "HeadLeft" or spranim == "HeadRight") then
+                        if curanim ~= "cordb2" then    --if curanim:sub(0,-1) ~= "2" then
+                            cordspr:Play("cordb2")
+                        end
+                        --cordspr.FlipX = spranim == "HeadLeft"
+                    elseif (spranim == "HeadDown" or spranim == "HeadUp") and curanim ~= "cordb" then
+                        cordspr:Play("cordb")
+                        --cordspr.FlipX = false
+                    end
+                end,
+            },
+        },
+        {modfolder = defaultmodfolder, })
+    end
 
 
 
@@ -2685,7 +2749,6 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
                         hairgfx = styledt.extra.modfolder .. "/" .. hairgfx
                     --elseif styleexdt.useDirectTailCostumeSheepForIcon then
                         --hairgfx = hairgfx
-                        print(styledt.extra.modfolder, "|", hairgfx)
                     end
                 end
 

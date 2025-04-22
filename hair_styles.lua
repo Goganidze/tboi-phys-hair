@@ -225,7 +225,9 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
     mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local bodcol = player:GetBodyColor()
 
-    local sheep = stdata.data.NullposRefSpr   --stdata.data.TailCostumeSheep
+    local nullref = stdata.data.NullposRefSpr   --stdata.data.TailCostumeSheep
+    local sheep = data._BethsHairCord and data._BethsHairCord.ReplaceCostumeSheep
+    local sheepIsTable = type(sheep) == "table"
     local tarcost = stdata.data.TargetCostume
     data._PhysHairExtra = data._PhysHairExtra or {}
 
@@ -265,9 +267,9 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
     end
 
 
-
+    
     --print(stdata.data.NullposRefSpr)
-    if sheep and tarcost then
+    if nullref and tarcost then
         --print(player:GetPlayerType(), sheep, tarcost.ID)
         data._PhysHairExtra.DefCostumetSheetPath = {}
         local dcsp = data._PhysHairExtra.DefCostumetSheetPath
@@ -283,17 +285,17 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                     local cspr = csd:GetSprite()
                     --print( sheep:GetFilename() )
                     local anim = cspr:GetAnimation()
-                    cspr:Load(sheep:GetFilename(), true)
+                    cspr:Load(nullref:GetFilename(), true)
                     cspr:Play(anim)
 
                     for i=0, cspr:GetLayerCount()-1 do
                         --print(i, cspr:GetLayer(i):GetSpritesheetPath())
-                        local shpa = sheep:GetLayer(i)
+                        local shpa = nullref:GetLayer(i) -- type(sheep) == "table" and sheep[i] or sheep   --sheep:GetLayer(i)
                         if shpa then
                             
                             --cspr:ReplaceSpritesheet(i, shpa:GetSpritesheetPath())
                             
-                            local orig = shpa:GetSpritesheetPath()
+                            local orig = sheep and (sheepIsTable and sheep[i] or sheep) or shpa:GetSpritesheetPath()
                             local refsting = orig:sub(0, orig:len()-4)
 
                             local colorsuf = bodycolor[bodcol] or ""
@@ -475,7 +477,7 @@ function mod.HStyles.PostRoomUpdateHair(_)
         end
     end, 1, 1, false)
 end
-mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.PostRoomUpdateHair)
+--mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.PostRoomUpdateHair)
 
 function mod.HStyles.PostUpdateHairChecker()
     if Isaac.GetFrameCount() % 60 == 0 then
