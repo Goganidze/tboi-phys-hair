@@ -2188,7 +2188,7 @@ menuTab.input.moveVector = Vector(0,0)
 function menuTab.input.GetMoveVector()
 	local ret = Vector(0,0)
 	local p = GetPtrPlayer() or Isaac.GetPlayer()
-	local controllerIndex = menuTab.input.TargetControllerIndex or p.controllerIndex
+	local controllerIndex = menuTab.input.TargetControllerIndex or p.ControllerIndex
 	if controllerIndex == 0 then
 		menuTab.input.moveVector = p:GetShootingJoystick() / 1
 	else

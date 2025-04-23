@@ -31,13 +31,23 @@ mod.HStyles = {
     },
 }
 
+---@class InStyleData
+---@field ID PlayerType
+---@field data PlayerHairData
+---@field extra table
+
+
 mod.HairStylesData = {
-    playerdata = {}, styles = {},
+    playerdata = {},
+    ---@type InStyleData[]
+    styles = {}, 
+    favorites = {},
 }
 local HairStylesData = mod.HairStylesData
 
 function mod.HStyles.AddStyle(name, playerid, data, extradata)
     if name and playerid and data then
+        data.StyleName = name
         HairStylesData.styles[name] = {ID=playerid, data=data, extra=extradata}
         HairStylesData.playerdata[playerid] = HairStylesData.playerdata[playerid] or {}
         local tab = HairStylesData.playerdata[playerid]
@@ -62,6 +72,7 @@ function mod.SetHairStyleData(player, playerType, style_data)
         style_data.TargetCostume = mod.HStyles.GetTargetCostume(playerType)
         --playerType = player:GetPlayerType()
     end
+    player:GetData()._PhysHair_HairStyle = {StyleName = style_data.StyleName, PlayerType = playerType}
     mod.HairLib.SetHairData(playerType,  style_data)
 end
 
@@ -84,7 +95,7 @@ function mod.HairPreInit(_, player)
                 end
             end
         else
-            local firstname = pladat[1]
+            local firstname = HairStylesData.favorites[ptype] or pladat[1]
             if firstname then
                 local stdata = HairStylesData.styles[firstname]
                 if stdata then
@@ -315,7 +326,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                             cspr:ReplaceSpritesheet(i, finalpath)
 
                             --foc[i] = shpa:GetSpritesheetPath()
-                            dcsp[i] = shpa:GetSpritesheetPath()
+                            dcsp[i] = orig:gsub("_notails", "") -- shpa:GetSpritesheetPath()
                         end
                     end
                     cspr:LoadGraphics()
@@ -602,6 +613,28 @@ function mod.HStyles.GetHairCostumeSpr(player)
 end
 
 
+function mod.HStyles.SetFavoriteStyle(Ptype, style_name)
+    if Ptype and style_name then
+        local stdata = HairStylesData.styles[style_name]
+        if stdata then
+            if stdata.ID == Ptype then
+                HairStylesData.favorites[Ptype] = style_name
+            end
+        end
+    end
+end
+
+function mod.HStyles.GetFavoriteStyle(Ptype)
+    return HairStylesData.favorites[Ptype]
+end
+
+function mod.HStyles.RemoveFavoriteStyle(Ptype)
+    if Ptype then
+        HairStylesData.favorites[Ptype] = nil
+    end
+end
+
+
 
 
 
@@ -719,6 +752,8 @@ function mod.HStyles.HairKeeper.update(_, ent)
         if not salon.Chranya or not salon.Chranya.Ref then
             salon.Chranya = EntityPtr(ent)
         end
+
+        
 
         data.room = data.room or game:GetRoom()
         local SelBtn = mod.WGA and mod.WGA.ManualSelectedButton

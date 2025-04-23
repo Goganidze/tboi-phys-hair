@@ -1359,6 +1359,13 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
                 end
             end
         end
+
+        local favcoded = {}
+        for k,v in pairs(mod.HairStylesData.favorites) do
+            favcoded[tostring(k)] = v
+        end
+
+        data.favorites = favcoded
        
         mod:SaveData( json.encode(data) )
     end
@@ -1444,6 +1451,13 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
                     mod.MainMenuStuff.RenderCharPort = true
                     MainMenu.GetContinueWidgetSprite():ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
                 end
+
+                local favuncoded = {}
+                for k,v in pairs(mod.HairStylesData.favorites) do
+                    favuncoded[tonumber(k)] = v
+                end
+
+                mod.HairStylesData.favorites = favuncoded or mod.HairStylesData.favorites
             
             else
                 --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true
@@ -1632,6 +1646,8 @@ TestSpr:PlayOverlay("cord")
 TestSpr:Play("cord")
 local testcord = Beam(TestSpr, "body", false, false, 3)
 
+local halfAlpha = Color(1,1,1,0.15)
+
 --[[
 local testimage = Renderer.LoadImage("gfx/characters/costumes/bethhairs_cord.png")
 local v1,v2,v3,v4 = Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)
@@ -1703,12 +1719,14 @@ function BethHair.StyleMenu.HUDRender()
         if smenu.wind then
             if wga.ControlType == wga.enum.ControlType.CONTROLLER then
                 if pos:Distance(preMousePos) > 3 then
-                    wga.ControlType = wga.enum.ControlType.MOUSE
+                    --wga.ControlType = wga.enum.ControlType.MOUSE
+                    wga.SetControlType(wga.enum.ControlType.MOUSE, smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer() )
                 end
             else
                 local move = wga.input.GetRefMoveVector()
                 if move:Length() > .2 then
-                    wga.ControlType = wga.enum.ControlType.CONTROLLER
+                    --wga.ControlType = wga.enum.ControlType.CONTROLLER
+                    wga.SetControlType(wga.enum.ControlType.CONTROLLER, smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer() )
                 end
             end
             preMousePos = pos
@@ -1726,7 +1744,7 @@ function BethHair.StyleMenu.HUDRender()
                 end
                 if player then
                     player.Velocity = Vector(0, 0)
-                    player.Position = keeper.Position + Vector(-70, 0)
+                    player.Position = keeper.Position + Vector(-70, 2)
                 end
             else
                 local xshift = game:GetRoom():IsMirrorWorld() and -80 or 80
@@ -1759,6 +1777,17 @@ function BethHair.StyleMenu.HUDRender()
                     local lplayer = Isaac.GetPlayer(i)
                     if lplayer.ControllerIndex == player.ControllerIndex then
                         lplayer.ControlsCooldown = math.max(lplayer.ControlsCooldown, 3)
+                    end
+                end
+
+                if Isaac.GetFrameCount() % 10 == 0 then
+                    local familList = Isaac.FindInRadius(player.Position, 60, EntityPartition.FAMILIAR)
+                    local playerYpos = player.Position.Y - 10
+                    for i = 1, #familList do
+                        local fam = familList[i]
+                        if fam.Position.Y > playerYpos then
+                            fam:SetColor(halfAlpha, 10, 10, false, false)
+                        end
                     end
                 end
             end
@@ -1794,6 +1823,27 @@ function BethHair.StyleMenu.HUDRender()
     --local mhw = Input.GetMouseWheel and Input.GetMouseWheel(true) or 0
     --wga.DrawText(0, "MouseWheel: "..mw, 70,40, nil,nil,nil,KColor(1,1,1,1))
     --wga.DrawText(0, "MouseHWheel: "..mhw, 70,60, nil,nil,nil,KColor(1,1,1,1))
+end
+
+do
+    local ActionToButtonFrame = {
+        [ButtonAction.ACTION_SHOOTUP] = 0,
+        [ButtonAction.ACTION_MENUCONFIRM] = 1,
+        [ButtonAction.ACTION_SHOOTDOWN] = 1,
+        [ButtonAction.ACTION_SHOOTRIGHT] = 2,
+        [ButtonAction.ACTION_SHOOTLEFT] = 3,
+        [ButtonAction.ACTION_MENUEX or -1] = 3,
+        [ButtonAction.ACTION_MENUBACK] = 2,
+
+    }
+    BethHair.StyleMenu.ControllerBtnRenderList = {}
+    function BethHair.StyleMenu.AddControllerBtnRender(Action, pos, scale)
+        local frame = ActionToButtonFrame[Action]
+        if frame then
+            smenu.ControllerBtnRenderList[frame] = smenu.ControllerBtnRenderList[frame] or {}
+            table.insert(smenu.ControllerBtnRenderList[frame], {pos, scale})
+        end
+    end
 end
 
 ---@type EditorButton
@@ -1941,6 +1991,14 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
                     wga.GetButton(smenu.name, "disчё").func(1)
                 end, wga.Callbacks.WINDOW_POST_RENDER)
 
+            elseif Input.IsButtonPressed(Keyboard.KEY_H, ControllerIndex) then
+                CharRotateBtnL.forceSel = math.max(CharRotateBtnL.forceSel or 0, 2)
+            elseif Input.IsButtonPressed(Keyboard.KEY_KP_DIVIDE, ControllerIndex) then
+                CharRotateBtnR.forceSel = math.max(CharRotateBtnR.forceSel or 0, 2)
+            end
+
+            if Input.IsButtonTriggered(Keyboard.KEY_G, ControllerIndex) then
+                smenu.SetFavorite(wga.ManualSelectedButton[1])
             end
 
             local inputDeviceName = Input.GetDeviceNameByIdx and Input.GetDeviceNameByIdx(ControllerIndex) or "XboxOne"
@@ -1957,6 +2015,11 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
             --sprs.Buttons:Play(inputDeviceName, true)
             sprs.Buttons:SetFrame(11)
             sprs.Buttons:Render(centerPos + charrotateBtnR_offset + Vector(0, 30))
+
+            if wga.ControlType == wga.enum.ControlType.CONTROLLER and wga.ManualSelectedButton then
+                local btn = wga.ManualSelectedButton[1]
+                smenu.AddControllerBtnRender(ButtonAction.ACTION_MENUCONFIRM, btn.pos + Vector(btn.x, btn.y), Vector(.75,.75))
+            end
         end
     end
 end
@@ -1974,6 +2037,24 @@ function BethHair.StyleMenu.PostWindowRender(_,pos, wind)
     local sprs = smenu.spr
 
     sprs.Scisors:Render(pos + Vector(40,0))
+
+    if smenu.FavoriteBtn then
+        local favBtn = smenu.FavoriteBtn
+        local Rpos = favBtn.pos + Vector(32, 3)
+        sprs.isFav:Render(Rpos)
+    end
+
+    --if #smenu.ControllerBtnRenderList > 0 then
+        for frame, k in pairs(smenu.ControllerBtnRenderList) do
+            sprs.Buttons:SetFrame(frame)
+            for i2, vec in ipairs(k) do
+                sprs.Buttons.Scale = vec[2]
+                sprs.Buttons:Render(vec[1])
+            end
+        end
+        smenu.ControllerBtnRenderList = {}
+        sprs.Buttons.Scale = Vector(1,1)
+    --end
 end
 BethHair:AddCallback(wga.Callbacks.WINDOW_POST_RENDER, BethHair.StyleMenu.PostWindowRender, smenu.name)
 
@@ -1991,6 +2072,9 @@ smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"
 
     Cursor = GenSprite("gfx/editor/hairstyle_menu.anm2","mousewhat"),
     HeadShadow = GenSprite("gfx/editor/hairstyle_menu.anm2","headshadow"),
+
+    favorite = GenSprite("gfx/editor/hairstyle_menu.anm2","favorite"),
+    isFav = GenSprite("gfx/editor/hairstyle_menu.anm2","isFav"),
 }
 
 smenu.spr.scrollback.Offset = Vector(-2,-2)
@@ -2180,6 +2264,8 @@ do
         navmap[xyX][xyY] = self
 
         smenu.rowcount = math.max(smenu.rowcount or 0, xyY)
+
+        entry.Btn = self
 
         return self
     end
@@ -2724,10 +2810,14 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
     local cropdown = Vector(15,17)
     if pstyles then
 
+        smenu.FavoriteBtn = nil
+
         local stylesdata = BethHair.HairStylesData.styles
 
         local EntrySklad = "Def_HairStyles"
         BethHair.StyleMenu.ClearEntrys(EntrySklad)
+
+        local favorited = mod.HStyles.GetFavoriteStyle(ptype)
 
         for i=1, #pstyles do
             local stylename = pstyles[i]
@@ -2793,11 +2883,18 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
                 GreenLightCondition = function(btn)
                     local targetPlayer = smenu.TargetPlayer
                     if targetPlayer and targetPlayer.Ref then
-                        local playerdata = smenu.TargetPlayer.Ref:GetData()
+                        local playerdata = targetPlayer.Ref:GetData()
                         return playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName == stylename
                     end
                 end,
             }
+
+            self.StyleName = stylename
+
+
+            if favorited == stylename then
+                smenu.FavoriteBtn = self
+            end
 
             --[[self = wga.AddButton(smenu.name, "style" .. i, pos,
              40, 40, nilspr,
@@ -2841,6 +2938,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
     BethHair.StyleMenu.closespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "disчёта-там")
     BethHair.StyleMenu.acceptspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "accept")
     BethHair.StyleMenu.setphysspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "phys")
+    BethHair.StyleMenu.favoritespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "favorite")
 
     local usephys
     usephys = wga.AddButton(smenu.name, "usephys", Vector(200,148),
@@ -2885,7 +2983,61 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
         end, function (pos, visible)
             BethHair.StyleMenu.closespr:Render(pos)
+            if not close.IsSelected and wga.ControlType == wga.enum.ControlType.CONTROLLER then
+                BethHair.StyleMenu.AddControllerBtnRender(ButtonAction.ACTION_MENUBACK, pos + Vector(close.x, close.y), Vector(.75,.75))
+            end
         end)
+
+    function smenu.SetFavorite(btn)
+        if not btn or not btn.IsHairStyleMenu then return end
+        local targetPlayer = smenu.TargetPlayer
+        if targetPlayer and targetPlayer.Ref then
+            local style =  btn.StyleName
+            local Ptype = targetPlayer.Ref:ToPlayer():GetPlayerType()
+
+            local isAlreadyFavorite = BethHair.HStyles.GetFavoriteStyle(Ptype) == style
+            
+            if not isAlreadyFavorite then
+                smenu.FavoriteBtn = btn
+                mod.HStyles.SetFavoriteStyle(Ptype, style)
+            else
+                smenu.FavoriteBtn = nil
+                mod.HStyles.RemoveFavoriteStyle(Ptype)
+            end
+
+        end
+    end
+
+
+    local favorite
+    favorite = wga.AddButton(smenu.name, "favorite", Vector(200,114),
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
+    function (button)
+        local targetPlayer = smenu.TargetPlayer
+        if targetPlayer and targetPlayer.Ref then
+            local pdata = smenu.TargetPlayer.Ref:GetData()
+            local curStyle = pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle.StyleName
+            if curStyle then
+                local menustyledata = BethHair.StyleMenu.CurrentStyleMenuData
+                for SkladName, entry in pairs(menustyledata.Entrys[menustyledata.SelectedEntrySklad]) do
+                    local btn = entry.Btn
+                    if btn.StyleName == curStyle then
+                        smenu.SetFavorite(btn)
+                        break
+                    end
+                end
+            end
+        end
+    end, function (pos, visible)
+        BethHair.StyleMenu.favoritespr:Render(pos)
+
+        if wga.ControlType == wga.enum.ControlType.CONTROLLER then
+            BethHair.StyleMenu.AddControllerBtnRender(ButtonAction.ACTION_SHOOTUP, pos + Vector(favorite.x, favorite.y), Vector(.75,.75))
+        end
+    end)
+
+
+
     wga.ManualSelectedButton = { close, smenu.name }
     mdata.CurCollum = 2
     mdata.HairSelPos = Vector(3,2)

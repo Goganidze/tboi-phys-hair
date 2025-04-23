@@ -491,6 +491,7 @@ return function (mod)
 
                 if player:IsExtraAnimationFinished() and not cdat.CostumeReplaced then --что за хуйню я написал?
                     local defSpriteSheep = data._PhysHairExtra and data._PhysHairExtra.DefCostumetSheetPath
+                    
                     cdat.CostumeReplaced = true
                     cdat.OrigCostume = {}
                     cdat.FinalCostumePath = {}
