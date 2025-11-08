@@ -6,6 +6,8 @@ local Room
 local Wtr = 20/13
 local sfx = SFXManager()
 
+
+
 local function GenSprite(gfx, anim, frame)
     if gfx then
         local spr
@@ -108,6 +110,26 @@ function mod.HairPreInit(_, player)
 end
 mod:AddCallback(mod.HairLib.Callbacks.HAIR_PRE_INIT, mod.HairPreInit)
 
+function mod.PlayerTypeChecker(_, player)
+    local data = player:GetData()
+    local ptype = player:GetPlayerType()
+    
+    if data._PhysHair_HairStyle then
+        local phdat = data._PhysHair_HairStyle
+        
+        if phdat.PrePlayerType and phdat.PrePlayerType ~= ptype then
+            data._BethsHairCord = nil
+            data._PhysHair_HairStyle = nil
+            return
+        end
+
+        phdat.PrePlayerType = ptype
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.PlayerTypeChecker)
+
+
+
 local bodycolor = {
     --[0] = "",
     [SkinColor.SKIN_BLACK] = "_black",
@@ -128,7 +150,7 @@ function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
         player = player:ToPlayer()
         local ptype = player:GetPlayerType()
         if stdata and (stdata.ID == ptype or stdata.ID == -1) then
-            --mod.SetHairStyleData(ptype, stdata)
+            mod.SetHairStyleData(player, ptype, stdata)
             local data = player:GetData()
             --data._PhysHair_HairStyle = style_name
             data._PhysHair_HairStyle = {StyleName = style_name, PlayerType = ptype}
@@ -592,12 +614,11 @@ function mod.HStyles.GetTargetCostume(playerType, style_name)
 
 end
 
-
+---@param player EntityPlayer
 function mod.HStyles.GetHairCostumeSpr(player)
     
     local data = player:GetData()._PhysHair_HairStyle
     local tarcost = mod.HStyles.GetTargetCostume(player:GetPlayerType(), data and data.StyleName)
-
     local pos = 0
     for i, csd in pairs(player:GetCostumeSpriteDescs()) do
         local conf = csd:GetItemConfig()
@@ -608,6 +629,18 @@ function mod.HStyles.GetHairCostumeSpr(player)
                 pos = pos + 1
             end
 
+        end
+    end
+
+    -- пиздец случился 
+
+    pos = 0
+    for i, csd in pairs(player:GetCostumeSpriteDescs()) do
+        local conf = csd:GetItemConfig()
+        if conf.Type == ItemType.ITEM_NULL 
+        and conf.Costume.Priority >= 99
+        and csd:GetSprite():GetLayer("head0") then
+            return csd:GetSprite()
         end
     end
 end
@@ -976,14 +1009,16 @@ function mod.HStyles.salon.EnterSalon()
         local level = game:GetLevel()
         salon.ReturnSettings = {
             CameraStyle = Options.CameraStyle,
-            NoWall = level:GetCurrentRoomDesc().Flags & RoomDescriptor.FLAG_NO_WALLS,
+            --NoWall = level:GetCurrentRoomDesc().Flags & RoomDescriptor.FLAG_NO_WALLS,
             MusicVolume = Options.MusicVolume,
+            WasClampEnabled = room:GetCamera():IsClampEnabled()
         }
+        room:GetCamera():SetClampEnabled(false)
         Options.CameraStyle = CameraStyle.ACTIVE_CAM_OFF
         MusicManager():VolumeSlide(0.5 , 0.08)
         
-        local crds = level:GetCurrentRoomDesc()
-        crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
+        --local crds = level:GetCurrentRoomDesc()
+        --crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
 
         salon.Entered = true
         for i = 0, game:GetNumPlayers()-1 do
@@ -1043,9 +1078,13 @@ function mod.HStyles.salon.ExitSalon()
             Options.CameraStyle = returnCameraStyle
         end, 15, 1, true)
 
-        if salon.ReturnSettings.NoWall then
-            local crds = game:GetLevel():GetCurrentRoomDesc()
-            crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
+        --if salon.ReturnSettings.NoWall then
+        --    local crds = game:GetLevel():GetCurrentRoomDesc()
+        --    crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
+        --end
+        if salon.ReturnSettings.WasClampEnabled then
+            local room = game:GetRoom()
+            room:GetCamera():SetClampEnabled(true)
         end
 
         MusicManager():VolumeSlide(1, 0.08)
@@ -1179,6 +1218,7 @@ do
 
             local sheep = stdata.data.NullposRefSpr
             local finalPath = data._BethsHairCord.FinalCostumePath
+
             if sheep and finalPath then
                 --local cspr2 = salon.CachedPhayerHairSpr
                 local anim = cspr:GetAnimation()
@@ -1620,7 +1660,6 @@ end
 
 
 
-
 ------------       поиск респрайтов       -------------
 local PlayerTypeToHairPos = {
     [PlayerType.PLAYER_AZAZEL]=1,
@@ -1645,7 +1684,9 @@ end
 
 local function FindOriginal(resources, path, costumepath, playerid, nullid, CostumeSheep, anm2)
     local hairpath = resources .. "/" .. path
+
     local res = pcall(Renderer.LoadImage, hairpath)
+
     if res then
         local fullCostumeSheep = resources .. "/" .. CostumeSheep
         local tab = {
@@ -1677,10 +1718,10 @@ local function FindOriginal(resources, path, costumepath, playerid, nullid, Cost
 end
 
 local function FindResprites(modfoldername, resources, path, costumepath, playerid, nullid, CostumeSheep, anm2, modd)
-    local hairpath = "mods/" .. modfoldername .. path
+    local hairpath = mod.GamePath .. "/mods/" .. modfoldername .. path
     local res = pcall(Renderer.LoadImage, hairpath)
     if res then
-        local fullCostumeSheep = "mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep
+        local fullCostumeSheep = mod.GamePath .. "/mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep
         local tab = {
             TargetCostume = {ID = nullid, Type = ItemType.ITEM_NULL},
             TailCostumeSheep = fullCostumeSheep,
@@ -1691,14 +1732,14 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
         }
 
         if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
-            tab.SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath
+            tab.SkinFolderSuffics = mod.GamePath .. "/mods/" .. modfoldername  .. costumepath
         end
         if PlayerTypeToHairPos[playerid] then
             tab.TargetCostume.pos = PlayerTypeToHairPos[playerid]
         end
         
         tab.NullposRefSpr:ReplaceSpritesheet(0, 
-            "mods/" .. modfoldername .. "/" .. resources .. "/" .. tab.TailCostumeSheep)
+            mod.GamePath .. "/mods/" .. modfoldername .. "/" .. resources .. "/" .. tab.TailCostumeSheep)
         tab.NullposRefSpr:LoadGraphics()
         
         mod.HStyles.AddStyle(modfoldername .. "-" .. playerid .. "-" .. CostumeSheep, playerid, tab,

@@ -291,10 +291,27 @@ return function (mod)
 
     ---@param player EntityPlayer
     function _HairCordData.playerUpdate(_, player)
-        if not PlayerData[player:GetPlayerType()] then
+        local data = player:GetData()
+        local ptype = player:GetPlayerType()
+
+        --[[print(data._BethsHairCord, data._PhysHair_HairStyle)
+        if data._BethsHairCord then
+            local cdat = data._BethsHairCord
+            
+            if cdat.PrePlayerType and cdat.PrePlayerType ~= ptype then
+                data._BethsHairCord = nil
+                data._PhysHair_HairStyle = nil
+                return
+            end
+
+            cdat.PrePlayerType = ptype
+        end]]
+
+
+        if not PlayerData[ptype] then
             return
         end
-        local data = player:GetData()
+        --local data = player:GetData()
         local playerPos = player.Position + player:GetFlyingOffset() * Wtr -- (Isaac.WorldToRenderPosition(player.Position) + player:GetFlyingOffset())
         local listdecap = Isaac.FindByType(3, FamiliarVariant.DECAP_ATTACK)
         local Headent = player
@@ -320,7 +337,7 @@ return function (mod)
         
         --local hairPos1 = player:GetCostumeNullPos("bethshair_cord1", true, Vector(0,0)) * Wtr
         --local hairPos2 = player:GetCostumeNullPos("bethshair_cord2", true, Vector(0,0)) * Wtr
-        local ptype = player:GetPlayerType()
+        
         if not data._BethsHairCord and not mod.BlockedChar[ptype] then
             --[[Isaac.RunCallbackWithParam(_HairCordData.Callbacks.HAIR_PRE_INIT, ptype, player)
             
@@ -358,12 +375,13 @@ return function (mod)
             _HairCordData.InitHairData(player, data, ptype)
         elseif data._BethsHairCord then
             local cdat = data._BethsHairCord
-            
+
             if cdat.HeadPosCheckFrame and (player.FrameCount - cdat.HeadPosCheckFrame <= 1) then
                 playerPos = cdat.RealHeadPos and ScreenToWorld(cdat.RealHeadPos + Headent.Velocity/2) or playerPos
             end
 
             local tarcost = cdat.TargetCostume
+
             if tarcost then
 
                 local bodcol = player:GetBodyColor()
@@ -488,7 +506,7 @@ return function (mod)
                     Isaac.RunCallbackWithParam(_HairCordData.Callbacks.POST_COLOR_CHANGE, ptype, player, bodcol, refsting)
                 end
                 cdat.BodyColorCheck = bodcol
-
+                
                 if player:IsExtraAnimationFinished() and not cdat.CostumeReplaced then --что за хуйню я написал?
                     local defSpriteSheep = data._PhysHairExtra and data._PhysHairExtra.DefCostumetSheetPath
                     

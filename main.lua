@@ -36,12 +36,26 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     local node = XMLData.GetEntryById(XMLNode.MOD, i)
     if node and node.id == "3127377427" then
         mod.Foldername = node.realdirectory or node.directory
+        mod.FullPath = node.fulldirectory:gsub("\\Repentogon", "")
+        
+        local a = mod.FullPath:find("mods/")
+        local lasta
+        for b = 1, #mod.FullPath do
+            local a = mod.FullPath:find("mods/", b)
+            if a then
+                b = a
+                lasta = a
+            end
+        end
+
+        mod.GamePath = mod.FullPath:sub(1, lasta-1)
         break
     end
 end
 
 
 mod.HairLib = include("physhair")
+Isaac.DebugString("physhair loaded")
 ---@type _HairCordData
 mod.HairLib = mod.HairLib(mod)
 
@@ -54,6 +68,7 @@ mod.HStyles = {
 }
 
 include("hair_styles")
+Isaac.DebugString("hair styles loaded")
 
 mod.DR = false
 
@@ -206,7 +221,7 @@ local headDirToRender2 = {
 --#region bethany hairs
 
 
-local defaultmodfolder = "mods/" .. mod.Foldername .. "/resources"
+local defaultmodfolder = mod.GamePath .. "/mods/" .. mod.Foldername .. "/resources"
 mod.defaultmodfolder = defaultmodfolder
 
 --mod.HairLib.SetHairData(PlayerType.PLAYER_BETHANY, {
@@ -217,10 +232,10 @@ mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
         --CostumeNullposes = {"bethshair_cord1","bethshair_cord2"},
         TargetCostume = {ID = NullItemID.ID_BETHANY, Type = ItemType.ITEM_NULL},
         --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_001x_bethshair_notails.png",
-        SkinFolderSuffics = "resources-dlc3/gfx/characters/costumes/",
+        SkinFolderSuffics = "resources/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_001x_bethshair_notails.png",
-        TailCostumeSheep = "resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png",
-        NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_001x_bethanyhead.anm2"),
+        TailCostumeSheep = "resources/gfx/characters/costumes/character_001x_bethshair.png",
+        NullposRefSpr = GenSprite(mod.GamePath .. "/mods/".. mod.Foldername ..  "/resources/gfx/characters/character_001x_bethanyhead.anm2"),
         [1] = {
             CordSpr = cordSpr,
             RenderLayers = headDirToRender1,
@@ -624,7 +639,7 @@ mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
         SkinFolderSuffics = "gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_018b_bethshair_notails.png",
         TailCostumeSheep = "gfx/characters/costumes/character_018b_bethshair.png",
-        NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_b16_bethany.anm2"),
+        NullposRefSpr = GenSprite(mod.GamePath .. "/mods/".. mod.Foldername ..  "/resources/gfx/characters/character_b16_bethany.anm2"),
         [1] = {
             Scretch = scretch * 1.2,
             CordSpr = cordSprB,
@@ -692,7 +707,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         SkinFolderSuffics = "resources/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_005_evehead_notails.png",
         TailCostumeSheep = "resources/gfx/characters/costumes/character_005_evehead.png",
-        NullposRefSpr = GenSprite("mods/".. mod.Foldername ..  "/resources/gfx/characters/character_005_evehead.anm2"),
+        NullposRefSpr = GenSprite(mod.GamePath .. "/mods/".. mod.Foldername ..  "/resources/gfx/characters/character_005_evehead.anm2"),
 
 
         [2] = {
@@ -1226,6 +1241,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
 
     local stupidShit = include("oldEvilAreBack")
+    Isaac.DebugString("oldevil loaded")
     stupidShit = stupidShit()
 
     local judasFezSpr = {
@@ -1323,6 +1339,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_RENDER, mod.JudasJunkPreRender)
 
     include("stylesVariants")
+    Isaac.DebugString("stylesVariants loaded")
 
 
 
@@ -1426,74 +1443,77 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         ImGui.AddCheckbox (menuID, "PhysHair_JudasBPhys","T. Judas", function(a) mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = not a  updateSaveData() end, true )
         ImGui.AddCheckbox (menuID, "PhysHair_EveBPhys","Eve", function(a) mod.BlockedChar[PlayerType.PLAYER_EVE] = not a updateSaveData() end, true )
     end
-        mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, function(_, saveslot, isslotselected, rawslot)
-            mod.MainMenuStuff.RenderCharPort = nil
-            if mod:HasData() then
-                local savedata = json.decode(mod:LoadData())
 
-                mod.SavePlayerData = savedata.PlayerData
+    mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, function(_, saveslot, isslotselected, rawslot)
+        mod.MainMenuStuff.RenderCharPort = nil
+        if mod:HasData() then
+            local savedata = json.decode(mod:LoadData())
 
-                mod.OdangoMode = savedata.OdangoMode
-                mod.BlockedChar[PlayerType.PLAYER_BETHANY] = savedata.Beth == 1
-                mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = savedata.BethB == 1
-                mod.BlockedChar[PlayerType.PLAYER_JUDAS] = savedata.Judas == 1
-                mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = savedata.JudasB == 1
-                mod.BlockedChar[PlayerType.PLAYER_EVE] = savedata.Eve == 1
+            mod.SavePlayerData = savedata.PlayerData
 
-                ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
-                ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
-                ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
-                ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
-                ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
-                
-                mod.CustomCharPortrait = savedata.PlayerData.CustomCharPortrait
-                if mod.CustomCharPortrait then
-                    mod.MainMenuStuff.RenderCharPort = true
-                    MainMenu.GetContinueWidgetSprite():ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
-                end
+            mod.OdangoMode = savedata.OdangoMode
+            mod.BlockedChar[PlayerType.PLAYER_BETHANY] = savedata.Beth == 1
+            mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = savedata.BethB == 1
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS] = savedata.Judas == 1
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = savedata.JudasB == 1
+            mod.BlockedChar[PlayerType.PLAYER_EVE] = savedata.Eve == 1
 
-                local favuncoded = {}
-                for k,v in pairs(mod.HairStylesData.favorites) do
+            ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
+            ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
+            ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
+            ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
+            ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+            
+            mod.CustomCharPortrait = savedata.PlayerData.CustomCharPortrait
+            if mod.CustomCharPortrait then
+                mod.MainMenuStuff.RenderCharPort = true
+                MainMenu.GetContinueWidgetSprite():ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
+            end
+
+            local favuncoded = {}
+            if savedata.favorites then
+                for k,v in pairs(savedata.favorites) do
                     favuncoded[tonumber(k)] = v
                 end
-
-                mod.HairStylesData.favorites = favuncoded or mod.HairStylesData.favorites
-            
-            else
-                --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true
-                mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = true
-                mod.BlockedChar[PlayerType.PLAYER_JUDAS] = true
-                mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = true
-                mod.BlockedChar[PlayerType.PLAYER_EVE] = true]]
-
-                ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
-                ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
-                ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
-                ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
-                ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
             end
-        end)
 
-        function mod.PostExitGame(shouldSave)
-            mod.MainMenuStuff.RenderCharPort = nil
-            if shouldSave then
-                updateSaveData()
-            end
-            mod.MainMenuStuff.frame = #mod.MainMenuStuff.WidgedMap
+            mod.HairStylesData.favorites = favuncoded or mod.HairStylesData.favorites
+        
+        else
+            --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true
+            mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = true
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS] = true
+            mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = true
+            mod.BlockedChar[PlayerType.PLAYER_EVE] = true]]
 
-            --[[local menu = MainMenu
-            local widgetSpr = menu.GetContinueWidgetSprite()
-            local charlayer = widgetSpr:GetLayer(0)
-            --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait, mod.CustomCharPortrait == charlayer:GetSpritesheetPath())
-            if mod.CustomCharPortrait and charlayer then
-                print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath())
-                if mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath() then
-                    --widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
-                end
-            end]]
+            ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
+            ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
+            ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
+            ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
+            ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
         end
+    end)
 
-        mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, mod.PostExitGame)
+    function mod.PostExitGame(shouldSave)
+        mod.MainMenuStuff.RenderCharPort = nil
+        if shouldSave then
+            updateSaveData()
+        end
+        mod.MainMenuStuff.frame = #mod.MainMenuStuff.WidgedMap
+
+        --[[local menu = MainMenu
+        local widgetSpr = menu.GetContinueWidgetSprite()
+        local charlayer = widgetSpr:GetLayer(0)
+        --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait, mod.CustomCharPortrait == charlayer:GetSpritesheetPath())
+        if mod.CustomCharPortrait and charlayer then
+            print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath())
+            if mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath() then
+                --widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
+            end
+        end]]
+    end
+
+    mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, mod.PostExitGame)
     --end
 
 
@@ -1623,6 +1643,7 @@ GenSprite1 = GenSprite
 
 ---@type wga_menu
 BethHair.WGA = include("worst gui api")
+Isaac.DebugString("gui loaded")
 local wga = BethHair.WGA
 
 BethHair.StyleMenu = {name = "physhair_styleEditorMenu", size = Vector(230,240), misc = {},
@@ -2848,6 +2869,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
                 hairspr = GenSprite(hairanm2 or "gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
                 for lr=0, hairspr:GetLayerCount()-1 do
+                    print(hairgfx)
                     hairspr:ReplaceSpritesheet(lr,hairgfx)
                 end
                 hairspr:LoadGraphics()
@@ -3335,14 +3357,6 @@ end)
 
 
 
-DebugFORFABTEST = function ()
-    local satan = Isaac.Spawn(1000,6,0, Vector(322.82, 154.974 - 11 * 1.56), Vector(0,0), nil)
-    satan:Update()
-    satan.SortingLayer = 1
-    satan:GetSprite():Load("gfx/grid/slaughterhouse/doors/slaughter_entrance_door.anm2", true)
-    satan:GetSprite():Play("OpenAlt")
-    satan:GetSprite():GetLayer("idk"):SetCustomShader("gfx/grid/slaughterhouse/doors/slaughterCutShader")
-    satan:GetSprite():GetLayer("idk"):SetColor(Color(1,1,1,0.1,0,0,0))
-    satan:Update()
-    satan:GetSprite().Offset = Vector(0,-11)
-end
+
+
+
