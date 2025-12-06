@@ -1266,7 +1266,7 @@ return function (mod)
         end
     end
 
-    function _HairCordData.SlightlyheavyHairPhys(player, HairData, StartPos, scale, headpos)
+    function mod.HairLib.SlightlyheavyHairPhys(player, HairData, StartPos, scale, headpos)
         local cdat = HairData
         local tail1 = HairData
         local plpos1 = StartPos

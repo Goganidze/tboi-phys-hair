@@ -75,7 +75,11 @@ function mod.SetHairStyleData(player, playerType, style_data)
         --playerType = player:GetPlayerType()
     end
     player:GetData()._PhysHair_HairStyle = {StyleName = style_data.StyleName, PlayerType = playerType}
-    mod.HairLib.SetHairData(playerType,  style_data)
+    --mod.HairLib.SetHairData(playerType,  style_data)
+    mod.HairLib.SetHairDataToPlayer(player, 
+        {
+            HairInfo = style_data
+        })
 end
 
 function mod.HairPreInit(_, player)
@@ -92,7 +96,7 @@ function mod.HairPreInit(_, player)
                 if stdata then
                     if stdata.ID == ptype or stdata.ID == -1 then
                         mod.SetHairStyleData(player,ptype, stdata.data)
-                        mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                        --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                     end
                 end
             end
@@ -102,13 +106,13 @@ function mod.HairPreInit(_, player)
                 local stdata = HairStylesData.styles[firstname]
                 if stdata then
                     mod.SetHairStyleData(player,ptype, stdata.data)
-                    mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                    --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                 end
             end 
         end
     end
 end
-mod:AddCallback(mod.HairLib.Callbacks.HAIR_PRE_INIT, mod.HairPreInit)
+--mod:AddCallback(mod.HairLib.Callbacks.HAIR_PRE_INIT, mod.HairPreInit)
 
 function mod.PlayerTypeChecker(_, player)
     local data = player:GetData()
@@ -118,7 +122,7 @@ function mod.PlayerTypeChecker(_, player)
         local phdat = data._PhysHair_HairStyle
         
         if phdat.PrePlayerType and phdat.PrePlayerType ~= ptype then
-            data._BethsHairCord = nil
+            data.__PhysHair_HairSklad = nil
             data._PhysHair_HairStyle = nil
             return
         end
@@ -150,11 +154,15 @@ function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
         player = player:ToPlayer()
         local ptype = player:GetPlayerType()
         if stdata and (stdata.ID == ptype or stdata.ID == -1) then
-            mod.SetHairStyleData(player, ptype, stdata)
+            --mod.SetHairStyleData(player, ptype, stdata)
             local data = player:GetData()
             --data._PhysHair_HairStyle = style_name
             data._PhysHair_HairStyle = {StyleName = style_name, PlayerType = ptype}
-            mod.HairLib.InitHairData(player, nil, nil, mode)
+            
+            mod.HairLib.SetHairDataToPlayer(player, {
+                HairInfo = stdata.data
+            })
+            --mod.HairLib.InitHairData(player, nil, nil, mode)
             
             --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
         end
@@ -168,7 +176,7 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local bodcol = player:GetBodyColor()
     data._PhysHairExtra = data._PhysHairExtra or {}
 
-    
+    print("SKIN")
 
     if skinsheet then
         data._PhysHairExtra.SkinIsChanged = true
@@ -230,8 +238,14 @@ end
 ---@field _PhysHairExtra table
 ---@field [string] any
 
+---@deprecated
 ---@param data PlayerDataContent
 function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+    do 
+        return
+    end
+
+
     --[[local skinsheet = stdata.data.SkinFolderSuffics
     local bodcol = player:GetBodyColor()
 
@@ -503,8 +517,7 @@ function mod.HStyles.PostRoomUpdateHair(_)
             local PHSdata = data._PhysHair_HairStyle
             if not PHSdata.PlayerType or PHSdata.PlayerType == ptype then
                 local stdata = HairStylesData.styles[PHSdata.StyleName]
-                
-                mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                -- mod.HStyles.UpdatePlayerSkin(player, data, stdata)
             end
         end
@@ -1168,11 +1181,12 @@ do
         return (-Isaac.WorldToScreen(Vector.Zero) + x)/(1/Wtr)
     end
 
-    function mod.HStyles.salon.ChangeHairStyle(player, stylename, StyleMode)
+    function mod.HStyles.salon.ChangeHairStyle(player, stylename, StyleMode, hairlayer)
         salon.DoChoopEffect = true
         --mod.StyleMenu.TargetHairKeeper
         local data = player:GetData()
-        salon.CachedPlayerHairData = data._BethsHairCord
+        salon.CachedPlayerHairData = data.__PhysHair_HairSklad    --data._BethsHairCord
+        local sklad = data.__PhysHair_HairSklad
 
         --[[
         local stdata = HairStylesData.styles[data._PhysHair_HairStyle.StyleName]
@@ -1217,7 +1231,14 @@ do
             CachedSpr.Scale = cspr.Scale
 
             local sheep = stdata.data.NullposRefSpr
-            local finalPath = data._BethsHairCord.FinalCostumePath
+            print(hairlayer, sklad[hairlayer], sklad[hairlayer].HairInfo, sklad[hairlayer].HairInfo.FinalCostumePath, sklad[hairlayer].FinalCostumePath)
+            local finalPath = sklad[hairlayer].HairInfo.FinalCostumePath    --data._BethsHairCord.FinalCostumePath
+            if not finalPath then
+                
+            end
+            --do
+            --    return
+            --end
 
             if sheep and finalPath then
                 --local cspr2 = salon.CachedPhayerHairSpr
@@ -1231,7 +1252,7 @@ do
                     end
                 end
                 CachedSpr:LoadGraphics()
-            else
+            elseif finalPath then
                 --local cspr2 = salon.CachedPhayerHairSpr
                 for i=0, CachedSpr:GetLayerCount()-1 do
                     --local shpa = cspr:GetLayer(i)
@@ -2073,21 +2094,21 @@ local lerpAngle = function(a, b, t)
 end
 
 
-function epf.PonyTailFunc(player, HairData, StartPos, scale, headpos)
-    local cdat = HairData
-    local tail1 = HairData
+function epf.PonyTailFunc(player, TailData, HairData, StartPos, Headpos, scale)
+    --local cdat = HairData
+    --local tail1 = HairData
     local plpos1 = StartPos
-    local scretch = cdat.Scretch
-    local Mmass = 10 / cdat.Mass   --/ 10
+    local scretch = TailData.Scretch
+    local Mmass = 10 / TailData.Mass   --/ 10
 
     local headdir = player:GetHeadDirection()
     local headpospushpower = (headdir == 1 or headdir == 2) and .8 or 1.9
 
-    for i=0, #tail1 do
+    for i=0, #TailData do
         local mass = Mmass * i --(#tail1 - i)
         local prep, nextp
-        local cur = tail1[i]
-        local precur = tail1[i-1]
+        local cur = TailData[i]
+        local precur = TailData[i-1]
         local lpos = cur[1]
 
         local srch = cur[3]
@@ -2095,17 +2116,16 @@ function epf.PonyTailFunc(player, HairData, StartPos, scale, headpos)
             prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
             --scretch = 0
         else
-            prep = tail1[i-1][1]
+            prep = TailData[i-1][1]
         end
         --if i < maxcoord-1 then
         --    nextp = tail1[i+1][1]
         --end
         local lerp = 1 - (.12 * mass )
-        cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( cdat.Mass/10 ))
+        cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( TailData.Mass/10 ))
         if precur then
-            --print(i, lerp, cur[2] , precur[2]*lerp*.2*scale * (scretch/defscretch) * ( cdat.Mass/10 ) )
             --cur[2] = cur[2] * .8 + precur[2]*lerp*.2*scale * (scretch/defscretch) * ( cdat.Mass/10 )
-            local prepust = precur[2]*lerp*scale * (scretch/defscretch) * ( cdat.Mass/10 )
+            local prepust = precur[2]*lerp*scale * (scretch/defscretch) * ( TailData.Mass/10 )
             local leng = cur[2]:Length()
             --cur[2] = (cur[2] + prepust):Resized(leng)
         end
@@ -2135,12 +2155,12 @@ function epf.PonyTailFunc(player, HairData, StartPos, scale, headpos)
             --cur[2] = cur[2]  + vel * .1
         end
 
-        if headpos then
-            headpos = headpos + Vector(0,-15)
-            local lerp = (.3 * (#tail1 - i) )
-            local bttdis = lpos:Distance(headpos)/scale
+        if Headpos then
+            Headpos = Headpos + Vector(0,-15)
+            local lerp = (.3 * (#TailData - i) )
+            local bttdis = lpos:Distance(Headpos)/scale
             
-            local vel = (lpos - headpos):Resized(math.max(0,headsize*0.6-bttdis)*.25)
+            local vel = (lpos - Headpos):Resized(math.max(0,headsize*0.6-bttdis)*.25)
             cur[2] = cur[2] *.8 + vel* headpospushpower*lerp
         end
 
@@ -2152,25 +2172,24 @@ function epf.PonyTailFunc(player, HairData, StartPos, scale, headpos)
             --lpos = cur[1]
             bttdis = scretch*scale
         end
+        cur.p:SetPosition(cur[1])
     end
 end 
 
 
-function epf.HoholockTailFunc(player, HairData, StartPos, scale, headpos)
-    local cdat = HairData
-    local tail1 = HairData
+function epf.HoholockTailFunc(player, TailData, HairData, StartPos, Headpos, scale)
     local plpos1 = StartPos
-    local scretch = cdat.Scretch
-    local Mmass = 10 / cdat.Mass   --/ 10
+    local scretch = TailData.Scretch
+    local Mmass = 10 / TailData.Mass   --/ 10
 
     local headdir = player:GetHeadDirection()
     local headpospushpower = headdir == 0 and -115 or headdir == 2 and -65 or headdir == 1 and -105 or -75
 
-    for i=0, #tail1 do
+    for i=0, #TailData do
         local mass = Mmass * i --(#tail1 - i)
         local prep, nextp
-        local cur = tail1[i]
-        local precur = tail1[i-1]
+        local cur = TailData[i]
+        local precur = TailData[i-1]
         local lpos = cur[1]
 
         local srch = cur[3]
@@ -2178,14 +2197,14 @@ function epf.HoholockTailFunc(player, HairData, StartPos, scale, headpos)
             prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
             --scretch = 0
         else
-            prep = tail1[i-1][1]
+            prep = TailData[i-1][1]
         end
         --if i < maxcoord-1 then
         --    nextp = tail1[i+1][1]
         --end
         local lerp = 1 - (.12 * mass )
 
-            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( cdat.Mass/10 ))
+            cur[2] = cur[2] + Vector(0,.8*scale * (scretch/defscretch) * ( TailData.Mass/10 ))
 
             local preangle
             if i == 0 then
@@ -2193,7 +2212,7 @@ function epf.HoholockTailFunc(player, HairData, StartPos, scale, headpos)
             elseif i == 1 then
                 preangle = (prep - plpos1 ):GetAngleDegrees()
             else
-                preangle = (prep - tail1[i-2][1]):GetAngleDegrees()
+                preangle = (prep - TailData[i-2][1]):GetAngleDegrees()
             end
 
 
@@ -2207,7 +2226,7 @@ function epf.HoholockTailFunc(player, HairData, StartPos, scale, headpos)
             end
             
             if i == 2 then
-                cdat.Cord:GetSprite().FlipX = curangle < -100 or curangle > 100
+                TailData.CordSpr:GetSprite().FlipX = curangle < -100 or curangle > 100
             end
         --end
         
@@ -2254,26 +2273,27 @@ function epf.HoholockTailFunc(player, HairData, StartPos, scale, headpos)
             --lpos = cur[1]
             bttdis = scretch*scale
         end
+        cur.p:SetPosition(cur[1])
     end
 end 
 
-function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
-    local cdat = HairData
-    local tail1 = HairData
+function epf.PonyTailFuncHard(player, TailData, HairData, StartPos, Headpos, scale)
+    --local cdat = HairData
+    --local tail1 = HairData
     local plpos1 = StartPos
-    local scretch = cdat.Scretch
-    local Mmass = 10 / cdat.Mass   --/ 10
+    local scretch = TailData.Scretch
+    local Mmass = 10 / TailData.Mass   --/ 10
 
     local headdir = player:GetHeadDirection()
     local headpospushpower = .8
 
-    local dotnum = #tail1
+    local dotnum = #TailData
 
     for i=0, dotnum do
         local mass = Mmass * (dotnum-i+1)*5 --(#tail1 - i)
         local prep, nextp
-        local cur = tail1[i]
-        local precur = tail1[i-1]
+        local cur = TailData[i]
+        local precur = TailData[i-1]
         local lpos = cur[1]
 
         local srch = cur[3]
@@ -2281,7 +2301,7 @@ function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
             prep = plpos1 --+(plpos1-lpos):Resized(scretch*.7)
             --scretch = 0
         else
-            prep = tail1[i-1][1]
+            prep = TailData[i-1][1]
         end
         
         local lerp =  i==0 and .98 or i==1 and .7 or i==2 and 0.5 or 0.4     --1 - ((i+1)/dotnum)   --1 - (.12 * mass )
@@ -2290,7 +2310,7 @@ function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
         if precur then
             
             --cur[2] = cur[2] * .8 + precur[2]*lerp*.2*scale * (scretch/defscretch) * ( cdat.Mass/10 )
-            local prepust = precur[2]*lerp*scale * (scretch/defscretch) * ( cdat.Mass/10 )
+            local prepust = precur[2]*lerp*scale * (scretch/defscretch) * ( TailData.Mass/10 )
             local leng = cur[2]:Length()
             --cur[2] = (cur[2] + prepust):Resized(leng)
         end
@@ -2320,12 +2340,12 @@ function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
             --cur[2] = cur[2]  + vel * .1
         --end
 
-        if headpos then
-            headpos = headpos + Vector(0,-5)
-            local lerp = (.3 * (#tail1 - i) )
-            local bttdis = lpos:Distance(headpos)/scale
+        if Headpos then
+            Headpos = Headpos + Vector(0,-5)
+            local lerp = (.3 * (#TailData - i) )
+            local bttdis = lpos:Distance(Headpos)/scale
             
-            local vel = (lpos - headpos):Resized(math.max(0,headsize*0.8-bttdis)*.25)
+            local vel = (lpos - Headpos):Resized(math.max(0,headsize*0.8-bttdis)*.25)
            
             cur[2] = cur[2] *.8 + vel* headpospushpower* ((i+1)/dotnum) * mass/10 --lerp
         end
@@ -2338,6 +2358,8 @@ function epf.PonyTailFuncHard(player, HairData, StartPos, scale, headpos)
             --lpos = cur[1]
             bttdis = scretch*scale
         end
+
+        cur.p:SetPosition(cur[1])
     end
 end
 

@@ -518,6 +518,7 @@ end)
 ---@field endValue number
 ---@field ValueSize any
 ---@field DragerSize number
+---@field PressDetectArea? {vec:Vector,size:Vector}
 
 ---@class EditorMenu
 ---@field sortList table<integer, {["btn"]:any, ["Priority"]:integer, }>
@@ -1157,6 +1158,17 @@ function menuTab.SetMouseWheelZone(btn, vec1, vec2, callbackfunc)
 		mwz.vec = topleft
 		mwz.size = bottomright-topleft
 		
+	end
+end
+
+function menuTab.SetPressDetectArea(btn, vec1, vec2)
+	if btn and vec1 and vec2 then
+		btn.PressDetectArea = btn.PressDetectArea or {}
+		local pda = btn.PressDetectArea
+		local topleft = Vector(math.min(vec1.X, vec2.X), math.min(vec1.Y, vec2.Y))
+		local bottomright = Vector(math.max(vec1.X, vec2.X), math.max(vec1.Y, vec2.Y))
+		pda.vec = topleft
+		pda.size = bottomright-topleft
 	end
 end
 
@@ -2293,8 +2305,9 @@ function menuTab.MouseButtonDetect(onceTouch)
 
 					--if not onceTouch and mousePos.X >= k.pos.X and mousePos.Y >= k.pos.Y
 					--	and mousePos.X < (k.pos.X + k.x) and mousePos.Y < (k.pos.Y + k.y) then
-
-					if not onceTouch and PointAABB(mousePos, k.pos, k.x, k.y) then
+					local pda = k.PressDetectArea
+					if not onceTouch and PointAABB(mousePos, k.pos, k.x, k.y)
+					and (not pda or PointAABB(mousePos, (k.pos - k.posref) + pda.vec, pda.size.X, pda.size.Y)) then
 
 						menuTab.OnFreePos = false
 						onceTouch = true
