@@ -1,9 +1,22 @@
 --BethHair = RegisterMod("Vifaniia s fisikoi", 1)
+local backparam = {}
+if BethHair then
+    if not BethHair.HStyles then
+        Console.PrintWarning('DISABLE "Hair (and Fez) With Physics [RGON]"')
+        return
+    end
+    if BethHair.HStyles.salon.Entered then
+        backparam.InstaTeleportInSalon = true
+    end
+end
 
 
 local mod = RegisterMod("Vifaniia s fisikoi", 1) -- BethHair
 BethHair = mod
 local BethHair = BethHair
+for i,k in pairs(backparam) do
+    BethHair[i] = k
+end
 mod.BlockedChar = {}
 local Isaac = Isaac
 local game = Game()
@@ -225,7 +238,7 @@ local headDirToRender2 = {
 --#region bethany hairs
 
 
-local defaultmodfolder = mod.GamePath .. "/mods/" .. mod.Foldername .. "/resources"
+local defaultmodfolder = mod.GamePath .. "mods/" .. mod.Foldername .. "/resources"
 mod.defaultmodfolder = defaultmodfolder
 
 mod.BethBackHair_def = GenSprite("gfx/characters/bethanyHair_back.anm2", "HeadDown")
@@ -250,7 +263,7 @@ mod.HStyles.AddStyle("BethDef", PlayerType.PLAYER_BETHANY, {
         SkinFolderSuffics = "resources/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_001x_bethshair_notails.png",
         TailCostumeSheep = "resources/gfx/characters/costumes/character_001x_bethshair.png",
-        NullposRefSpr = GenSprite(mod.GamePath .. "/mods/".. mod.Foldername ..  "/resources/gfx/characters/character_001x_bethanyhead.anm2"),
+        NullposRefSpr = GenSprite(mod.GamePath .. "mods/".. mod.Foldername ..  "/resources/gfx/characters/character_001x_bethanyhead.anm2"),
         HeadShadowLayer = {[1]=1,[2]=1, mask = mod.BethHeadShadowMask},
         [1] = {
             CordSpr = cordSpr,
@@ -671,15 +684,15 @@ mod.HStyles.AddStyle("BethBDef", PlayerType.PLAYER_BETHANY_B, {
         SkinFolderSuffics = "gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_018b_bethshair_notails.png",
         TailCostumeSheep = "gfx/characters/costumes/character_018b_bethshair.png",
-        NullposRefSpr = GenSprite(mod.GamePath .. "/mods/".. mod.Foldername ..  "/resources/gfx/characters/character_b16_bethany.anm2"),
+        NullposRefSpr = GenSprite(mod.GamePath .. "mods/".. mod.Foldername ..  "/resources/gfx/characters/character_b16_bethany.anm2"),
         [1] = {
-            Scretch = scretch * 1.2,
+            Scretch = scretch * 0.7,
             CordSpr = cordSprB,
             RenderLayers = headDirToRender1,
             CostumeNullpos = "bethshair_cord1",
         },
         [2] = {
-            Scretch = scretch * 1.2,
+            Scretch = scretch * 0.7,
             CordSpr = cordSprB,
             RenderLayers = headDirToRender2,
             CostumeNullpos = "bethshair_cord2",
@@ -739,34 +752,37 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         SkinFolderSuffics = "resources/gfx/characters/costumes/",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_005_evehead_notails.png",
         TailCostumeSheep = "resources/gfx/characters/costumes/character_005_evehead.png",
-        NullposRefSpr = GenSprite(mod.GamePath .. "/mods/".. mod.Foldername ..  "/resources/gfx/characters/character_005_evehead.anm2"),
+        NullposRefSpr = GenSprite(mod.GamePath .. "mods/".. mod.Foldername ..  "/resources/gfx/characters/character_005_evehead.anm2"),
 
 
         [2] = {
-            Scretch = scretch * 1.5,
+            Scretch = scretch * 1.2,
             DotCount = 4,
             CordSpr = EveHairCord,
             RenderLayers = EveheadDirToRender,
             CostumeNullpos = "evehair_cord1",
             Mass = 10,
             PhysFunc = mod.HairLib.EveheavyHairPhys,
+            StartHeight = 5,
         },
         [3] = {
-            Scretch = scretch * 0.8 ,
+            Scretch = scretch * 0.1 ,
             CordSpr = EveHairCord2,
             RenderLayers = EveheadDirToRender2,
             CostumeNullpos = "evehair_cord2",
             DotCount = 2,
-            Length = 7,
-            StartHeight = 3,
+            Length = 12,
+            StartHeight = 4,
             Mass = 25,
+            CS = {[-1]=5,[0]=8,12}
         },
         [1] = {
-            Scretch = scretch * 1.2,
+            Scretch = scretch * 1.0,
             CordSpr = EveHairCord,
             RenderLayers = EveheadDirToRender3,
             CostumeNullpos = "evehair_cord3",
             Mass = 20,
+            StartHeight = 4,
             PhysFunc = mod.HairLib.EveheavyHairPhys,
         },
     }, {modfolder = nil}) --resources
@@ -780,7 +796,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         TailCostumeSheep = "gfx/characters/costumes/eve_styles/ponytail/character_005_evehead.png",
         NullposRefSpr = GenSprite("gfx/characters/costumes/eve_styles/ponytail/evehead_ponytail.anm2"),
         [1] = {
-            Scretch = scretch * 1.4,
+            Scretch = scretch * 1.2,
             DotCount = 3,
             CordSpr = BeamR("gfx/characters/costumes/eve_styles/ponytail/evehair_tail_cord.anm2", 
                 "cord", "body", false, false, 3),
@@ -792,7 +808,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             PhysFunc = mod.HairLib.EveheavyHairPhys,
             PreUpdate = function(player, taildata)
                 local spranim = player:GetSprite():GetOverlayAnimation()
-                local cordspr = taildata.Cord:GetSprite()
+                local cordspr = taildata.CordSpr:GetSprite()
                 if spranim == "HeadLeft" then
                     cordspr.FlipX = true
                 else
@@ -808,7 +824,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             Bounce = 0.5,
         },
         [2] = {
-            Scretch = scretch * 1.5,
+            Scretch = scretch * 1.3,
             DotCount = 4,
             CordSpr = BeamR("gfx/characters/costumes/eve_styles/ponytail/evehair_tail_cord.anm2", 
                 "cord2", "body", false, false, 3),
@@ -854,7 +870,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             PhysFunc = mod.HairLib.EveheavyHairPhys,
             PreUpdate = function(player, taildata)
                 local spranim = player:GetSprite():GetOverlayAnimation()
-                local cordspr = taildata.Cord:GetSprite()
+                local cordspr = taildata.CordSpr:GetSprite()
 
                 local curanim = cordspr:GetAnimation()
                 if (spranim == "HeadLeft" or spranim == "HeadRight") and curanim ~= "cord2" then
@@ -880,7 +896,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             PhysFunc = mod.HairLib.EveheavyHairPhys,
             PreUpdate = function(player, taildata)
                 local spranim = player:GetSprite():GetOverlayAnimation()
-                local cordspr = taildata.Cord:GetSprite()
+                local cordspr = taildata.CordSpr:GetSprite()
                 
                 local curanim = cordspr:GetAnimation()
                 if (spranim == "HeadLeft" or spranim == "HeadRight") and curanim ~= "cord2b" then
@@ -909,7 +925,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         ReplaceCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
         TailCostumeSheep = "gfx/characters/costumes/samson_styles/flattop/character_007_samsonshairandbandanna.png",
         ItemCostumeAlts = {
-            {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST, 
+            {ID = CollectibleType.COLLECTIBLE_BLOODY_LUST,
             gfx="gfx/characters/costumes/samson_styles/flattop/costume_081_bloodylust.png",
             anm2 = "gfx/characters/costumes/samson_styles/157_blood lust.anm2"},
         },
@@ -975,7 +991,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         NullposRefSpr = GenSprite("gfx/characters/costumes/samson_styles/ronin/samsonhead_ronin.anm2"),
         
         {
-            Scretch = scretch * 1.5,
+            Scretch = scretch * 1.4,
             DotCount = 4,
             CordSpr = BeamR("gfx/characters/costumes/samson_styles/ronin/samsonhair_ronin_cord.anm2", 
                 "cord4", "body", false, false, 3),
@@ -987,7 +1003,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             PhysFunc = mod.HairLib.EveheavyHairPhys,
             PreUpdate = function(player, taildata)
                 local spranim = player:GetSprite():GetOverlayAnimation()
-                local cordspr = taildata.Cord:GetSprite()
+                local cordspr = taildata.CordSpr:GetSprite()
 
                 cordspr.FlipX = spranim == "HeadRight"
                 local hairvel = taildata[3][2] + Vector(0, -0.01)
@@ -999,7 +1015,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             CS = {[0]=36/4*1.5, 36/4*2.5, 36/4*3.5, 36/4*4}
         },
         {
-            Scretch = scretch * 1.75,
+            Scretch = scretch * 1.55,
             DotCount = 3,
             CordSpr = BeamR("gfx/characters/costumes/samson_styles/ronin/samsonhair_ronin_cord.anm2", 
                 "cord", "body", false, false, 3),
@@ -1011,7 +1027,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             PhysFunc = mod.HairLib.EveheavyHairPhys,
             PreUpdate = function(player, taildata)
                 local spranim = player:GetSprite():GetOverlayAnimation()
-                local cordspr = taildata.Cord:GetSprite()
+                local cordspr = taildata.CordSpr:GetSprite()
 
                 local curanim = cordspr:GetAnimation()
                 if (spranim == "HeadLeft" or spranim == "HeadRight") then
@@ -1028,7 +1044,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
                 end
             end,
             Bounce = 0.4,
-            CS = {[0]=27/3*1, 27/3*2, 27/3*3}
+            --CS = {[0]=27/3*1, 27/3*2, 27/3*3}
         },
 
 
@@ -1085,17 +1101,17 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
                 CordSpr = cordspr,
                 RenderLayers = { [3] = 2, [0] = 1, [1] = 3, [2] = 3 },
                 CostumeNullpos = "bethshair_cord1",
-                DotCount = 2,
+                DotCount = 1,
                 Length = 18,
                 StartHeight = 0,
-                Scretch = scretch * 1.35,
+                Scretch = scretch * 1.15,
                 --PhysFunc = mod.HairLib.SlightlyheavyHairPhys,
-                Mass = 12,
-                CS = {[0]=8,15},
-                StartOffset = 4,
+                Mass = 15,
+                --CS = {[0]=8,18},
+                StartOffset = 5,
                 PreUpdate = function(player, taildata)
                     local spranim = player:GetSprite():GetOverlayAnimation()
-                    local cordspr = taildata.Cord:GetSprite()
+                    local cordspr = taildata.CordSpr:GetSprite()    --taildata.Cord:GetSprite()
     
                     local curanim = cordspr:GetAnimation()
                     if (spranim == "HeadLeft" or spranim == "HeadRight") then
@@ -1113,17 +1129,17 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
                 CordSpr = cordspr2,
                 RenderLayers = { [3] = 2, [0] = 3, [1] = 3, [2] = 1 },
                 CostumeNullpos = "bethshair_cord2",
-                DotCount = 2,
+                DotCount = 1,
                 Length = 18,
-                Scretch = scretch * 1.35,
+                Scretch = scretch * 1.15,
                 --PhysFunc = mod.HairLib.SlightlyheavyHairPhys,
                 StartHeight = 0,
-                Mass = 12,
-                CS = {[0]=8,15},
-                StartOffset = 4,
+                Mass = 15,
+                --CS = {[0]=8,18},
+                StartOffset = 5,
                 PreUpdate = function(player, taildata)
                     local spranim = player:GetSprite():GetOverlayAnimation()
-                    local cordspr = taildata.Cord:GetSprite()
+                    local cordspr = taildata.CordSpr:GetSprite()
     
                     local curanim = cordspr:GetAnimation()
                     if (spranim == "HeadLeft" or spranim == "HeadRight") then
@@ -1152,30 +1168,6 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
 
 
-    mod:AddCallback(mod.HairLib.Callbacks.HAIR_POST_INIT, function (_, player, hairdata)
-        local plaType = player:GetPlayerType()
-        if plaType == PlayerType.PLAYER_EVE then
-            --for tail = 1, #hairdata do
-                local taildata = hairdata[2]
-                --for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
-                --    local k = i+1
-                --    hairdata[2][i][3] = taildata.Length/taildata.DotCount*k-k*2+5
-                --end
-                --[[hairdata[1][0][3] = 11
-
-                hairdata[3][1][3] = 13
-                hairdata[3][0][3] = 8
-                hairdata[3][1][3] = 13]]
-            --end
-        end
-    end)
-
-
-
-
-
-
-
 
     local JudasFezheadDirToRender = {
         [3] = 3, -- 3 << 1,
@@ -1189,8 +1181,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         TargetCostume = {ID = NullItemID.ID_JUDAS, Type = ItemType.ITEM_NULL},
         --ReplaceCostumeSuffix = "_notails",    --"gfx/characters/costumes/character_004_judasfez_notails.png",
         ReplaceCostumeSheep = "gfx/characters/costumes/character_004_judasfez_notails.png",
-        TailCostumeSheep = "gfx/characters/costumes/character_004_judasfez.png",
-        NullposRefSpr = GenSprite("gfx/characters/character_004_judasfez.anm2"),
+        TailCostumeSheep = "resources/gfx/characters/costumes/character_004_judasfez.png",
+        NullposRefSpr = GenSprite(mod.GamePath .. "mods/".. mod.Foldername ..  "/resources/gfx/characters/character_004_judasfez.anm2"),
         --[[[1] = {
             DotCount = 3,
             Scretch = scretch*.75,
@@ -1201,7 +1193,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             Mass = 6,
             --sprScale = Vector(1,2),
         },]]
-        [1] = {
+        --[[[1] = {
             DotCount = 0,
             Scretch = 0,
             Length = 0,
@@ -1210,13 +1202,14 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             CostumeNullpos = "judasfez_cord",
             Mass = 0,
             --sprScale = Vector(1,2),
-        },
+        },]]
     })
     --mod.HairLib.SetHairData(PlayerType.PLAYER_JUDAS_B, {
     mod.HStyles.AddStyle("JudasBDef", PlayerType.PLAYER_JUDAS_B, {
         TargetCostume = {ID = NullItemID.ID_JUDAS_B, Type = ItemType.ITEM_NULL},
         ReplaceCostumeSheep = "gfx/characters/costumes/character_004b_judasfez_notails.png",
-        TailCostumeSheep = "gfx/characters/costumes/character_004_judasfez.png",
+        TailCostumeSheep = "resources/gfx/characters/costumes/character_004_judasfez.png",
+        NullposRefSpr = GenSprite(mod.GamePath .. "mods/".. mod.Foldername ..  "/resources/gfx/characters/character_004_judasfez.anm2"),
         --[[[1] = {
             DotCount = 3,
             Scretch = scretch*.75,
@@ -1227,7 +1220,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             Mass = 6,
             --sprScale = Vector(1,2),
         },]]
-        [1] = {
+        --[[[1] = {
             DotCount = 0,
             Scretch = 0,
             Length = 0,
@@ -1236,24 +1229,9 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             CostumeNullpos = "judasfez_cord",
             Mass = 0,
             --sprScale = Vector(1,2),
-        },
+        },]]
     })
 
-
-    --[[mod:AddCallback(mod.HairLib.Callbacks.HAIR_POST_INIT, function (_, player, hairdata)
-        local plaType = player:GetPlayerType()
-        if plaType == PlayerType.PLAYER_JUDAS or plaType == PlayerType.PLAYER_JUDAS_B then
-            for tail = 1, #hairdata do
-                local taildata = hairdata[tail]
-                for i=0, taildata.DotCount-1 do --pos                         velocity,     длина
-                    local k = i+1
-                    hairdata[tail][i][3] = taildata.Length/taildata.DotCount*k-k*2+5
-                end
-                hairdata[1][taildata.DotCount-2][3] = 10
-                hairdata[1][taildata.DotCount-1][3] = 13
-            end
-        end
-    end)]]
 
 
     for i=1, (REPENTANCE_PLUS and 54 or 40) do
@@ -1288,10 +1266,11 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
     function mod.JudasJunkUpdate(_, player)
         local data = player:GetData()
+
         if not data._JudasFezFakeCord then
         else
             
-            local cdat = data._BethsHairCord
+            local cdat = data.__PhysHair_HairSklad
             local playerPos = cdat and cdat.RealHeadPos
             if playerPos then
                 data._JudasFezFakeCord.targetOffset = playerPos   --- Isaac.WorldToScreen(player.Position )
@@ -1319,9 +1298,9 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             end
             --stupidShit.MegaShitReflectFix()
 
-
-            local cdat = data._BethsHairCord
-            local playerPos = cdat and cdat.RealHeadPos
+            
+            local sklad = data.__PhysHair_HairSklad
+            local playerPos = sklad and sklad.RealHeadPos
             if playerPos then
                 data._JudasFezFakeCord.targetOffset = playerPos   --- Isaac.WorldToScreen(player.Position )
                     + player:GetCostumeNullPos("judasfez_cord", true, Vector(0,0))    --+ Vector(0, -0 * (player:GetSprite().Scale.Y - 1))
@@ -1379,12 +1358,12 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     local json = require("json")
     local function updateSaveData()
         local data = {
-            OdangoMode = mod.OdangoMode,
-            Beth = mod.BlockedChar[PlayerType.PLAYER_BETHANY] and 1 or 0,
-            BethB = mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] and 1 or 0,
-            Judas = mod.BlockedChar[PlayerType.PLAYER_JUDAS] and 1 or 0,
-            JudasB = mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] and 1 or 0,
-            Eve = mod.BlockedChar[PlayerType.PLAYER_EVE] and 1 or 0,
+            --OdangoMode = mod.OdangoMode,
+            --Beth = mod.BlockedChar[PlayerType.PLAYER_BETHANY] and 1 or 0,
+            --BethB = mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] and 1 or 0,
+            --Judas = mod.BlockedChar[PlayerType.PLAYER_JUDAS] and 1 or 0,
+            --JudasB = mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] and 1 or 0,
+            --Eve = mod.BlockedChar[PlayerType.PLAYER_EVE] and 1 or 0,
         }
 
         data.PlayerData = {}
@@ -1436,6 +1415,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     end
     mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, mod.PlayerPostInit)
 
+    --[[====
+
     local strings = {
         ["Bethany Odango Mode"] = {en = "Bethany Odango Mode", ru = "Режим Оданго для Вифании"},
         ["physfor"] = {en = "Physics for", ru = "Физика для"},
@@ -1476,6 +1457,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         ImGui.AddCheckbox (menuID, "PhysHair_EveBPhys","Eve", function(a) mod.BlockedChar[PlayerType.PLAYER_EVE] = not a updateSaveData() end, true )
     end
 
+    ====]]
+
     mod:AddCallback(ModCallbacks.MC_POST_SAVESLOT_LOAD, function(_, saveslot, isslotselected, rawslot)
         mod.MainMenuStuff.RenderCharPort = nil
         if mod:HasData() then
@@ -1483,6 +1466,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
             mod.SavePlayerData = savedata.PlayerData
 
+            --[[====
             mod.OdangoMode = savedata.OdangoMode
             mod.BlockedChar[PlayerType.PLAYER_BETHANY] = savedata.Beth == 1
             mod.BlockedChar[PlayerType.PLAYER_BETHANY_B] = savedata.BethB == 1
@@ -1495,7 +1479,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
             ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
             ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
-            
+            ====]]
+
             mod.CustomCharPortrait = savedata.PlayerData.CustomCharPortrait
             if mod.CustomCharPortrait then
                 mod.MainMenuStuff.RenderCharPort = true
@@ -1518,11 +1503,13 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             mod.BlockedChar[PlayerType.PLAYER_JUDAS_B] = true
             mod.BlockedChar[PlayerType.PLAYER_EVE] = true]]
 
+            --[[====
             ImGui.UpdateData("PhysHair_BethPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY])
             ImGui.UpdateData("PhysHair_BethBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_BETHANY_B])
             ImGui.UpdateData("PhysHair_JudasPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS])
             ImGui.UpdateData("PhysHair_JudasBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_JUDAS_B])
             ImGui.UpdateData("PhysHair_EveBPhys", ImGuiData.Value, not mod.BlockedChar[PlayerType.PLAYER_EVE])
+            ====]]
         end
     end)
 
@@ -1536,9 +1523,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         --[[local menu = MainMenu
         local widgetSpr = menu.GetContinueWidgetSprite()
         local charlayer = widgetSpr:GetLayer(0)
-        --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait, mod.CustomCharPortrait == charlayer:GetSpritesheetPath())
         if mod.CustomCharPortrait and charlayer then
-            print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath())
             if mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath() then
                 --widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
             end
@@ -1590,9 +1575,7 @@ function mod.MainMenuRender()
         local widgetSpr = MainMenu.GetContinueWidgetSprite()
         
         local charlayer = MainMenuStuff.CharacterWidgetSpr:GetLayer(0)
-        --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait, mod.CustomCharPortrait == charlayer:GetSpritesheetPath())
         if mod.CustomCharPortrait and charlayer then
-            --print(charlayer:GetSpritesheetPath(), mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath())
             if mod.CustomCharPortrait ~= charlayer:GetSpritesheetPath() then
 
                 --widgetSpr:ReplaceSpritesheet(0, mod.CustomCharPortrait, true)
@@ -1715,13 +1698,11 @@ function BethHair.StyleMenu.HUDRender()
         --for i=1,120*20 do
         --	spr1:Render(vec-Vector(60,60))
         --end
-        --print("fir", Isaac.GetTime()-t)
         spr1:Update()
         local t1 = Isaac.GetTime()
         for i=1,20 do
             ms:Render(vec)
         end
-        --print("sec", Isaac.GetTime()-t1)
         ms:SetPosRotation((t / 30) % 360)
         ms:SetRotation((t / 30) % 360)
     end]]
@@ -1729,7 +1710,6 @@ function BethHair.StyleMenu.HUDRender()
     --testcord:Add(Vector(190,100),30)
     --testcord:Render()
 
-    --print(v1,v2,v3,v4, sq, dq, kc1)
 --[[
     local fl = Game():GetRoom():GetBackdrop():GetFloorImage()
     local trans = Renderer.StartTransformation(fl)
@@ -1740,7 +1720,6 @@ function BethHair.StyleMenu.HUDRender()
         SourceQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)), 
         DestinationQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)), 
         KColor(1,1,1,1))
-    --print(trans:IsValid ())
     trans:Apply ()
 ]]
     local notpaused = not game:IsPaused()
@@ -1769,6 +1748,13 @@ function BethHair.StyleMenu.HUDRender()
 
         --window logic
         if smenu.wind then
+            if smenu.TargetPlayer and not smenu.TargetPlayer.Ref then
+                smenu.TargetPlayer = nil
+                wga.CloseWindow(smenu.name)
+                smenu.wind = nil
+                return
+            end
+
             if wga.ControlType == wga.enum.ControlType.CONTROLLER then
                 if pos:Distance(preMousePos) > 3 then
                     --wga.ControlType = wga.enum.ControlType.MOUSE
@@ -1840,6 +1826,22 @@ function BethHair.StyleMenu.HUDRender()
                         if fam.Position.Y > playerYpos then
                             fam:SetColor(halfAlpha, 10, 10, false, false)
                         end
+                    end
+                    if mod.HStyles.salon.FakeCollision then
+                        local familList = Isaac.FindByType(EntityType.ENTITY_FAMILIAR)
+                        for i = 1, #familList do
+                            local fam = familList[i]
+                            if fam.Position:Distance(player.Position) < 60 and fam.Position.Y > playerYpos then
+                                fam:SetColor(halfAlpha, 10, 10, false, false)
+                            end
+                        end
+                    end
+                end
+                local playerTwin = player:GetOtherTwin()
+                if playerTwin then
+                    if playerTwin.Position.Y > player.Position.Y then
+                        playerTwin.Position = Vector(playerTwin.Position.X,
+                            player.Position.Y - playerTwin.Size - player.Size - 1)
                     end
                 end
             end
@@ -2021,6 +2023,8 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
                 smenu.CharHeadDirection = (smenu.CharHeadDirection - 1) % 4
                 --CharRotateBtnR.IsSelected = 1
                 CharRotateBtnR.forceSel = 5
+            elseif Input.IsButtonTriggered(Keyboard.KEY_W, 0) then
+                smenu.SetFavorite(wga.ManualSelectedButton[1])
             end
 
 
@@ -2126,6 +2130,7 @@ smenu.spr = {scrollback = GenSprite("gfx/editor/hairstyle_menu.anm2","scrollbar"
     CharRotateR = GenSprite("gfx/editor/hairstyle_menu.anm2", "char_rotate_r"),
     Buttons = GenSprite("gfx/ui/buttons.anm2"),
     VerySpecialKeyBoardLeftArrow = GenSprite("gfx/editor/hairstyle_menu.anm2", "keyboard_arrow_left"),
+    NotSoSpecialKeyBoardWKey = GenSprite("gfx/editor/hairstyle_menu.anm2", "keyboard_arrow_left", 3),
     Scisors = GenSprite("gfx/editor/hairstyle_menu.anm2","detail1"),
 
     Cursor = GenSprite("gfx/editor/hairstyle_menu.anm2","mousewhat"),
@@ -2142,6 +2147,7 @@ if Sprite().SetCustomShader then
 end
 smenu.spr.HeadShadow.Scale = Vector(0.85, 0.85)
 smenu.spr.HeadShadow.Offset = Vector(3,3)
+smenu.spr.NotSoSpecialKeyBoardWKey.Scale = Vector(.75,.75)
 
 local greenbtnColor = Color(78/256, 1, 90/256, 1, 3/256, 30/256, 24/256)
 
@@ -2363,7 +2369,6 @@ do
                         smenu.hairbtnsoffset = val
                     end
                 end, function (pos, visible)
-                    --print(self.dragCurPos)
                     spr.scrollback:SetFrame(self.IsSelected and 1 or 0)
 
                     spr.scrollback:Render(pos, nil, Vector(0,30))
@@ -2530,7 +2535,6 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
                 end
 
                 --if wga.ControlType ==  self.IsSelected then
-                --    print(xy.Y , #pstyles, xy.Y / #pstyles)
                 --    wga.DraggerSetValue(smenu.scrollbtn, xy.Y / #pstyles)
                 --end
             end
@@ -2663,7 +2667,7 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
         local ismove = vec:Length() > 0.1
         local ishori = math.abs(x) > math.abs(y)
-        --print(mdata.CurCollum, btn[1].name)
+
         if ismove then
             if mdata.CurCollum == 1 then
                 local navcol1 = navmap.collums[mdata.CurCollum]
@@ -2786,7 +2790,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
         local ismove = vec:Length() > 0.1
         local ishori = math.abs(x) > math.abs(y)
-        --print(mdata.CurCollum, btn[1].name)
+
         if ismove then
             if mdata.CurCollum == 1 then
                 local navcol1 = navmap.collums[mdata.CurCollum]
@@ -2918,7 +2922,6 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
                 hairspr = GenSprite(hairanm2 or "gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
                 for lr=0, hairspr:GetLayerCount()-1 do
-                    print(hairgfx)
                     hairspr:ReplaceSpritesheet(lr,hairgfx)
                 end
                 hairspr:LoadGraphics()
@@ -2931,12 +2934,11 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             self = BethHair.StyleMenu.AddEntry{
                 ButtonName = "style" .. i,
                 ImageCount = 3,
-                HairLayer = styledt.extra.HairLayer or 0,
+                HairLayer = styleexdt and styleexdt.HairLayer or 0,
                 EntrySklad = EntrySklad,
                 BtnBackSpr = spr,
                 ButtonPressLogic = function (button)
                     local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
-                    print(self.HairLayer)
                     mod.HStyles.salon.ChangeHairStyle(player, stylename, smenu.SetStyleMode, self.HairLayer)
                     
                 end,
@@ -3116,7 +3118,12 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
         BethHair.StyleMenu.favoritespr:Render(pos)
 
         if wga.ControlType == wga.enum.ControlType.CONTROLLER then
-            BethHair.StyleMenu.AddControllerBtnRender(ButtonAction.ACTION_SHOOTUP, pos + Vector(favorite.x, favorite.y), Vector(.75,.75))
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer()
+            if player and player.ControllerIndex == 0 then
+                smenu.spr.NotSoSpecialKeyBoardWKey:Render(pos + Vector(favorite.x, favorite.y))
+            else
+                BethHair.StyleMenu.AddControllerBtnRender(ButtonAction.ACTION_SHOOTUP, pos + Vector(favorite.x, favorite.y), Vector(.75,.75))
+            end
         end
     end)
 
@@ -3142,7 +3149,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
         local ismove = vec:Length() > 0.1
         local ishori = math.abs(x) > math.abs(y)
-        --print(mdata.CurCollum, btn[1].name)
+
         if ismove then
             if mdata.CurCollum == 1 then
                 local navcol1 = navmap.collums[mdata.CurCollum]

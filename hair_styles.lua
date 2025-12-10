@@ -69,7 +69,6 @@ end
 
 function mod.SetHairStyleData(player, playerType, style_data)
     --local copy
-    --print("SetHairStyleData", playerType, style_data.ID)
     if not style_data.TargetCostume then
         style_data.TargetCostume = mod.HStyles.GetTargetCostume(playerType)
         --playerType = player:GetPlayerType()
@@ -101,7 +100,7 @@ function mod.HairPreInit(_, player)
                 end
             end
         else
-            local firstname = HairStylesData.favorites[ptype] or pladat[1]
+            local firstname = HairStylesData.favorites[ptype] -- or pladat[1]
             if firstname then
                 local stdata = HairStylesData.styles[firstname]
                 if stdata then
@@ -112,7 +111,7 @@ function mod.HairPreInit(_, player)
         end
     end
 end
---mod:AddCallback(mod.HairLib.Callbacks.HAIR_PRE_INIT, mod.HairPreInit)
+mod:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, mod.HairPreInit)
 
 function mod.PlayerTypeChecker(_, player)
     local data = player:GetData()
@@ -176,8 +175,6 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local bodcol = player:GetBodyColor()
     data._PhysHairExtra = data._PhysHairExtra or {}
 
-    print("SKIN")
-
     if skinsheet then
         data._PhysHairExtra.SkinIsChanged = true
         local spr = player:GetSprite()
@@ -193,7 +190,6 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
         if orig then
             orig = orig:match(".+/(.-)%.png")
             local path = skinsheet .. orig .. ( bodycolor[bodcol] or "") .. ".png"
-            
             local havecolorver = false
             if not cacheSkinsColor[path] then
                 havecolorver = pcall(Renderer.LoadImage, path)
@@ -303,7 +299,6 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                     cspr:Load(lloic.anm2, true)
 
                     for id, gfx in pairs(lloic.gfx) do
-                        --print("restor", id, gfx)
                         cspr:ReplaceSpritesheet(id-1, gfx)
                     end
                     cspr:LoadGraphics()
@@ -315,9 +310,7 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
 
 
     
-    --print(stdata.data.NullposRefSpr)
     if nullref and tarcost then
-        --print(player:GetPlayerType(), sheep, tarcost.ID)
         data._PhysHairExtra.DefCostumetSheetPath = {}
         local dcsp = data._PhysHairExtra.DefCostumetSheetPath
 
@@ -330,13 +323,11 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
             if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
                 if not tarcost.pos or tarcost.pos == pos then
                     local cspr = csd:GetSprite()
-                    --print( sheep:GetFilename() )
                     local anim = cspr:GetAnimation()
                     cspr:Load(nullref:GetFilename(), true)
                     cspr:Play(anim)
 
                     for i=0, cspr:GetLayerCount()-1 do
-                        --print(i, cspr:GetLayer(i):GetSpritesheetPath())
                         local shpa = nullref:GetLayer(i) -- type(sheep) == "table" and sheep[i] or sheep   --sheep:GetLayer(i)
                         if shpa then
                             
@@ -484,7 +475,6 @@ function mod.HStyles.UpdateMainHairSprite(player, data, stdata)
                             if gfxistab then
                                 cspr:ReplaceSpritesheet(j-1, adgfx[j])
                             else
-                                --print(j-1, layer:GetLayerID())
                                 cspr:ReplaceSpritesheet(j-1, adgfx)
                             end
                         end
@@ -561,7 +551,7 @@ function mod.HStyles.PostUpdateHairChecker()
         end
     end
 end
-mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.HStyles.PostUpdateHairChecker)
+--mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.HStyles.PostUpdateHairChecker)
 
 function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
     local PHSdata = player:GetData()._PhysHair_HairStyle
@@ -616,13 +606,23 @@ local PlayerTypeToTargetCostumePos = {
     [PlayerType.PLAYER_AZAZEL]=1,
 }
 
+local function formatCostumeMap(costumemap)
+        local tab = {}
+        for i = 1, #costumemap do
+            local cost = costumemap[i]
+            tab[cost.costumeIndex] = costumemap[i]
+        end
+        return tab
+    end
+
 function mod.HStyles.GetTargetCostume(playerType, style_name)
     if style_name and HairStylesData.styles[style_name] then
         local stdata = HairStylesData.styles[style_name]
         local tarcost = stdata.data.TargetCostume
         return tarcost
     elseif playerType then
-        return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL, pos = PlayerTypeToTargetCostumePos[playerType] or 0}
+        return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL,   --pos = PlayerTypeToTargetCostumePos[playerType] or 0}
+            CostumeLayer = PlayerTypeToTargetCostumePos[playerType] or 0 }   -- 0=both, 1=head, 2=body
     end
 
 end
@@ -632,22 +632,29 @@ function mod.HStyles.GetHairCostumeSpr(player)
     
     local data = player:GetData()._PhysHair_HairStyle
     local tarcost = mod.HStyles.GetTargetCostume(player:GetPlayerType(), data and data.StyleName)
-    local pos = 0
+    local TargetCostumeLayer = tarcost.CostumeLayer or 1
+    --local pos = 0
+    local costumemap = formatCostumeMap(player:GetCostumeLayerMap())
+
     for i, csd in pairs(player:GetCostumeSpriteDescs()) do
         local conf = csd:GetItemConfig()
         if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
-            if not tarcost.pos or tarcost.pos == pos then
+            --if not tarcost.pos or tarcost.pos == pos then
+            --    return csd:GetSprite()
+            --else
+            --    pos = pos + 1
+            --end
+            local isBodyLayer = costumemap[i-1].isBodyLayer
+            if TargetCostumeLayer == 0 
+            or TargetCostumeLayer == 1 and not isBodyLayer
+            or TargetCostumeLayer == 2 and isBodyLayer then
                 return csd:GetSprite()
-            else
-                pos = pos + 1
             end
-
         end
     end
 
     -- пиздец случился 
 
-    pos = 0
     for i, csd in pairs(player:GetCostumeSpriteDescs()) do
         local conf = csd:GetItemConfig()
         if conf.Type == ItemType.ITEM_NULL 
@@ -701,9 +708,15 @@ mod.HStyles.salon = {
     EnterIndexLongRoom = 236,
     TopLeftRefIndex = 128,
     TopLeftRefIndexLongRoom = 233,
-    BGEntVar = Isaac.GetEntityVariantByName("Фон парихмазерской")
+    BGEntVar = Isaac.GetEntityVariantByName("Фон парихмазерской"),
+    Alpha = 0,
+    JustMask = GenSprite("gfx/editor/hairstyle_menu.anm2","justmask3")
 }
 local salon = mod.HStyles.salon
+
+--salon.JustMask.FlipX = true
+salon.JustMask.Scale = Vector(4,4)
+salon.JustMask:SetCustomShader("shaders/PhysHairCuttingShadder")
 
 ---@param ent EntitySlot
 function mod.HStyles.HairKeeper.update(_, ent)
@@ -725,7 +738,7 @@ function mod.HStyles.HairKeeper.update(_, ent)
         end
     end
 
-    if salon.FakeCollision then
+    if salon.FakeCollision and salon.Entered then
         local nearP = game:GetNearestPlayer(ent.Position)
         if nearP.Position:Distance(ent.Position) < nearP.Size+ent.Size then
             if nearP.EntityCollisionClass == EntityCollisionClass.ENTCOLL_ALL then
@@ -745,6 +758,7 @@ function mod.HStyles.HairKeeper.update(_, ent)
             spr:Play("scisor_loop", true)
         elseif isAnim == "scisor_end" then
             spr:Play("idle", true)
+            data.ShowCantHeadless = nil
             data.faceAngle = nil
         elseif isAnim == "scisor2_start" then
             spr:Play("scisor2_loop", true)
@@ -754,6 +768,9 @@ function mod.HStyles.HairKeeper.update(_, ent)
         elseif isAnim == "scisor2_чик" then
             spr:Play("scisor2_loop", true)
             --sfx:Play(mod.HStyles.Sfx.chair_creaks, Options.SFXVolume * 3.3, 0, false, 2.1)
+        elseif isAnim == "cant_nohead" then
+            data.ShowCantHeadless = nil
+            spr:Play("idle", true)
         end
     else
         if salon.Entered then
@@ -858,7 +875,7 @@ function mod.HStyles.HairKeeper.update(_, ent)
             --end
         end
         
-        local camera = data.room:GetCamera()
+        --local camera = data.room:GetCamera()
         --camera:SetFocusPosition(ent.Target.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0))
         if not mod.StyleMenu.wind then
             ent.Target = nil
@@ -867,6 +884,25 @@ function mod.HStyles.HairKeeper.update(_, ent)
             --    local crds = data.level:GetCurrentRoomDesc()
             --    crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
             --end
+        end
+    else
+        if data.HintAnimCooldown then
+            data.HintAnimCooldown = data.HintAnimCooldown - 1
+            if data.HintAnimCooldown <= 0 then
+                data.HintAnimCooldown = nil
+                data.ShowCantHeadless = nil
+            end
+        end
+        if isAnim == "idle" then
+            if not data.HintAnimCooldown and data.ShowCantHeadless then
+                local sprFrame = spr:GetFrame()
+                if sprFrame < 5 or sprFrame > 22 and sprFrame < 28 then
+                    data.ShowCantHeadless = nil
+                    data.HintAnimCooldown = 90
+                    spr:Play("cant_nohead", true)
+                end
+            end
+
         end
     end
 
@@ -887,7 +923,32 @@ mod:AddCallback(ModCallbacks.MC_PRE_SLOT_CREATE_EXPLOSION_DROPS, mod.HStyles.Hai
 function mod.HStyles.HairKeeper.coll(_, ent, col)
     if not ent.Target and col.Type == EntityType.ENTITY_PLAYER then
         local player = col:ToPlayer()
-        if not player:IsHeadless() then
+        if player:IsHeadless() then
+            local sklad = player:GetData().__PhysHair_HairSklad
+            local HeadPos = sklad and sklad.RealHeadPos
+            if HeadPos and sklad.FrameCheck == Isaac.GetFrameCount() then
+                local screenCenter = Vector(Isaac.GetScreenWidth()/2, Isaac.GetScreenHeight()/2)
+                local roomEdge = Isaac.WorldToScreen(salon.TopLeftPos)
+                local centerToEgde = screenCenter - roomEdge
+                local headDiff = screenCenter - HeadPos
+                if math.abs(headDiff.X) < centerToEgde.X and math.abs(headDiff.Y) < centerToEgde.Y then
+                    local ptype = player:GetPlayerType()
+                    local bhpd = BethHair.HairStylesData.playerdata
+                    if bhpd[ptype] then
+                        ent.Target = player
+                        BethHair.StyleMenu.TargetPlayer = EntityPtr(player)
+                        BethHair.StyleMenu.TargetHairKeeper = EntityPtr(ent)
+                        BethHair.StyleMenu.ShowWindow()
+
+                        ent:GetSprite():Play("scisor_start", true)
+                    end
+                else
+                    ent:GetData().ShowCantHeadless = true
+                end
+            else
+                ent:GetData().ShowCantHeadless = true
+            end
+        else
             local ptype = player:GetPlayerType()
             local bhpd = BethHair.HairStylesData.playerdata
             if bhpd[ptype] then
@@ -925,7 +986,7 @@ function mod.HStyles.salon.NewRoom()
             TopLeftRefIndex = salon.TopLeftRefIndexLongRoom
             salon.FakeCollision = true
         else
-            Console.PrintWarning("[HairPhys] inappropriate shape of the room for Salon")
+            --Console.PrintWarning("[HairPhys] inappropriate shape of the room for Salon")
             return
         end
 
@@ -992,6 +1053,17 @@ function mod.HStyles.salon.NewRoom()
     end
 end
 mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, mod.HStyles.salon.NewRoom)
+if Isaac.GetPlayer() then
+    mod.HStyles.salon.NewRoom()
+    if BethHair.InstaTeleportInSalon then
+        Isaac.CreateTimer(function ()
+            mod.HStyles.salon.EnterSalon()
+        end, 1, 1, false)
+        BethHair.InstaTeleportInSalon = nil
+    end
+end
+
+
 
 ---@param player EntityPlayer
 function mod.HStyles.salon.playerUpdate(_, player)
@@ -1040,6 +1112,18 @@ function mod.HStyles.salon.EnterSalon()
             player.GridCollisionClass = 0
             player.Position = salon.TopLeftPos + Vector(40 * 3 + 20 , 40 * 2 - 10 )
             player.ControlsCooldown = math.max(16, player.ControlsCooldown)
+
+            local ptype = player:GetPlayerType()
+            if ptype == PlayerType.PLAYER_THESOUL then
+                local hash = GetPtrHash(player)
+                for j, body in pairs(Isaac.FindByType(3, FamiliarVariant.FORGOTTEN_BODY)) do
+                    if GetPtrHash(body:ToFamiliar().Player) == hash then
+                        body.GridCollisionClass = EntityGridCollisionClass.GRIDCOLL_NONE
+                        body.TargetPosition = player.Position/1
+                        break
+                    end
+                end
+            end
         end
 
         salon.Alpha = 0
@@ -1081,6 +1165,16 @@ function mod.HStyles.salon.ExitSalon()
                 player:AddCacheFlags(CacheFlag.CACHE_FLYING, true)
                 --player:SetColor(Color(.0,.0,.0,.5), 10, 100, true, true)
                 player.ControlsCooldown = math.max(16, player.ControlsCooldown)
+            end
+            local ptype = player:GetPlayerType()
+            if ptype == PlayerType.PLAYER_THESOUL then
+                local hash = GetPtrHash(player)
+                for j, body in pairs(Isaac.FindByType(3, FamiliarVariant.FORGOTTEN_BODY)) do
+                    if GetPtrHash(body:ToFamiliar().Player) == hash then
+                        body.TargetPosition = player.Position
+                        break
+                    end
+                end
             end
         end
         --salon.Alpha = 0
@@ -1131,8 +1225,9 @@ do
                         --tar = mod.StyleMenu.TargetPlayer.Position + Vector(Isaac.GetScreenWidth()/4 * Wtr,0)
                     else
                         tar = salon.TopLeftPos+Vector(40*6+0,40*4+0)
-                        salon.CameraFocusPos = salon.CameraFocusPos * 0.8 + (tar) * 0.2
+                        salon.CameraFocusPos = salon.CameraFocusPos * 0.9 + (tar) * 0.1
                         room:GetCamera():SetFocusPosition(salon.CameraFocusPos)
+                        --room:GetCamera():SnapToPosition(salon.CameraFocusPos)
                     end
                     --salon.CameraFocusPos = salon.CameraFocusPos * 0.8 + (tar) * 0.2
                     --room:GetCamera():SetFocusPosition(salon.CameraFocusPos)
@@ -1222,7 +1317,6 @@ do
             local cspr = mod.HStyles.GetHairCostumeSpr(player)
             salon.CachedPhayerHairSpr = GenSprite(cspr:GetFilename(), cspr:GetAnimation())
             local CachedSpr = salon.CachedPhayerHairSpr
-            --print(CachedSpr:GetFilename())
             for j, layer in pairs(cspr:GetAllLayers()) do
                 CachedSpr:ReplaceSpritesheet(j, layer:GetSpritesheetPath())
             end
@@ -1231,7 +1325,7 @@ do
             CachedSpr.Scale = cspr.Scale
 
             local sheep = stdata.data.NullposRefSpr
-            print(hairlayer, sklad[hairlayer], sklad[hairlayer].HairInfo, sklad[hairlayer].HairInfo.FinalCostumePath, sklad[hairlayer].FinalCostumePath)
+
             local finalPath = sklad[hairlayer].HairInfo.FinalCostumePath    --data._BethsHairCord.FinalCostumePath
             if not finalPath then
                 
@@ -1247,7 +1341,8 @@ do
                 CachedSpr:Play(anim, true)
                 for i=0, CachedSpr:GetLayerCount()-1 do
                     local shpa = sheep:GetLayer(i)
-                    if shpa then
+                    local str = finalPath[i]
+                    if shpa and str then
                         CachedSpr:ReplaceSpritesheet(i, finalPath[i])
                     end
                 end
@@ -1257,7 +1352,10 @@ do
                 for i=0, CachedSpr:GetLayerCount()-1 do
                     --local shpa = cspr:GetLayer(i)
                     --if shpa then
-                        CachedSpr:ReplaceSpritesheet(i, finalPath[i])
+                    local str = finalPath[i]
+                    if str then
+                         CachedSpr:ReplaceSpritesheet(i, finalPath[i])
+                    end
                     --end
                 end
                 CachedSpr:LoadGraphics()
@@ -1364,7 +1462,6 @@ do
                                          ---@type KColor
                                         local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
                                         local r,g,b = tex.Red, tex.Green, tex.Blue
-                                            --print(pos, tex, tex and tex.Alpha)
                                         if tex and tex.Alpha > 0 and r+g+b > 0.1 then
 
                                             local midR, midG, midB = 1,1,1
@@ -1387,7 +1484,6 @@ do
                                             if isHasColor then
                                                 ----@type KColor
                                                 --local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
-                                                --print(pos, tex, tex and tex.Alpha)
                                                 --if tex and tex.Alpha > 0 then
                                                     local refColor = Color(1,1,1,1,0,0,0, midR, midG, midB, 1)
                                                 -- refColor:SetColorize()
@@ -1415,17 +1511,29 @@ do
             local cspr = Chooping.RefSpr
             local procent = (salon.Chranya.Ref:GetSprite():GetFrame()-1) / 10
 
+            local visibleLayerNum = 0
             local layer 
             for i = 0, cspr:GetLayerCount()-1 do
-                layer = cspr:GetCurrentAnimationData():GetLayer(i):GetFrame(cspr:GetFrame())
-                if layer then
-                    break
+                local justlayer = cspr:GetCurrentAnimationData():GetLayer(i)
+                local frame = justlayer and justlayer:GetFrame(cspr:GetFrame())
+                if not layer then
+                    layer = frame
+                    --if layer then
+                    --    break
+                    --end
+                end
+                if frame and frame:IsVisible() then
+                    visibleLayerNum = visibleLayerNum + 1
                 end
             end
-
+            
             local RenderPos = Isaac.WorldToScreen(Chooping.RenderPos)
 
-            cspr:Render(RenderPos, Vector((layer and layer:GetWidth() or 0) * procent, 0))
+            
+            salon.JustMask.Color:SetColorize(visibleLayerNum,0,0,0)
+            salon.JustMask:Render(RenderPos + Vector(layer:GetPos().X - layer:GetPivot().X + procent * layer:GetWidth(),0))
+
+            cspr:Render(RenderPos)   --, Vector((layer and layer:GetWidth() or 0) * procent, 0))
 
             if procent > 1 then
                 salon.DoChoopEffect = nil
@@ -1452,7 +1560,6 @@ do
                                 ---@type KColor
                                 local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, -1) --layerID
                                 local r,g,b = tex.Red, tex.Green, tex.Blue
-                                    --print(pos, tex, tex and tex.Alpha)
                                 if tex and tex.Alpha > 0 and r+g+b > 0.1 then
 
                                     local midR, midG, midB = 1,1,1
@@ -1475,7 +1582,6 @@ do
                                     if isHasColor then
                                         ----@type KColor
                                         --local tex = cspr:GetTexel(pos, Vector.Zero, 0.5, layerID)
-                                        --print(pos, tex, tex and tex.Alpha)
                                         --if tex and tex.Alpha > 0 then
                                             local refColor = Color(1,1,1,1,0,0,0, midR, midG, midB, 1)
                                         -- refColor:SetColorize()
@@ -1533,6 +1639,7 @@ do
                         hairPieceSpr:SetFrame(spr.Frame)
                         hairPieceSpr.Rotation = spr.Rotation
                         hairPieceSpr.Color = spr.Color
+                        hairPieceSpr.Scale = spr.Scale
                         hairPieceSpr:Render(RenderPos + tab[1])
                     end
                     for i = #Chooping.extralist, 1, -1 do
@@ -1555,7 +1662,7 @@ do
                         spr.Rotation = spr.Rotation + tab[5]
                         hairPieceSpr.Rotation = spr.Rotation
                         tab[2].Y = tab[2].Y + 0.1
-                        local sc = math.min(40,tab[4])/40 
+                        local sc = math.min(40,tab[4])/40
                         spr.Scale = Vector.One/(1/sc)  -- spr.Scale * 0.95
                         hairPieceSpr.Scale = spr.Scale
                         if RenderPos.Y + tab[1].Y > Chooping.FloorYpos then
@@ -1709,12 +1816,12 @@ local function FindOriginal(resources, path, costumepath, playerid, nullid, Cost
     local res = pcall(Renderer.LoadImage, hairpath)
 
     if res then
-        local fullCostumeSheep = resources .. "/" .. CostumeSheep
+        local fullCostumeSheep =  resources .. "/" .. CostumeSheep   --mod.GamePath ..
         local tab = {
             TargetCostume = {ID = nullid, Type = ItemType.ITEM_NULL},
             TailCostumeSheep = fullCostumeSheep,
             ReplaceCostumeSheep = fullCostumeSheep,
-            NullposRefSpr = GenSprite(anm2),
+            NullposRefSpr = GenSprite(resources .. "/" .. anm2),
             --SkinFolderSuffics = costumepath,
             
         }
@@ -1739,28 +1846,35 @@ local function FindOriginal(resources, path, costumepath, playerid, nullid, Cost
 end
 
 local function FindResprites(modfoldername, resources, path, costumepath, playerid, nullid, CostumeSheep, anm2, modd)
-    local hairpath = mod.GamePath .. "/mods/" .. modfoldername .. path
+    local hairpath = mod.GamePath .. "mods/" .. modfoldername .. path
     local res = pcall(Renderer.LoadImage, hairpath)
     if res then
-        local fullCostumeSheep = mod.GamePath .. "/mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep
+        local fullCostumeSheep = mod.GamePath .. "mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep
+        --if playerid == 36 then
+
+        --end
+        local nullRef = GenSprite(mod.GamePath .. "mods/" .. modfoldername .. "/" .. resources .. "/" .. anm2)
+        if nullRef:GetDefaultAnimation() == "" then
+            nullRef = GenSprite("resources/" .. anm2)
+        end
         local tab = {
             TargetCostume = {ID = nullid, Type = ItemType.ITEM_NULL},
             TailCostumeSheep = fullCostumeSheep,
             ReplaceCostumeSheep = fullCostumeSheep,
-            NullposRefSpr = GenSprite(anm2),
+            NullposRefSpr = nullRef,
             --SkinFolderSuffics = "mods/" .. modfoldername  .. costumepath,
             SyncWithCostumeBodyColor = true,
         }
 
         if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
-            tab.SkinFolderSuffics = mod.GamePath .. "/mods/" .. modfoldername  .. costumepath
+            tab.SkinFolderSuffics = mod.GamePath .. "mods/" .. modfoldername  .. costumepath
         end
         if PlayerTypeToHairPos[playerid] then
             tab.TargetCostume.pos = PlayerTypeToHairPos[playerid]
         end
         
         tab.NullposRefSpr:ReplaceSpritesheet(0, 
-            mod.GamePath .. "/mods/" .. modfoldername .. "/" .. resources .. "/" .. tab.TailCostumeSheep)
+            mod.GamePath .. "mods/" .. modfoldername .. "/" .. resources .. "/" .. tab.TailCostumeSheep)
         tab.NullposRefSpr:LoadGraphics()
         
         mod.HStyles.AddStyle(modfoldername .. "-" .. playerid .. "-" .. CostumeSheep, playerid, tab,
@@ -1806,7 +1920,7 @@ local PlayeeTypeToHairAnm2 = {
     [PlayerType.PLAYER_KEEPER_B]="gfx/characters/character_b13_keeper.anm2", 
     --[PlayerType.PLAYER_APOLLYON_B]="gfx/characters/character_b14_apollyon.anm2", 
     [PlayerType.PLAYER_THEFORGOTTEN_B]="gfx/characters/character_b15_theforgotten.anm2",
-    [PlayerType.PLAYER_BETHANY_B]="gfx/characters/character_b16_bethany.anm2",
+    --[PlayerType.PLAYER_BETHANY_B]="gfx/characters/character_b16_bethany.anm2",
     [PlayerType.PLAYER_JACOB_B]="gfx/characters/character_b17_jacob2.png", 
     [PlayerType.PLAYER_JACOB2_B]="gfx/characters/character_b17_jacob2.anm2", 
     [PlayerType.PLAYER_THESOUL]="gfx/characters/character_b15_thesoul.anm2",
@@ -1846,7 +1960,7 @@ local PlayeeTypeToHairPath = {
     [PlayerType.PLAYER_KEEPER_B]="gfx/characters/costumes/character_015b_keeperisgreedier.png", 
     --[PlayerType.PLAYER_APOLLYON_B]="gfx/characters/costumes/character_016b_apollyonvoid.png", 
     [PlayerType.PLAYER_THEFORGOTTEN_B]="gfx/characters/costumes/character_016b_theforgottencracks.png",
-    [PlayerType.PLAYER_BETHANY_B]="gfx/characters/costumes/character_018b_bethshair.png", 
+    --[PlayerType.PLAYER_BETHANY_B]="gfx/characters/costumes/character_018b_bethshair.png", 
     [PlayerType.PLAYER_JACOB_B]="gfx/characters/costumes/character_019b_jacobhair.png", 
     [PlayerType.PLAYER_JACOB2_B]="gfx/characters/costumes/character_019b_jacob2hair.png", 
     --[PlayerType.PLAYER_THESOUL]="gfx/characters/costumes/character_017b_thesoulshood.png",
@@ -1937,7 +2051,6 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
             local cache = CachedModXMLData[i]
             for i,k in pairs(mod) do
                 if i ~= "description" then
-                    --print(i,k)
                     cache[i] = k
                 end
             end
@@ -1980,7 +2093,6 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
                 mod
             )
-
             FindResprites(dir, "resources",
                 "/resources/gfx/characters/costumes/character_001x_bethshair.png",
                 "/resources/gfx/characters/costumes/",
@@ -1997,12 +2109,27 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
                 mod
             )
-
             FindResprites(dir, "resources",
                 "/resources/gfx/characters/costumes/character_005_evehead.png",
                 "/resources/gfx/characters/costumes/",
                 PlayerType.PLAYER_EVE,  NullItemID.ID_EVE, 
                 "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
+                mod
+            )
+
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_018b_bethshair.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY_B,  NullItemID.ID_BETHANY_B, 
+                "gfx/characters/costumes/character_018b_bethshair.png", "gfx/characters/character_b16_bethany.anm2",
+                mod
+            )
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_018b_bethshair.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY_B,  NullItemID.ID_BETHANY_B, 
+                "gfx/characters/costumes/character_018b_bethshair.png", "gfx/characters/character_b16_bethany.anm2",
                 mod
             )
             
@@ -2143,7 +2270,6 @@ function epf.PonyTailFunc(player, TailData, HairData, StartPos, Headpos, scale)
             local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp*scale))
             
             cur[2] = (cur[2]* lerp + vel * (1-lerp))
-            --print(i, (1-lerp), "|", vel)
             --cur[2] = cur[2] * 0.2 + vel * .8
         end
         if nextp then
@@ -2244,7 +2370,6 @@ function epf.HoholockTailFunc(player, TailData, HairData, StartPos, Headpos, sca
             local vel = (prep-lpos):Resized(math.max(-1,bttdis-scretch*lerp*scale))
             
             cur[2] = (cur[2]* lerp + vel * (1-lerp))
-            --print(i, (1-lerp), "|", vel)
             --cur[2] = cur[2] * 0.2 + vel * .8
         end
         if nextp then
@@ -2397,7 +2522,6 @@ function epf.MenuPaperSwing(tab, start_pos, headpos)
             end
 
             local vel = (nextp-lpos):Resized( math.max(0, (bttdis*2.2-scretch)) )    --(nextp-lpos):Resized(  math.min(scretch*3, math.max(0, bttdis-scretch*.5)*0.2) )
-            --print(i, vel, bttdis)
             squeezevel = (squeezevel + vel * .39 ) -- (cur[2] * .5 + vel * .5)
         end
 

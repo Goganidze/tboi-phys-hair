@@ -361,7 +361,9 @@ return function()
             local clr = spr.Color
             local targetPos = _JFFC.pos[CountPos-1]
             local CordKcolor = ent:GetPlayerType() == PlayerType.PLAYER_JUDAS 
-                and KColor(69/256 * clr.R, 66/256 * clr.G, 6/256 * clr.B, 1 * clr.A) or KColor(0.02* clr.R, 0.05* clr.G, 0.05* clr.B, 1* clr.A)
+                and KColor(69/256 * clr.R, 66/256 * clr.G, 6/256 * clr.B, 1 * clr.A) 
+                or --KColor(0.02* clr.R, 0.05* clr.G, 0.05* clr.B, 1* clr.A)
+                    KColor(0.03* clr.R, 0.00* clr.G, 0.00* clr.B, 1* clr.A)
 
             if basePos and targetPos and not IsReflect or (IsReflect and not _JFFC["NoReflect"] and _JFFC.OffsetReflect) then
                 for i = 1, CountPos do --Рендер
@@ -522,7 +524,7 @@ return function()
 
 
     --почему то отражения ломаются и я не могу понять из за чего, ведь после luamod мод чиниться навсегда.
-    tab.MegaShitReflectFix = function()
+    --[[tab.MegaShitReflectFix = function()
         if not PHYSHAIR_MEGASHITFIX then
             PHYSHAIR_MEGASHITFIX = true
             local room = game:GetRoom()
@@ -531,7 +533,7 @@ return function()
                 Isaac.ExecuteCommand("luamod " .. modpath)
             end
         end
-    end
+    end]]
 
 
     return tab

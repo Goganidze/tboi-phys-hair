@@ -88,6 +88,19 @@ return function (mod)
         return copy
     end
 
+    local function CheckPNGExists(path, cache)
+        local havecolorver = false
+        if cache[path] == nil then
+            havecolorver = pcall(Renderer.LoadImage, path) and true or false
+            cache[path] = havecolorver
+            return havecolorver
+        else
+            return cache[path]
+        end
+    end
+
+
+
     local testspr = Sprite()
     testspr:Load("gfx/characters/costumes/judasFez_cord.anm2", true)
     testspr:Play("cord", true)
@@ -114,27 +127,41 @@ return function (mod)
     local PlayerTypeToTargetCostumePos = {
         [PlayerType.PLAYER_AZAZEL]=1,
     }
-
-    function _HairCordData2.GetTargetCostume(playerType)
-        if playerType then
-            return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL, pos = PlayerTypeToTargetCostumePos[playerType] or 0}
+    local function formatCostumeMap(costumemap)
+        local tab = {}
+        for i = 1, #costumemap do
+            local cost = costumemap[i]
+            tab[cost.costumeIndex] = costumemap[i]
         end
-
+        return tab
     end
+
+    --function _HairCordData2.GetTargetCostume(playerType)
+    --    if playerType then
+    --        return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL, pos = PlayerTypeToTargetCostumePos[playerType] or 0}
+    --    end
+--
+    --end
 
     ---@param player EntityPlayer
     function _HairCordData2.GetHairCostumeSpr(player)
         local data = player:GetData()._PhysHair_HairStyle
         local tarcost = mod.HStyles.GetTargetCostume(player:GetPlayerType(), data and data.StyleName)
+        local isBody = tarcost.isBody
+
         local pos = 0
+        local costumemap = formatCostumeMap(player:GetCostumeLayerMap())
         for i, csd in pairs(player:GetCostumeSpriteDescs()) do
             local conf = csd:GetItemConfig()
             if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
-                if not tarcost.pos or tarcost.pos == pos then
+                if isBody == costumemap[i].isBodyLayer then
                     return csd:GetSprite()
-                else
-                    pos = pos + 1
                 end
+                --if (not tarcost.pos or tarcost.pos == pos) then
+                --    return csd:GetSprite()
+                --else
+                --    pos = pos + 1
+                --end
 
             end
         end
@@ -212,9 +239,9 @@ return function (mod)
 
             hairContainer.HairInfo = TabDeepCopy(hairData.HairInfo)
             local hairInfo = hairContainer.HairInfo
-            for i,k in pairs(hairContainer.HairInfo) do
-                print(i,k)
-            end
+            --for i,k in pairs(hairContainer.HairInfo) do
+            --    print(i,k)
+            --end
 
             local playerPos = player.Position
             for i = 1, #hairInfo do
@@ -245,7 +272,7 @@ return function (mod)
                    -- tailData[i] = {playerPos + Vector(0,tailData.Length/tailData.DotCount*i), Vector(0,0), tailData.Length/tailData.DotCount*i+(12)-i*2}
                     
                     local pos = playerPos + Vector(0,tailData.Length/tailData.DotCount*i)
-                    local sprCoord = tailData.Length/(tailData.DotCount)*(i+1)      --tailData.Length/(tailData.DotCount-1)*(i+1)
+                    local sprCoord = (tailData.Length-tailData.STH)/(tailData.DotCount)*(i+1)      --tailData.Length/(tailData.DotCount-1)*(i+1)
                     tailData[i] = {
                         p = Point(
                             pos,
@@ -256,7 +283,6 @@ return function (mod)
                         Vector(0,0),
                         cs and cs[i] or sprCoord
                     }
-                    print("ppp", i, tailData.Length, tailData[i][3])
                     tailData[i].p:SetIsWorldSpace(true)
                 end
                 --local cs = tailData.CS
@@ -272,8 +298,13 @@ return function (mod)
 
             --- смена костюма
 
+            local costumedescs = player:GetCostumeSpriteDescs()
             if hairInfo.TargetCostume then
-                _HairCordData2.UpdateTargetCostume(player, hairContainer.HairInfo, player:GetCostumeSpriteDescs())
+                _HairCordData2.UpdateTargetCostume(player, hairContainer.HairInfo, costumedescs)
+            end
+
+            if hairInfo.ItemCostumeAlts then
+                _HairCordData2.UpdateItemCostumeAlts(player, hairContainer.HairInfo, costumedescs)
             end
 
             _HairCordData2.UpdateTailsCordColor(player, sklad, player:GetBodyColor())
@@ -357,7 +388,7 @@ return function (mod)
                 P[2] = P[2] *.8 + vel* .2
             end
 
-            P[2].Y = P[2].Y + .8*scale  --mass/10*
+            P[2].Y = P[2].Y + .8*scale*(mass/10)
 
             P[1] = P[1] + P[2]
 
@@ -470,7 +501,6 @@ return function (mod)
                             if not havecolorver then
                                 finalpath = sprpath:sub(0, sprpath:len()-4) .. ".png"
                             end
-                            print("finalpath", finalpath)
                             cordspr:ReplaceSpritesheet(layer:GetLayerID(), finalpath)
                         end
                         cordspr:LoadGraphics()
@@ -483,6 +513,18 @@ return function (mod)
 
     end
     mod:AddCallback(ModCallbacks.MC_POST_PLAYER_UPDATE, _HairCordData2.PostPlayerUpdate)
+
+    function _HairCordData2.HairPreUpdate(_,player, haildata)
+        for i = 1, #haildata do
+            local taildata = haildata[i]
+            if taildata then
+                if taildata.PreUpdate then
+                    taildata.PreUpdate(player, taildata)
+                end
+            end
+        end
+    end
+    mod:AddCallback(_HairCordData2.Callbacks.HAIRPHYS_PRE_UPDATE, _HairCordData2.HairPreUpdate)
 
     function _HairCordData2.UpdateHairsCordPoses(player, sklad)
         local playerPos = sklad.RealHeadPos and ScreenToWorld(sklad.RealHeadPos + player.Velocity/2) or player.Position
@@ -991,9 +1033,10 @@ return function (mod)
     function _HairCordData2.PostFamiliarRenderHead(_, fam, offset)
         local famVar = fam.Variant
         ignoreHeadless = true
+        local isdecap = Isaac.CountEntities(nil, EntityType.ENTITY_FAMILIAR, FamiliarVariant.DECAP_ATTACK) > 0
 
         if famVar == FamiliarVariant.GUILLOTINE then
-            if Isaac.CountEntities(nil, EntityType.ENTITY_FAMILIAR, FamiliarVariant.DECAP_ATTACK) > 0 then
+            if isdecap then
                 return
             end
             local player = fam.Player
@@ -1017,6 +1060,20 @@ return function (mod)
                 _HairCordData2.PostPlayerRender(_, fam.Player, offset)
                 sklad.RealHeadPos = RealHeadPos
             end
+        elseif famVar == FamiliarVariant.SCISSORS then
+            if isdecap then
+                return
+            end
+            local player = fam.Player
+            local data = player:GetData()
+            local sklad = data.__PhysHair_HairSklad
+            if sklad then
+                local RealHeadPos = sklad.RealHeadPos
+                sklad.RealHeadPosRerender = sklad.RealHeadPos
+                sklad.RealHeadPos = worldToScreen(fam.Position + fam.PositionOffset)
+                _HairCordData2.PostPlayerRender(_, fam.Player, offset)
+                sklad.RealHeadPos = RealHeadPos
+            end
         end
         ignoreHeadless = false
     end
@@ -1029,7 +1086,11 @@ return function (mod)
     function _HairCordData2.UpdateTargetCostume(player, hairdata, costumeDescs)
         if hairdata.TargetCostume then
             local tarcost = hairdata.TargetCostume
+            local sklad = player:GetData().__PhysHair_HairSklad
+            
             hairdata.FinalCostumePath = {}
+            sklad.cacheNoHairColor = sklad.cacheNoHairColor or {}
+            local cacheNoHairColor = sklad.cacheNoHairColor
 
             local nullref = hairdata.NullposRefSpr
             local bodyColor = player:GetBodyColor()
@@ -1037,13 +1098,22 @@ return function (mod)
             Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.PRE_COLOR_CHANGE, player:GetPlayerType(), player, bodyColor, bodyColorSuffix)
 
             local pos = 0
+            local TargetCostumelayer = tarcost.CostumeLayer or 1
+            local costumemap = formatCostumeMap(player:GetCostumeLayerMap())
             for icost, csd in pairs(costumeDescs) do
                 local conf = csd:GetItemConfig()
                 if tarcost.ID == conf.ID and (not tarcost.Type or tarcost.Type == conf.Type) then
-                    if not tarcost.pos or tarcost.pos == pos then
+                    local isBodyLayer = costumemap[icost-1].isBodyLayer
+
+                    if TargetCostumelayer == 0 
+                    or TargetCostumelayer == 1 and not isBodyLayer
+                    or TargetCostumelayer == 2 and isBodyLayer then
+                    --if not tarcost.pos or tarcost.pos == pos then
                         
                         local cspr = csd:GetSprite()
-                        cspr:Load(nullref:GetFilename(), true)
+                        if nullref then
+                            cspr:Load(nullref:GetFilename(), true)
+                        end
                         
                         if not hairdata.OrigCostume or hairdata.OrigCostume.path ~= cspr:GetFilename() then
                             hairdata.OrigCostume = {
@@ -1059,11 +1129,17 @@ return function (mod)
                         if type(replacestr) == "table" then
                             for i, str in ipairs(replacestr) do
                                 local finalstr = str:sub(0, -5) .. bodyColorSuffix .. ".png"
+                                if not CheckPNGExists(finalstr, cacheNoHairColor) then
+                                    finalstr = str:sub(0, -5) .. ".png"
+                                end
                                 cspr:ReplaceSpritesheet(i, finalstr)
                                 hairdata.FinalCostumePath[i] = finalstr
                             end
                         else
                             local finalstr = replacestr:sub(0, -5) .. bodyColorSuffix .. ".png"
+                            if not CheckPNGExists(finalstr, cacheNoHairColor) then
+                                finalstr = replacestr:sub(0, -5) .. ".png"
+                            end
                             for layerId = 0, cspr:GetLayerCount() do
                                 cspr:ReplaceSpritesheet(layerId, finalstr)
                                 hairdata.FinalCostumePath[layerId] = finalstr
@@ -1079,6 +1155,35 @@ return function (mod)
                 end
             end
 
+        end
+    end
+
+    function _HairCordData2.UpdateItemCostumeAlts(player, hairdata, costumeDescs)
+        local ItemCostumeAlts = hairdata.ItemCostumeAlts
+        for i, csd in pairs(costumeDescs) do
+            local conf = csd:GetItemConfig()
+            for itemAltsId = 1, #ItemCostumeAlts do
+                local itemAlt = ItemCostumeAlts[itemAltsId]
+                if conf.ID == itemAlt.ID and (not itemAlt.Type or itemAlt.Type == conf.Type) then
+                    local cspr = csd:GetSprite()
+                    if itemAlt.anm2 then
+                        cspr:Load(itemAlt.anm2, true)
+                    end
+                    if itemAlt.gfx then
+                        if type(itemAlt.gfx) == "table" then
+                            for layerid, gfx in pairs(itemAlt.gfx) do
+                                cspr:ReplaceSpritesheet(layerid, gfx)
+                            end
+                        else 
+                            local gfx = itemAlt.gfx
+                            for layerId = 0, cspr:GetLayerCount() do
+                                cspr:ReplaceSpritesheet(layerId, gfx)
+                            end
+                        end
+                        cspr:LoadGraphics()
+                    end
+                end
+            end
         end
     end
 
@@ -1103,7 +1208,8 @@ return function (mod)
                         local sprpath = layer:GetSpritesheetPath()
                         sprpath = TryDeleteColorFromPath(sprpath)
                         local finalpath = sprpath:sub(0, sprpath:len()-4) .. bodyColorSuffix .. ".png"
-                        local havecolorver = false
+
+                        --[[local havecolorver = false
                         if not cacheNoHairColor[finalpath] then
                             havecolorver = pcall(Renderer.LoadImage, finalpath)
                             cacheNoHairColor[finalpath] = havecolorver
@@ -1112,8 +1218,12 @@ return function (mod)
                         end
                         if not havecolorver then
                             finalpath = sprpath:sub(0, sprpath:len()-4) .. ".png"
+                        end)]]
+
+                        if not CheckPNGExists(finalpath, cacheNoHairColor) then
+                            finalpath = sprpath:sub(0, sprpath:len()-4) .. ".png"
                         end
-                        print("finalpath", finalpath)
+
                         cordspr:ReplaceSpritesheet(layer:GetLayerID(), finalpath)
                     end
                     cordspr:LoadGraphics()
