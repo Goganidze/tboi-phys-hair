@@ -917,10 +917,11 @@ return function (mod)
                 end
                 Back2Spr.Color = playerCol
                 Back2Spr:SetFrame(spr:GetOverlayAnimation(), spr:GetOverlayFrame())
+                local headTransform = player:GetCostumeNullPos("HeadTransform",true, Vector(0,0))
                 if isreflect then
                     Back2Spr:Render(headpos )
                 else
-                    Back2Spr:Render(headpos)
+                    Back2Spr:Render(headpos + headTransform)
                 end
             end
 
@@ -1113,7 +1114,7 @@ return function (mod)
             local nullref = hairdata.NullposRefSpr
             local bodyColor = player:GetBodyColor()
             local bodyColorSuffix = bodycolor[bodyColor] or ""
-            Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.PRE_COLOR_CHANGE, player:GetPlayerType(), player, bodyColor, bodyColorSuffix)
+            --Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.PRE_COLOR_CHANGE, player:GetPlayerType(), player, bodyColor, bodyColorSuffix)
 
             local pos = 0
             local TargetCostumelayer = tarcost.CostumeLayer or 1
@@ -1210,7 +1211,7 @@ return function (mod)
 
         sklad.cacheNoHairColor = sklad.cacheNoHairColor or {}
         local cacheNoHairColor = sklad.cacheNoHairColor
-        --Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.PRE_COLOR_CHANGE, player:GetPlayerType(), player, bodyColor, refsting)
+        Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.PRE_COLOR_CHANGE, player:GetPlayerType(), player, bodyColor, bodyColorSuffix)
         
         local costumeDescs = player:GetCostumeSpriteDescs()
         for hairLayer = 0, #sklad do

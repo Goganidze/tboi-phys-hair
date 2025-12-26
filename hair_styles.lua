@@ -190,7 +190,7 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
     local skinsheet = stdata.data.SkinFolderSuffics
     local bodcol = player:GetBodyColor()
     data._PhysHairExtra = data._PhysHairExtra or {}
-
+    print(skinsheet, bodcol)
     if skinsheet then
         data._PhysHairExtra.SkinIsChanged = true
         local spr = player:GetSprite()
@@ -570,12 +570,14 @@ end
 --mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.HStyles.PostUpdateHairChecker)
 
 function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
+    print("COLOR CHANGE")
     local PHSdatas = player:GetData()._PhysHair_HairStyle
     for i, PHSdata in pairs(PHSdatas) do
         if type(i) == "number" then
             local stdata = HairStylesData.styles[PHSdata.StyleName]
             if stdata then
                 local skinsheet = stdata.data.SkinFolderSuffics
+                print(skinsheet)
                 if skinsheet then
                     --[[local spr = player:GetSprite()
                     ---@type string
@@ -1848,9 +1850,9 @@ local function FindOriginal(resources, path, costumepath, playerid, nullid, Cost
             --SkinFolderSuffics = costumepath,
             
         }
-        if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
+        --if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
             tab.SkinFolderSuffics = costumepath
-        end
+        --end
         if PlayerTypeToHairPos[playerid] then
             tab.TargetCostume.pos = PlayerTypeToHairPos[playerid]
         end
@@ -1889,9 +1891,9 @@ local function FindResprites(modfoldername, resources, path, costumepath, player
             SyncWithCostumeBodyColor = true,
         }
 
-        if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
+        --if EntityConfig.GetPlayer(playerid):GetSkinColor() == -1 then
             tab.SkinFolderSuffics = mod.GamePath .. "mods/" .. modfoldername  .. costumepath
-        end
+        --end
         if PlayerTypeToHairPos[playerid] then
             tab.TargetCostume.pos = PlayerTypeToHairPos[playerid]
         end

@@ -764,7 +764,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             CordSpr = EveHairCord,
             RenderLayers = EveheadDirToRender,
             CostumeNullpos = "evehair_cord1",
-            Mass = 10,
+            Mass = 30,
             PhysFunc = mod.HairLib.EveheavyHairPhys,
             StartHeight = 5,
         },
