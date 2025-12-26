@@ -147,23 +147,39 @@ local bodycolor = {
 local cacheNoHairColor = {}
 
 --mode: 1 = no phys hair
-function mod.HStyles.SetStyleToPlayer(player, style_name, mode)
+function mod.HStyles.SetStyleToPlayer(player, style_name, layer, StyleMode)
     if player and style_name then
         local stdata = HairStylesData.styles[style_name]
         player = player:ToPlayer()
         local ptype = player:GetPlayerType()
+
         if stdata and (stdata.ID == ptype or stdata.ID == -1) then
-            --mod.SetHairStyleData(player, ptype, stdata)
             local data = player:GetData()
-            --data._PhysHair_HairStyle = style_name
-            data._PhysHair_HairStyle = {StyleName = style_name, PlayerType = ptype}
+
+            data._PhysHair_HairStyle = data._PhysHair_HairStyle or {}
+            layer = layer or 0
+            data._PhysHair_HairStyle[layer] = {StyleName = style_name, PlayerType = ptype}
+
             
+            local setdata = stdata.data
+            if StyleMode == 1 then
+                local temp = {}
+                temp.TargetCostume = setdata.TargetCostume
+                temp.SyncWithCostumeBodyColor = setdata.SyncWithCostumeBodyColor
+                temp.SkinFolderSuffics = setdata.SkinFolderSuffics
+                temp.ReplaceCostumeSheep = setdata.TailCostumeSheep
+                temp.TailCostumeSheep = setdata.TailCostumeSheep
+                temp.ItemCostumeAlts = setdata.ItemCostumeAlts
+                temp.NullposRefSpr = setdata.NullposRefSpr
+                temp.StyleName = setdata.StyleName
+
+                setdata = temp
+            end
+
             mod.HairLib.SetHairDataToPlayer(player, {
-                HairInfo = stdata.data
+                HairInfo = setdata,
+                layer = layer,
             })
-            --mod.HairLib.InitHairData(player, nil, nil, mode)
-            
-            --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
         end
     end
 end
@@ -554,31 +570,33 @@ end
 --mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.HStyles.PostUpdateHairChecker)
 
 function mod.HStyles.BodyColorTracker(_, player, bodcol, refstring)
-    local PHSdata = player:GetData()._PhysHair_HairStyle
-    if PHSdata then
-        local stdata = HairStylesData.styles[PHSdata.StyleName]
-        if stdata then
-            local skinsheet = stdata.data.SkinFolderSuffics
-            if skinsheet then
-                --[[local spr = player:GetSprite()
-                ---@type string
-                --local orig = spr:GetLayer(0):GetDefaultSpritesheetPath()
-                --orig = orig:match(".+/(.-)%.png")
-                local orig
-                local pconf = EntityConfig.GetPlayer(stdata.ID)
-                if pconf then
-                    orig = pconf:GetSkinPath()
-                end
-                
-                if orig then
-                    orig = orig:match(".+/(.-)%.png")
-                    local path = skinsheet .. orig .. ( refstring or "") .. ".png"
-                    for i=0, spr:GetLayerCount()-1 do
-                        spr:ReplaceSpritesheet(i,path)
+    local PHSdatas = player:GetData()._PhysHair_HairStyle
+    for i, PHSdata in pairs(PHSdatas) do
+        if type(i) == "number" then
+            local stdata = HairStylesData.styles[PHSdata.StyleName]
+            if stdata then
+                local skinsheet = stdata.data.SkinFolderSuffics
+                if skinsheet then
+                    --[[local spr = player:GetSprite()
+                    ---@type string
+                    --local orig = spr:GetLayer(0):GetDefaultSpritesheetPath()
+                    --orig = orig:match(".+/(.-)%.png")
+                    local orig
+                    local pconf = EntityConfig.GetPlayer(stdata.ID)
+                    if pconf then
+                        orig = pconf:GetSkinPath()
                     end
-                    spr:LoadGraphics()
-                end]]
-                mod.HStyles.UpdatePlayerSkin(player, player:GetData(), stdata)
+                    
+                    if orig then
+                        orig = orig:match(".+/(.-)%.png")
+                        local path = skinsheet .. orig .. ( refstring or "") .. ".png"
+                        for i=0, spr:GetLayerCount()-1 do
+                            spr:ReplaceSpritesheet(i,path)
+                        end
+                        spr:LoadGraphics()
+                    end]]
+                    mod.HStyles.UpdatePlayerSkin(player, player:GetData(), stdata)
+                end
             end
         end
     end
@@ -631,6 +649,7 @@ end
 function mod.HStyles.GetHairCostumeSpr(player)
     
     local data = player:GetData()._PhysHair_HairStyle
+    data = data and data[0]
     local tarcost = mod.HStyles.GetTargetCostume(player:GetPlayerType(), data and data.StyleName)
     local TargetCostumeLayer = tarcost.CostumeLayer or 1
     --local pos = 0
@@ -1308,11 +1327,15 @@ do
             end
         end
         ]]
-        if not data._PhysHair_HairStyle or not data._PhysHair_HairStyle.StyleName 
-        or not HairStylesData.styles[data._PhysHair_HairStyle.StyleName] then
+
+        local PHSdata = data._PhysHair_HairStyle
+        PHSdata = PHSdata and PHSdata[hairlayer or 0]
+
+        if not PHSdata or not PHSdata.StyleName 
+        or not HairStylesData.styles[PHSdata.StyleName] then
             salon.CachedPhayerHairSpr = mod.HStyles.GetHairCostumeSpr(player)
         else
-            local stdata = HairStylesData.styles[data._PhysHair_HairStyle.StyleName]
+            local stdata = HairStylesData.styles[PHSdata.StyleName]
 
             local cspr = mod.HStyles.GetHairCostumeSpr(player)
             salon.CachedPhayerHairSpr = GenSprite(cspr:GetFilename(), cspr:GetAnimation())
@@ -1385,7 +1408,7 @@ do
         }
         mod.HStyles.Chooping.SWIG.Scale = Vector(1.5, 1.5)
         
-        mod.HStyles.SetStyleToPlayer(player, stylename, StyleMode)
+        mod.HStyles.SetStyleToPlayer(player, stylename, hairlayer, StyleMode)
     end
 
 

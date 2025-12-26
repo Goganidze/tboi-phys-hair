@@ -30,7 +30,7 @@ return function (mod)
     local _HairCordData2 = {Callbacks = {}}
 
     local function addCallbackID(name)
-        _HairCordData2.Callbacks[name] = setmetatable({},{__concat = function(t,b) return "[Phys Hair] "..name..b end})
+        _HairCordData2.Callbacks[name] = setmetatable({},{__tostring = function(t,b) return "[Phys Hair] "..name end})
     end
     ---@enum HairCordcallbacks
     local callbacks = {
@@ -176,6 +176,24 @@ return function (mod)
             end
         end
     end
+
+    ---@class TargetCostume
+    ---@field ID integer
+    ---@field Type ItemType?
+    ---@field CostumeLayer? 0|1|2 -- 0=both, 1=head, 2=body
+    
+
+    ---@class SetHairDataParam
+    ---@field HeadBackSpr Sprite?
+    ---@field HeadBack2Spr Sprite?
+    ---@field TargetCostume TargetCostume?
+    ---@field ReplaceCostumeSheep string|string[]?
+    ---@field ReplaceCostumeSuffix string|string[]?
+    ---@field SyncWithCostumeBodyColor boolean?
+    ---@field [integer] HairDataIn
+    ---@field NullposRefSpr Sprite?
+    ---@field SkinFolderSuffics string?
+    ---@field ItemCostumeAlts ItemCostumeAlts_set[]?
 
     ---@class SethairDataIn
     ---@field layer? number
@@ -1193,12 +1211,29 @@ return function (mod)
         sklad.cacheNoHairColor = sklad.cacheNoHairColor or {}
         local cacheNoHairColor = sklad.cacheNoHairColor
         --Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.PRE_COLOR_CHANGE, player:GetPlayerType(), player, bodyColor, refsting)
+        
         local costumeDescs = player:GetCostumeSpriteDescs()
         for hairLayer = 0, #sklad do
             local hairContainer = sklad[hairLayer]
             local hairInfo = hairContainer.HairInfo
             if hairInfo.SyncWithCostumeBodyColor then
                 _HairCordData2.UpdateTargetCostume(player, hairInfo, costumeDescs)
+
+                if hairInfo.HeadBack2Spr then
+                    local spr = hairInfo.HeadBack2Spr
+                    for layerId, layer in pairs(spr:GetAllLayers()) do
+                        local sprpath = layer:GetSpritesheetPath()
+                        sprpath = TryDeleteColorFromPath(sprpath)
+                        local finalpath = sprpath:sub(0, sprpath:len()-4) .. bodyColorSuffix .. ".png"
+
+                        if not CheckPNGExists(finalpath, cacheNoHairColor) then
+                            finalpath = sprpath:sub(0, sprpath:len()-4) .. ".png"
+                        end
+
+                        spr:ReplaceSpritesheet(layer:GetLayerID(), finalpath)
+                    end
+                    spr:LoadGraphics()
+                end
 
                 for tailID = 1, #hairInfo do
                     local tailData = hairInfo[tailID]

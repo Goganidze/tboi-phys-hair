@@ -97,22 +97,22 @@ return function (mod)
     ---@field CS table?
     ---@field StartOffset number?
 
-    ---@class TargetCostume
-    ---@field ID integer
-    ---@field Type ItemType?
-    ---@field pos 0|1?
+    --@class TargetCostume
+    --@field ID integer
+    --@field Type ItemType?
+    --@field pos 0|1?
 
-    ---@class SetHairDataParam
-    ---@field HeadBackSpr Sprite?
-    ---@field HeadBack2Spr Sprite?
-    ---@field TargetCostume TargetCostume?
-    ---@field ReplaceCostumeSheep string|string[]?
-    ---@field ReplaceCostumeSuffix string|string[]?
-    ---@field SyncWithCostumeBodyColor boolean?
-    ---@field [integer] HairDataIn
-    ---@field NullposRefSpr Sprite?
-    ---@field SkinFolderSuffics string?
-    ---@field ItemCostumeAlts ItemCostumeAlts_set[]?
+    --@class SetHairDataParam
+    --@field HeadBackSpr Sprite?
+    --@field HeadBack2Spr Sprite?
+    --@field TargetCostume TargetCostume?
+    --@field ReplaceCostumeSheep string|string[]?
+    --@field ReplaceCostumeSuffix string|string[]?
+    --@field SyncWithCostumeBodyColor boolean?
+    --@field [integer] HairDataIn
+    --@field NullposRefSpr Sprite?
+    --@field SkinFolderSuffics string?
+    --@field ItemCostumeAlts ItemCostumeAlts_set[]?
 
     ---@class ItemCostumeAlts_set
     ---@field ID integer

@@ -625,48 +625,51 @@ mod.HStyles.AddStyle("BethNoTails", PlayerType.PLAYER_BETHANY, {
 function mod.extraPhysFunc.BethHairStyles_PreUpdate(_, player, hairInfo)
     local data = player:GetData()
     local spr = player:GetSprite()
-    local HairStyle = data._PhysHair_HairStyle and data._PhysHair_HairStyle.StyleName
-    if HairStyle then
-        if HairStyle == "BethPonyTail" then
-            local spranim = spr:GetOverlayAnimation()
-            local cordspr = hairInfo[1].CordSpr:GetSprite()     -- mod.BethPonyTailCord:GetSprite()
-            if spranim == "HeadRight" then
-                cordspr.FlipX = true
-            else
-                cordspr.FlipX = false
-            end
-            cordspr:Play(spranim == "HeadLeft" and "cord3" or spranim == "HeadRight" and "cord2" or "cord", true)
-        elseif HairStyle == "BethOneSideTail" then
-            local spranim = spr:GetOverlayAnimation()
-            local cordspr = hairInfo[1].CordSpr:GetSprite() -- mod.BethOneSideCord:GetSprite()
-            if spranim == "HeadUp" or spranim == "HeadLeft" then
-                cordspr.FlipX = true
-            else
-                cordspr.FlipX = false
-            end
-        elseif HairStyle == "BethDrillTail" then
-            local spranim = spr:GetOverlayAnimation()
-            --local cordspr = mod.BethDrillTailCord:GetSprite()
-            --local cordspr2 = mod.BethDrillTailCord2:GetSprite()
-            local cordspr = hairInfo[1].CordSpr:GetSprite()
-            local cordspr2 = hairInfo[2].CordSpr:GetSprite()
-            if spranim == "HeadUp" then
-                cordspr:Play("cordb")
-                cordspr2:Play("cordb2")
-            else
-                cordspr:Play("cord")
-                cordspr2:Play("cord2")
-            end
-        elseif HairStyle == "BethNoTails" then
-            local spranim = spr:GetOverlayAnimation()
-            local cordspr = hairInfo[4].CordSpr:GetSprite()  -- mod.BethNoTailCords["4"]:GetSprite()
-            if spranim == "HeadLeft" then
-                cordspr.FlipX = true
-            else
-                cordspr.FlipX = false
+    --local PHSdatas = data._PhysHair_HairStyle
+    --if PHSdatas then
+        local HairStyle = hairInfo.StyleName  --  PHSdatas[0] and PHSdatas[0].StyleName
+        if HairStyle and hairInfo[1] then
+            if HairStyle == "BethPonyTail" then
+                local spranim = spr:GetOverlayAnimation()
+                local cordspr = hairInfo[1].CordSpr:GetSprite()     -- mod.BethPonyTailCord:GetSprite()
+                if spranim == "HeadRight" then
+                    cordspr.FlipX = true
+                else
+                    cordspr.FlipX = false
+                end
+                cordspr:Play(spranim == "HeadLeft" and "cord3" or spranim == "HeadRight" and "cord2" or "cord", true)
+            elseif HairStyle == "BethOneSideTail" then
+                local spranim = spr:GetOverlayAnimation()
+                local cordspr = hairInfo[1].CordSpr:GetSprite() -- mod.BethOneSideCord:GetSprite()
+                if spranim == "HeadUp" or spranim == "HeadLeft" then
+                    cordspr.FlipX = true
+                else
+                    cordspr.FlipX = false
+                end
+            elseif HairStyle == "BethDrillTail" then
+                local spranim = spr:GetOverlayAnimation()
+                --local cordspr = mod.BethDrillTailCord:GetSprite()
+                --local cordspr2 = mod.BethDrillTailCord2:GetSprite()
+                local cordspr = hairInfo[1].CordSpr:GetSprite()
+                local cordspr2 = hairInfo[2].CordSpr:GetSprite()
+                if spranim == "HeadUp" then
+                    cordspr:Play("cordb")
+                    cordspr2:Play("cordb2")
+                else
+                    cordspr:Play("cord")
+                    cordspr2:Play("cord2")
+                end
+            elseif HairStyle == "BethNoTails" then
+                local spranim = spr:GetOverlayAnimation()
+                local cordspr = hairInfo[4].CordSpr:GetSprite()  -- mod.BethNoTailCords["4"]:GetSprite()
+                if spranim == "HeadLeft" then
+                    cordspr.FlipX = true
+                else
+                    cordspr.FlipX = false
+                end
             end
         end
-    end
+    --end
 end
 mod:AddCallback(mod.HairLib.Callbacks.HAIRPHYS_PRE_UPDATE, mod.extraPhysFunc.BethHairStyles_PreUpdate, PlayerType.PLAYER_BETHANY)
 
@@ -1290,6 +1293,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             return
         end
         local hsdat = data._PhysHair_HairStyle
+        hsdat = hsdat and hsdat[0]
 
         if not data._JudasFezFakeCord or not judasFezStyleName[hsdat and hsdat.StyleName] then
         elseif JudasFezheadDirToRender[player:GetHeadDirection()] & 1 == 1 then
@@ -1318,6 +1322,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             return
         end
         local hsdat = data._PhysHair_HairStyle
+        hsdat = hsdat and hsdat[0]
         if not judasFezStyleName[hsdat and hsdat.StyleName] then
             return
         end
@@ -1351,11 +1356,100 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_RENDER, mod.JudasJunkPreRender)
 
     --include("stylesVariants")
-
-
-
-
     local json = require("json")
+
+    local UserdataToTab
+    UserdataToTab = function(t)
+        if t.X then
+            ---@cast t Vector
+            return {__t="vec", X=t.X, Y=t.Y}
+        else
+            local T = getmetatable(t)
+            local Tname = T and T.__type
+            if Tname == "Sprite" then
+                ---@cast t Sprite
+                local tab = {__t="spr", 
+                    layer = {},
+                    gfx = t:GetFilename(),
+                    anim = t:GetAnimation()}
+
+                for layerID,layer in pairs(t:GetAllLayers()) do
+                    tab.layer[layerID..""] = layer:GetSpritesheetPath()
+                end
+
+                return tab
+            elseif Tname == "Beam" then
+                ---@cast t Beam
+                local tab = {__t="beam",
+                    spr = UserdataToTab(t:GetSprite()),
+                    layer = t:GetLayer(),
+                    unkbool = t:GetUnkBool()
+                    }
+
+                return tab
+            elseif Tname == "Point" then
+                ---@cast t Point
+                return {__t="point", pos = UserdataToTab(t:GetPosition()), width = t:GetWidth(), coord = t:GetSpritesheetCoordinate() }
+            end
+        end
+    end
+
+    local DecodeTabUserdata
+    function DecodeTabUserdata(t)
+        local __type = t.__t
+        if __type == "vec" then
+            return Vector(t.X, t.Y)
+        elseif __type == "spr" then
+            local spr = GenSprite(t.gfx, t.anim)
+            for layerID,layer in pairs(t.layer) do
+                spr:ReplaceSpritesheet(tonumber(layerID), layer)
+            end
+            spr:LoadGraphics()
+            return spr
+        elseif __type == "beam" then
+            local spr = DecodeTabUserdata(t.spr)
+            return Beam(spr, t.layer, false, t.unkbool)
+        elseif __type == "point" then
+            return Point(DecodeTabUserdata(t.pos), t.coord, t.width)
+        end
+    end
+
+
+
+    local DeepCopyHairInfo
+    DeepCopyHairInfo = function(t)
+        local copy = {}
+        for i,k in pairs(t) do
+            local ii = type(i) == "number" and i.."" or i
+            if type(k) == "table" then
+                copy[ii] = DeepCopyHairInfo(k)
+            elseif type(k) == "userdata" then
+                copy[ii] = UserdataToTab(k)
+            else
+                copy[ii] = k
+            end
+        end
+        return copy
+    end
+
+    local DeepCopyHairInfoDecode
+    DeepCopyHairInfoDecode = function(t)
+        local copy = {}
+        for i,k in pairs(t) do
+            local ii = tonumber(i) or i
+            copy[ii] = k
+            if type(k) == "table" then
+                if k.__t then
+                    copy[ii] = DecodeTabUserdata(k)
+                else
+                    copy[ii] = DeepCopyHairInfoDecode(k)
+                end
+            end
+        end
+        return copy
+    end
+
+
     local function updateSaveData()
         local data = {
             --OdangoMode = mod.OdangoMode,
@@ -1367,18 +1461,40 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         }
 
         data.PlayerData = {}
+        data.PlayerHairInfo = {}
         for i=0, game:GetNumPlayers()-1 do
             local player = Isaac.GetPlayer(i)
             local pdata = player:GetData()
             local unickyID = player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_SAD_ONION):GetSeed()
-           
-            data.PlayerData[tostring(unickyID)] = {HairStyle = pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle.StyleName, 
-                HairMode = pdata._PhysHair_HairMode}
+            unickyID = tostring(unickyID)
 
+            data.PlayerHairInfo[unickyID] = {}
+            local phi = data.PlayerHairInfo[unickyID]
+
+            local PHSdatas = {}
+            if pdata._PhysHair_HairStyle then
+                for j,k in pairs(pdata._PhysHair_HairStyle) do
+                    if type(j) == "number" then
+                        PHSdatas[tostring(j)] = {StyleName = k.StyleName}
+                    end
+                end
+            end
+            if pdata.__PhysHair_HairSklad then
+                for j,k in pairs(pdata.__PhysHair_HairSklad) do
+                    if type(j) == "number" then
+                        phi[tostring(j)] = DeepCopyHairInfo(k.HairInfo)
+                    end
+                end
+            end
+
+            data.PlayerData[unickyID] = PHSdatas
+            --{HairStyle = pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle.StyleName, HairMode = pdata._PhysHair_HairMode}
+
+            
             mod.MainMenuStuff.RenderCharPort = nil
             mod.CustomCharPortrait = nil
             if i == 0 then
-                local hsdata = mod.HStyles.GetStyleData(pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle.StyleName)
+                local hsdata = mod.HStyles.GetStyleData(pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle[0] and pdata._PhysHair_HairStyle[0].StyleName)
                 if hsdata and hsdata.extra then
                     data.PlayerData.CustomCharPortrait = hsdata.extra.CustomCharPortrait
                     mod.CustomCharPortrait = hsdata.extra.CustomCharPortrait
@@ -1403,12 +1519,48 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         if not data._PHYSHAIR_SAVELOADED then -- and player.FrameCount > 1 then
             data._PHYSHAIR_SAVELOADED = true
             if mod.SavePlayerData then
+                local ptype = player:GetPlayerType()
                 local unickyID = player:GetCollectibleRNG(CollectibleType.COLLECTIBLE_SAD_ONION):GetSeed()
                 local savePlayerData = mod.SavePlayerData[tostring(unickyID)]
                 
-                if savePlayerData and savePlayerData.HairStyle then
-                    mod.HStyles.SetStyleToPlayer(player, savePlayerData.HairStyle, savePlayerData.HairMode)
+                if savePlayerData  then
+                    --for i, PHSdata in pairs(savePlayerData) do
+                    --    mod.HStyles.SetStyleToPlayer(player, PHSdata.HairStyle, PHSdata.HairMode)
+                    --end
+
                     --player:GetData()._PhysHair_HairStyle = savePlayerData.HairStyle
+                end
+                local savedPlayerHairInfo = mod.SavePlayerHairInfo and mod.SavePlayerHairInfo[tostring(unickyID)]
+
+                if savedPlayerHairInfo then
+                    --player:GetData().__PhysHair_HairSklad = DeepCopyHairInfoDecode(savedPlayerHairInfo)
+                    local hairinfoset = DeepCopyHairInfoDecode(savedPlayerHairInfo)
+                    for layer, hairInfo in pairs(hairinfoset) do
+                        if type(layer) == "number" then
+                            data._PhysHair_HairStyle = data._PhysHair_HairStyle or {}
+                            layer = layer or 0
+                            data._PhysHair_HairStyle[layer] = {StyleName = hairInfo.StyleName, PlayerType = ptype}
+
+                            local stdata = mod.HStyles.GetStyleData(hairInfo.StyleName)
+                            if stdata then
+                                for i = 1, #hairInfo do
+                                    if hairInfo[i] then
+                                        local tailstdata = stdata.data[i]
+                                        if tailstdata and tailstdata.PhysFunc then
+                                            hairInfo[i].PhysFunc = tailstdata.PhysFunc
+                                        end
+                                    end
+                                end
+                            end
+
+                            mod.HairLib.SetHairDataToPlayer(player, {
+                                HairInfo = hairInfo,
+                                layer = layer,
+                            })
+
+                            mod.HStyles.UpdatePlayerSkin(player, data, stdata)
+                        end
+                    end
                 end
             end
         end
@@ -1465,6 +1617,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             local savedata = json.decode(mod:LoadData())
 
             mod.SavePlayerData = savedata.PlayerData
+            mod.SavePlayerHairInfo = savedata.PlayerHairInfo
 
             --[[====
             mod.OdangoMode = savedata.OdangoMode
@@ -2162,6 +2315,7 @@ do
         Entrys = {},
         SelectedEntrySklad = nil,
         navmapCopys = {},
+        EntrysData = {},
 
         BtnMask = GenSprite("gfx/editor/hairstyle_menu.anm2","button_mask"),
         JustMask = GenSprite("gfx/editor/hairstyle_menu.anm2","justmask"),
@@ -2211,6 +2365,11 @@ do
     function BethHair.StyleMenu.CreateEntrySklad(EntrySklad)
         CurrentStyleMenuData.Entrys[EntrySklad] = {}
         CurrentStyleMenuData.navmapCopys[EntrySklad] = {{},{},{}}
+        CurrentStyleMenuData.EntrysData[EntrySklad] = {}
+    end
+
+    function BethHair.StyleMenu.GetEntry(EntrySklad)
+        return CurrentStyleMenuData.Entrys[EntrySklad]
     end
 
     ---@class BethHairStyleMenu.EntryData
@@ -2240,6 +2399,7 @@ do
         
         local CurIndex = #CurrentStyleMenuData.Entrys[entrySklad] + 1
         CurrentStyleMenuData.Entrys[entrySklad][CurIndex] = entry
+        local CurrentEntrySkladData = CurrentStyleMenuData.EntrysData[entrySklad]
 
         local ButtonName = data.ButtonName
         local SubMenu = "physhair_SubMenus"..data.EntrySklad
@@ -2263,7 +2423,10 @@ do
         local self
         self = wga.AddButton(SubMenu, ButtonName, pos,
             40, 40, nilspr,
-            ButtonPressLogic,
+            function(...)
+                CurrentEntrySkladData.LastPressedBtn = self
+                ButtonPressLogic(...)
+            end,
             function(Rpos, visible)
                 if visible then
 
@@ -2890,6 +3053,9 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
         local EntrySklad = "Def_HairStyles"
         BethHair.StyleMenu.ClearEntrys(EntrySklad)
+        BethHair.StyleMenu.CreateEntrySklad(EntrySklad)
+        
+        smenu.HairLayer = 0
 
         local favorited = mod.HStyles.GetFavoriteStyle(ptype)
 
@@ -2968,7 +3134,8 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
                     local targetPlayer = smenu.TargetPlayer
                     if targetPlayer and targetPlayer.Ref then
                         local playerdata = targetPlayer.Ref:GetData()
-                        return playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName == stylename
+                        local PSH = playerdata._PhysHair_HairStyle
+                        return PSH and PSH[self.HairLayer].StyleName == stylename
                     end
                 end,
             }
@@ -3023,12 +3190,12 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
     BethHair.StyleMenu.closespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "disчёта-там")
     BethHair.StyleMenu.acceptspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "accept")
-    BethHair.StyleMenu.setphysspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "phys")
+    BethHair.StyleMenu.setphysspr = GenSprite("gfx/editor/hairstyle_menu.anm2", "phys", smenu.SetStyleMode and 1 or 0)
     BethHair.StyleMenu.favoritespr = GenSprite("gfx/editor/hairstyle_menu.anm2", "favorite")
 
     local usephys
     usephys = wga.AddButton(smenu.name, "usephys", Vector(200,148),
-    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),   ---- СЮДААААААААААААААААААААААААААААА
         function (button)
             if smenu.SetStyleMode then
                 smenu.SetStyleMode = nil
@@ -3039,8 +3206,23 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             end
 
             local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref or Isaac.GetPlayer()
-            local _PhysHair_HairStyle = player:GetData()._PhysHair_HairStyle
-            BethHair.HStyles.SetStyleToPlayer(player, _PhysHair_HairStyle and _PhysHair_HairStyle.StyleName, smenu.SetStyleMode)
+            --local _PhysHair_HairStyle = player:GetData()._PhysHair_HairStyle
+            --BethHair.HStyles.SetStyleToPlayer(player, _PhysHair_HairStyle and _PhysHair_HairStyle.StyleName, smenu.SetStyleMode)
+
+            local CurrentEntrySkladData = BethHair.StyleMenu.CurrentStyleMenuData.EntrysData["Def_HairStyles"]
+            local LastPressedBtn = CurrentEntrySkladData.LastPressedBtn
+            ---@cast LastPressedBtn EditorButton
+            if CurrentEntrySkladData.LastPressedBtn then
+                LastPressedBtn.func(0)
+            elseif player then
+                local hairContainer = player:GetData().__PhysHair_HairSklad
+                if hairContainer and hairContainer[smenu.HairLayer] then
+                    local stylename = hairContainer[smenu.HairLayer].HairInfo.StyleName
+                    if stylename then
+                        BethHair.HStyles.SetStyleToPlayer(player, stylename, smenu.HairLayer, smenu.SetStyleMode)
+                    end
+                end
+            end
         end, function (pos, visible)
             BethHair.StyleMenu.setphysspr:Render(pos)
         end)
@@ -3339,14 +3521,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
 BethHair:AddCallback(ModCallbacks.MC_HUD_RENDER, BethHair.StyleMenu.HUDRender)
 
 
@@ -3385,44 +3559,6 @@ if debugmultiplayer and WORSTDEBUGMENU then
     end)
 end
 
-
---[[
-
-local textColor = {54/256, 47/256, 45/256}
-local seedfont = Font()
-seedfont:Load("font/teammeatfont12.fnt")
-mod:AddCallback(ModCallbacks.MC_PRE_PAUSE_SCREEN_RENDER, function(_, name)
-    if PauseMenu.GetState() ~= 2 then
-        local centerPos = Vector(Isaac.GetScreenWidth()/2, Isaac.GetScreenHeight()/2)
-
-        ---@type Sprite
-        local spr = PauseMenu.GetSprite()
-        spr:Render(centerPos + Vector(57.5,0))
-
-        local statSpr = PauseMenu.GetStatsSprite()
-        statSpr:Render(centerPos + Vector(57.5,0))
-
-        local compSpr = PauseMenu.GetCompletionMarksSprite()
-        compSpr:Render(centerPos + Vector(57.5,0) + spr:GetNullFrame("CompletionWidget"):GetPos()) -- -62.5,-84
-
-        local seed = game:GetSeeds()
-        local seedstr = Seeds.Seed2String(seed:GetStartSeed())
-        local textoffset = spr:GetCurrentAnimationData():GetLayer(5):GetFrame(spr:GetFrame()):GetPos()
-        local textRPos = centerPos + textoffset + Vector(57.5-35,0-40) --+ Vector(-149.5,-75)
-
-        local seedstr1,seedstr2 = seedstr:sub(1,5), seedstr:sub(6,10)
-
-        seedfont:DrawStringScaledUTF8(seedstr1, textRPos.X,textRPos.Y, 1,1, 
-            KColor(textColor[1],textColor[2],textColor[3],spr.Color.A), 0, false)
-        seedfont:DrawStringScaledUTF8(seedstr2, textRPos.X,textRPos.Y + seedfont:GetLineHeight()-4, 1,1, 
-            KColor(textColor[1],textColor[2],textColor[3],spr.Color.A), 0, false)
-
-        if Isaac.GetFrameCount() % 30 < 15 then
-        return true
-        end
-    end
-end)
-]]
 
 
 
