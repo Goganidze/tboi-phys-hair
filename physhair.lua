@@ -57,7 +57,7 @@ return function (mod)
     ---@field [1] HairDataIn
     ---@field [2] HairDataIn
 
-    ---@class PlayerHairData
+    ----@class PlayerHairData
     ----@field CordSpr Sprite|any
     ----@field Scretch number
     ----@field DotCount integer

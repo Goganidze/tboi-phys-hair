@@ -3,6 +3,7 @@ local backparam = {}
 if BethHair then
     if not BethHair.HStyles then
         Console.PrintWarning('DISABLE "Hair (and Fez) With Physics [RGON]"')
+        ImGui.PushNotification('DISABLE "Hair (and Fez) With Physics [RGON]"', ImGuiNotificationType.WARNING, 8000)
         return
     end
     if BethHair.HStyles.salon.Entered then
@@ -784,7 +785,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             CordSpr = EveHairCord,
             RenderLayers = EveheadDirToRender3,
             CostumeNullpos = "evehair_cord3",
-            Mass = 20,
+            Mass = 30,
             StartHeight = 4,
             PhysFunc = mod.HairLib.EveheavyHairPhys,
         },
@@ -2939,6 +2940,10 @@ function BethHair.StyleMenu.GenWindowBtns(ptype)
 
 end
 
+function BethHair.StyleMenu.NavigationIsValid(btn)
+    return btn and btn.canPressed and btn.visible
+end
+
 function BethHair.StyleMenu.GenWindowBtns2(ptype)
     local mdata = wga.GetMenu(smenu.name)
     local smenuspr = smenu.spr
@@ -2947,6 +2952,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
     mdata.navmap = navmap
     navmap.collums = {}
 
+    local NavigationIsValid = BethHair.StyleMenu.NavigationIsValid
 
     mdata.NavigationFunc = function (btn, vec)  
         local x,y = vec.X, vec.Y
@@ -3022,8 +3028,8 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
                 else
                     local add = y > 0 and 1 or -1
                     local next = mdata.HairSelPos.Y + add
-                    if navmap.collums[mdata.CurCollum][next] then
-                        mdata.HairSelPos.Y = mdata.HairSelPos.Y + add
+                    if NavigationIsValid(navmap.collums[mdata.CurCollum][next]) then
+                        mdata.HairSelPos.Y = next
                         btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
                     else
                         btn[1] = navmap.collums[mdata.CurCollum][mdata.HairSelPos.Y]
@@ -3195,7 +3201,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
     local usephys
     usephys = wga.AddButton(smenu.name, "usephys", Vector(200,148),
-    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),   ---- СЮДААААААААААААААААААААААААААААА
+    24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
         function (button)
             if smenu.SetStyleMode then
                 smenu.SetStyleMode = nil
@@ -3224,8 +3230,38 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
                 end
             end
         end, function (pos, visible)
-            BethHair.StyleMenu.setphysspr:Render(pos)
+            if visible then
+                BethHair.StyleMenu.setphysspr:Render(pos)
+            end
         end)
+    usephys.posfunc = function()
+        usephys.visible = true
+        usephys.canPressed = true
+
+        local currentPlayerStyle
+        local CurrentEntrySkladData = BethHair.StyleMenu.CurrentStyleMenuData.EntrysData["Def_HairStyles"]
+        if CurrentEntrySkladData then
+            currentPlayerStyle = CurrentEntrySkladData.LastPressedBtn and CurrentEntrySkladData.LastPressedBtn.StyleName
+        end
+        if not currentPlayerStyle then
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref or Isaac.GetPlayer()
+            if player then
+                local hairContainer = player:GetData().__PhysHair_HairSklad
+                if hairContainer and hairContainer[smenu.HairLayer] then
+                    currentPlayerStyle = hairContainer[smenu.HairLayer].HairInfo.StyleName
+                end
+            end
+        end
+        if currentPlayerStyle then
+            local HSData = BethHair.HStyles.GetStyleData(currentPlayerStyle)
+            if HSData then
+                if HSData.data.ReplaceCostumeSheep == HSData.data.TailCostumeSheep then
+                    usephys.visible = false
+                    usephys.canPressed = false
+                end
+            end
+        end
+    end
 
     local accept
     accept = wga.AddButton(smenu.name, "accept", Vector(200,174),

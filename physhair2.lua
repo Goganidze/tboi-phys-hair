@@ -188,6 +188,7 @@ return function (mod)
     ---@field HeadBack2Spr Sprite?
     ---@field TargetCostume TargetCostume?
     ---@field ReplaceCostumeSheep string|string[]?
+    ---@field TailCostumeSheep string|string[]?
     ---@field ReplaceCostumeSuffix string|string[]?
     ---@field SyncWithCostumeBodyColor boolean?
     ---@field [integer] HairDataIn

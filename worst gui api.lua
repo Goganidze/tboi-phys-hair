@@ -3553,7 +3553,7 @@ end
 
 
 
-local _, uniquepath = pcall(error,"",2)
+--local _, uniquepath = pcall(error,"",2)
 
 if WORSTGUI then
 	if WORSTGUI.Ver < menuTab.Ver then
@@ -3565,7 +3565,6 @@ if WORSTGUI then
 		function WORSTGUI.LastLoadCall()
 		
 			--WORSTGUI:AddCallback()
-			--print(WORSTGUI.Name)
 		end
 		function WORSTGUI.GlobalButtonDetect()
 			local mousetouch = false
@@ -3580,7 +3579,6 @@ if WORSTGUI then
 				end
 			end]]
 			if WORSTGUI.CachedDetect then
-				--print(#WORSTGUI.CachedDetect)
 				for i = #WORSTGUI.CachedDetect, 1, -1 do
 					local menus = WORSTGUI.CachedDetect[i]
 					menus.DetectSelectedButtonActualeActuale(mousetouch)
@@ -3590,7 +3588,6 @@ if WORSTGUI then
 					local menus = WORSTGUI.CachedDetect[i]
 					menus.OnFreePos = not mousetouch
 				end
-				--print("phys",mousetouch)
 				WORSTGUI.CachedDetect = {}
 			end
 		end
@@ -3607,7 +3604,6 @@ else
 	function WORSTGUI.LastLoadCall()
 		
 		--WORSTGUI:AddCallback()
-		--print(WORSTGUI.Name)
 
 	end
 	menuTab:AddCallback(ModCallbacks.MC_POST_MODS_LOADED, function()
@@ -3616,7 +3612,6 @@ else
 
 	function WORSTGUI.GlobalButtonDetect()
 		local mousetouch = false
-		--print(WORSTGUI.Instances)
 		
 		--[[for i, menus in pairs(WORSTGUI.Instances) do
 			print(i, mousetouch)
@@ -3637,7 +3632,6 @@ else
 				local menus = WORSTGUI.CachedDetect[i]
 				menus.OnFreePos = not mousetouch
 			end
-			--print("phys2",mousetouch)
 			WORSTGUI.CachedDetect = {}
 		end
 	end
