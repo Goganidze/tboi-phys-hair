@@ -1356,8 +1356,47 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
     end
     mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_RENDER, mod.JudasJunkPreRender)
 
+
+    local function PrintTab(tab, level)
+        level = level or 0
+        
+        if type(tab) == "table" then
+            for i,k in pairs(tab) do
+                local offset = ""
+                if level and level>0 then
+                    for j = 0, level do
+                        offset = offset .. " "
+                    end
+                end
+                print(offset .. i,k)
+                if type(k) == "table" then
+                    PrintTab(k, level+1)
+                end
+            end
+        end
+    end
+    local DeepPrint = function(...)
+        for i,k in pairs({...}) do
+            if type(k) == "table" then 
+                print(k)
+                PrintTab(k,1)
+            else
+                print(k)
+            end
+        end
+    end
+
+
     --include("stylesVariants")
     local json = require("json")
+
+    local ShortPath = function(str)
+        return string.gsub(str, mod.GamePath, "!**game**!")
+    end
+    local UnShortPath = function(str)
+        return string.gsub(str, "!%*%*game%*%*!", mod.GamePath)
+    end
+
 
     local UserdataToTab
     UserdataToTab = function(t)
@@ -1371,11 +1410,11 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
                 ---@cast t Sprite
                 local tab = {__t="spr", 
                     layer = {},
-                    gfx = t:GetFilename(),
+                    gfx = ShortPath(t:GetFilename()),
                     anim = t:GetAnimation()}
 
                 for layerID,layer in pairs(t:GetAllLayers()) do
-                    tab.layer[layerID..""] = layer:GetSpritesheetPath()
+                    tab.layer[layerID..""] = ShortPath(layer:GetSpritesheetPath())
                 end
 
                 return tab
@@ -1401,9 +1440,9 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         if __type == "vec" then
             return Vector(t.X, t.Y)
         elseif __type == "spr" then
-            local spr = GenSprite(t.gfx, t.anim)
+            local spr = GenSprite(UnShortPath(t.gfx), t.anim)
             for layerID,layer in pairs(t.layer) do
-                spr:ReplaceSpritesheet(tonumber(layerID), layer)
+                spr:ReplaceSpritesheet(tonumber(layerID), UnShortPath(layer))
             end
             spr:LoadGraphics()
             return spr
@@ -1422,10 +1461,13 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         local copy = {}
         for i,k in pairs(t) do
             local ii = type(i) == "number" and i.."" or i
-            if type(k) == "table" then
+            local ktype = type(k)
+            if ktype == "table" then
                 copy[ii] = DeepCopyHairInfo(k)
-            elseif type(k) == "userdata" then
+            elseif ktype == "userdata" then
                 copy[ii] = UserdataToTab(k)
+            elseif ktype == "string" then
+                copy[ii] = ShortPath(k)
             else
                 copy[ii] = k
             end
@@ -1439,12 +1481,15 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         for i,k in pairs(t) do
             local ii = tonumber(i) or i
             copy[ii] = k
-            if type(k) == "table" then
+            local ktype = type(k)
+            if ktype == "table" then
                 if k.__t then
                     copy[ii] = DecodeTabUserdata(k)
                 else
                     copy[ii] = DeepCopyHairInfoDecode(k)
                 end
+            elseif ktype == "string" then
+                copy[ii] = UnShortPath(k)
             end
         end
         return copy
@@ -1837,13 +1882,6 @@ local testcord = Beam(TestSpr, "body", false, false, 3)
 
 local halfAlpha = Color(1,1,1,0.15)
 
---[[
-local testimage = Renderer.LoadImage("gfx/characters/costumes/bethhairs_cord.png")
-local v1,v2,v3,v4 = Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)
-local sq = SourceQuad(v1,v2,v3,v4)
-local dq = DestinationQuad(v1+Vector(102,102),v2+Vector(102,102),v3+Vector(102,152),v4+Vector(102,152))
-local kc1 = KColor(1,1,1,1)
-]]
 
 function BethHair.StyleMenu.HUDRender()
     --[[if ms and renderms then
@@ -1864,18 +1902,6 @@ function BethHair.StyleMenu.HUDRender()
     --testcord:Add(Vector(190,100),30)
     --testcord:Render()
 
---[[
-    local fl = Game():GetRoom():GetBackdrop():GetFloorImage()
-    local trans = Renderer.StartTransformation(fl)
-    --local sq = SourceQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32))
-    --local dq = DestinationQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32))
-    --trans:Render(testimage, sq, dq, kc1)
-    trans:Render(testimage, 
-        SourceQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)), 
-        DestinationQuad(Vector(0,0), Vector(32,0), Vector(0,32), Vector(32,32)), 
-        KColor(1,1,1,1))
-    trans:Apply ()
-]]
     local notpaused = not game:IsPaused()
     if notpaused then
         --wga.DetectMenuButtons(smenu.name)
