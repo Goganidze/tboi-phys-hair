@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metadata>
-    <name>Hair (and Fez) With Physics [RGON]</name>
-    <directory>bethhair</directory>
-    <id>3127377427</id>
+    <name>Small Hairstyle Pack</name>
+    <directory>physhair2</directory>
+    
     <description>[h2]This mod requires REPENTOGON to work[/h2]
 
 Check the link [url=https://repentogon.com][/url]
 [hr][/hr]
-This mod replaces the [i]static[/i] sprite of Bethany's tails with a dynamic one, BLESSED BY THE POWER OF REPENTOGON.
-
-The mod has the settings menu in imgui.</description>
+</description>
     <version>1.9</version>
     <visibility>Private</visibility>
     <tag id="Lua"/>
