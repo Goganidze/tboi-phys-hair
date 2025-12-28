@@ -1592,8 +1592,13 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
                                 for i = 1, #hairInfo do
                                     if hairInfo[i] then
                                         local tailstdata = stdata.data[i]
-                                        if tailstdata and tailstdata.PhysFunc then
-                                            hairInfo[i].PhysFunc = tailstdata.PhysFunc
+                                        if tailstdata then
+                                            if tailstdata.PhysFunc then
+                                                hairInfo[i].PhysFunc = tailstdata.PhysFunc
+                                            end
+                                            if tailstdata.PreUpdate then
+                                                hairInfo[i].PreUpdate = tailstdata.PreUpdate
+                                            end
                                         end
                                     end
                                 end
