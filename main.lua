@@ -70,7 +70,7 @@ end
 
 mod.HairLib = include("physhair2")
 
----@type _HairCordData
+---@type _HairCordData2
 mod.HairLib = mod.HairLib(mod)
 
 mod.HStyles = {
@@ -1694,6 +1694,10 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             local favuncoded = {}
             if savedata.favorites then
                 for k,v in pairs(savedata.favorites) do
+                    for k2, v2 in pairs(v) do
+                        v[tonumber(k2)] = v2
+                        v[k2] = nil
+                    end
                     favuncoded[tonumber(k)] = v
                 end
             end
@@ -3074,7 +3078,6 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
 
     local playerdata = (smenu.TargetPlayer and smenu.TargetPlayer.Ref or Isaac.GetPlayer()):GetData()
-    smenu.PrevStyleName = playerdata._PhysHair_HairStyle and playerdata._PhysHair_HairStyle.StyleName
 
     local hspd = BethHair.HairStylesData.playerdata
     local pstyles = hspd[ptype]
@@ -3292,6 +3295,17 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             end
         end
     end
+    do
+        local Sklad = playerdata.__PhysHair_HairSklad
+        if Sklad and Sklad[smenu.HairLayer] then
+            local hairInfo = Sklad[smenu.HairLayer].HairInfo
+            if hairInfo.ReplaceCostumeSheep == hairInfo.TailCostumeSheep then
+                smenu.SetStyleMode = 1
+                BethHair.StyleMenu.setphysspr:SetFrame(1)
+            end
+        end
+    end
+
 
     local accept
     accept = wga.AddButton(smenu.name, "accept", Vector(200,174),
@@ -3309,10 +3323,29 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             BethHair.StyleMenu.CloseWindow()
 
             local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
-            if smenu.PrevStyleName then
-                BethHair.HStyles.SetStyleToPlayer(player, smenu.PrevStyleName, smenu.SetStyleMode)
-            else
+            --if smenu.PrevStyleName then
+            --    BethHair.HStyles.SetStyleToPlayer(player, smenu.PrevStyleName, smenu.SetStyleMode)
+            --else
 
+            --end
+            if smenu.PrePlayerHairSklad then
+                local sklad = player:GetData().__PhysHair_HairSklad
+                for i=0, #smenu.PrePlayerHairSklad do
+                    BethHair.HStyles.SetStyleToPlayer(player, smenu.PrePlayerHairSklad[i].HairInfo.StyleName, i)
+                    sklad[i] = smenu.PrePlayerHairSklad[i]
+                    local hairContainer = sklad[i]
+
+                    local costumedescs = player:GetCostumeSpriteDescs()
+                    if hairContainer.HairInfo.TargetCostume then
+                        mod.HairLib.UpdateTargetCostume(player, hairContainer.HairInfo, costumedescs)
+                    end
+                    if hairContainer.HairInfo.ItemCostumeAlts then
+                        mod.HairLib.UpdateItemCostumeAlts(player, hairContainer.HairInfo, costumedescs, i)
+                    end
+                    mod.HairLib.CheckAndRemoveItemCostumeAlts(player, sklad, costumedescs)
+                    mod.HairLib.UpdateTailsCordColor(player, sklad, player:GetBodyColor())
+                    Isaac.RunCallbackWithParam(mod.HairLib.Callbacks.HAIR_POST_INIT, ptype, player, sklad.HairInfo)
+                end
             end
 
         end, function (pos, visible)
@@ -3554,10 +3587,18 @@ function BethHair.StyleMenu.ShowWindow()
     smenu.wind.backcolornfocus = Color(1,1,1,1)
 
     BethHair.StyleMenu.TargetPlayer = smenu.TargetPlayer or EntityPtr(Isaac.GetPlayer())
+    local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer()
+    smenu.PrePlayerHairSklad = {}
+    local playerHairSklad = player:GetData().__PhysHair_HairSklad
+    if playerHairSklad then
+        for i=0, #playerHairSklad do
+            smenu.PrePlayerHairSklad[i] = playerHairSklad[i]
+        end
+    end
 
-    wga.SetControlType(wga.enum.ControlType.CONTROLLER, smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer() )
+    wga.SetControlType(wga.enum.ControlType.CONTROLLER, player )
 
-    local ptype = smenu.TargetPlayer and smenu.TargetPlayer.Ref:ToPlayer():GetPlayerType()
+    local ptype = player:GetPlayerType()
         or Isaac.GetPlayer():GetPlayerType()
     BethHair.StyleMenu.GenWindowBtns2(ptype)
 

@@ -1959,7 +1959,7 @@ local PlayeeTypeToHairAnm2 = {
 local PlayeeTypeToHairPath = {
     [PlayerType.PLAYER_MAGDALENE]="gfx/characters/costumes/character_002_maggiesbeautifulgoldenlocks.png",
     [PlayerType.PLAYER_CAIN]="gfx/characters/costumes/character_003_cainseyepatch.png", 
-    [PlayerType.PLAYER_JUDAS]="gfx/characters/costumes/character_004_judasfez.png",
+    --[PlayerType.PLAYER_JUDAS]="gfx/characters/costumes/character_004_judasfez.png",
     --[PlayerType.PLAYER_EVE]="gfx/characters/costumes/character_005_evehead.png",
     [PlayerType.PLAYER_AZAZEL]="gfx/characters/costumes/character_008_azazelhead.png",
     --[PlayerType.PLAYER_EDEN]="gfx/characters/costumes/character_003_cainseyepatch",
@@ -1976,7 +1976,7 @@ local PlayeeTypeToHairPath = {
     [PlayerType.PLAYER_ISAAC_B]="gfx/characters/costumes/character_001b_isaacsscars.png",
     [PlayerType.PLAYER_MAGDALENE_B]="gfx/characters/costumes/character_002b_maggiesnotsobeautifulgoldenlocks.png", 
     [PlayerType.PLAYER_CAIN_B]="gfx/characters/costumes/character_003b_cainsbloodyeyepatch.png", 
-    [PlayerType.PLAYER_JUDAS_B]="gfx/characters/costumes/character_004b_judasfez.png",
+    --[PlayerType.PLAYER_JUDAS_B]="gfx/characters/costumes/character_004b_judasfez.png",
     [PlayerType.PLAYER_BLUEBABY_B]="gfx/characters/costumes/character_005b_bluebabyhead.png", 
     [PlayerType.PLAYER_EVE_B]="gfx/characters/costumes/character_006b_evehead.png", 
     [PlayerType.PLAYER_SAMSON_B]="gfx/characters/costumes/character_007b_samsonshair.png",
@@ -2161,6 +2161,39 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 "gfx/characters/costumes/character_018b_bethshair.png", "gfx/characters/character_b16_bethany.anm2",
                 mod
             )
+            
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_004_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS,  NullItemID.ID_JUDAS, 
+                "gfx/characters/costumes/character_004_judasfez.png", "gfx/characters/character_004_judasfez.anm2",
+                mod
+            )
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_004_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS,  NullItemID.ID_JUDAS, 
+                "gfx/characters/costumes/character_004_judasfez.png", "gfx/characters/character_004_judasfez.anm2",
+                mod
+            )
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_004b_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS_B,  NullItemID.ID_JUDAS_B, 
+                "gfx/characters/costumes/character_004b_judasfez.png", "gfx/characters/character_b04_judas.anm2",
+                mod
+            )
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_004b_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS_B,  NullItemID.ID_JUDAS_B, 
+                "gfx/characters/costumes/character_004b_judasfez.png", "gfx/characters/character_b04_judas.anm2",
+                mod
+            )
+
+
             
             for ptype in pairs(PlayeeTypeToHairPath) do
                 --if PlayeeTypeToHairPath[ptype] then

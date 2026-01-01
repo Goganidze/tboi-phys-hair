@@ -23,7 +23,7 @@ return function (mod)
         [2] = {3,2}, --HeadRight
     }
     
-    ---@class _HairCordData
+    ----@class _HairCordData
     ---@field Callbacks HairCordcallbacks
     ---@field PlayerData table
     _HairCordData = _HairCordData or {PlayerData = {}, Callbacks = {}}

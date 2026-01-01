@@ -31,7 +31,15 @@ return function()
     end
 
     function tab.cordUpdate(data, ent, headPos, playerPos)
+
         local _JFFC = data._JudasFezFakeCord
+
+        if ent.FrameCount % 5 == 0 then
+            local hairInfo = data.__PhysHair_HairSklad[0].HairInfo
+            _JFFC.HideCord = hairInfo.ReplaceCostumeSheep == hairInfo.TailCostumeSheep
+        end
+        if _JFFC.HideCord then return end
+
         local room = game:GetRoom()
         local spr = _JFFC.SavedSpr 
 
@@ -41,6 +49,14 @@ return function()
         local CountPos = _JFFC.Unit or 10
 
         spr.Color = ent:GetSprite().Color
+
+        if _JFFC.PrePlayerPos and _JFFC.PrePlayerPos:Distance(ent.Position) > 100 then
+            playerPos = worldToScreen(ent.Position)
+            headPos = playerPos + ent:GetCostumeNullPos("BethHair_headref", true, Vector(0,0))
+            _JFFC["targetOffset"] = playerPos + ent:GetCostumeNullPos("judasfez_cord", true, Vector(0,0)) 
+        end
+
+        _JFFC.PrePlayerPos = ent.Position
 
         --if then --физика
             if not _JFFC["CordFrame"] and Isaac.GetFrameCount() % 2 == 0 then
@@ -95,10 +111,11 @@ return function()
                         velic = velic + Vector(0, (.25)*scale)
                     end
 
-                    local bttdis = lpos:Distance(prepos)
+                    --local bttdis = lpos:Distance(prepos)
             
                     if bttdis > Stretch*3*scale then
-                        _JFFC.pos[i] = prepos-(prepos-lpos):Resized(Stretch*3*scale)
+                        --_JFFC.pos[i] = prepos-(prepos-lpos):Resized(Stretch*3*scale)
+                        _JFFC.pos[i] = prepos + (lpos-prepos):Resized(Stretch*3*scale)
                         lpos = _JFFC.pos[i]
                         --bttdis = scretch*scale -- math.min(bttdis, scretch*scale*4) --/scale
                     end
@@ -148,6 +165,9 @@ return function()
 
         if data._JudasFezFakeCord  and not data._JudasFezFakeCord.ignoreFrame then
             local _JFFC = data._JudasFezFakeCord
+
+            if _JFFC.HideCord then return end
+
             local room = game:GetRoom()
             local rendermode = room:GetRenderMode()
             --local LastPos = worldToScreen(_JFFC.target.Position)
