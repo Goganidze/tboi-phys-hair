@@ -319,6 +319,18 @@ local getAngleDiv = function(a,b)
 	return r1>r2 and r2 or r1
 end
 
+local function ScreenFunc(func, ...)
+	local success, err = pcall(func, ...)
+	if not success then
+		if REPENTOGON then
+			Console.PrintError("[WGA] Button renderFunc error: " .. tostring(err))
+		else
+			print("[WGA] Button renderFunc error:", err)
+		end
+	end
+	return success
+end
+
 
 menuTab.strings = {
 	["Room Name:"] = {en = "Room Name:", ru = "Имя Комнаты:"},
@@ -1949,7 +1961,8 @@ function menuTab.RenderButton(menuName, btn)
 		and menuTab.TextboxPopup.TargetBtn[2] == btn.name
 
 	if btn.posfunc then
-		btn.posfunc(btn)
+		--btn.posfunc(btn)
+		ScreenFunc(btn.posfunc, btn)
 	end
 	if btn.visible then
 		local renderPos = btn.pos or Vector(50,50)
@@ -1990,7 +2003,8 @@ function menuTab.RenderButton(menuName, btn)
 	end
 
 	if btn.render then
-		btn.render(btn.pos, btn.visible)
+		--btn.render(btn.pos, btn.visible)
+		ScreenFunc(btn.render, btn.pos, btn.visible)
 	end
 	if btn.isDrager then
 		local pos = btn.pos + btn.dragCurPos
@@ -2021,7 +2035,8 @@ function menuTab.RenderMenuButtons(menuName)
 			---@type EditorButton
 			local btn = menuTab.MenuData[menuName].Buttons[dat.btn]
 			if btn.posfunc then
-				btn.posfunc(btn)
+				--btn.posfunc(btn)
+				ScreenFunc(btn.posfunc, btn)
 			end
 			if btn.visible then
 				local renderPos = btn.pos or Vector(50,50)

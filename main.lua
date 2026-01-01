@@ -760,8 +760,8 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
 
 
         [2] = {
-            Scretch = scretch * 1.2,
-            DotCount = 4,
+            Scretch = scretch * 1.4,
+            DotCount = 3,
             CordSpr = EveHairCord,
             RenderLayers = EveheadDirToRender,
             CostumeNullpos = "evehair_cord1",
@@ -770,23 +770,23 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
             StartHeight = 5,
         },
         [3] = {
-            Scretch = scretch * 0.1 ,
+            Scretch = scretch * 0.4 ,
             CordSpr = EveHairCord2,
             RenderLayers = EveheadDirToRender2,
             CostumeNullpos = "evehair_cord2",
-            DotCount = 2,
+            DotCount = 1,
             Length = 12,
             StartHeight = 4,
             Mass = 25,
-            CS = {[-1]=5,[0]=8,12}
+            CS = {[-1]=5,[0]=12,12}
         },
         [1] = {
             Scretch = scretch * 1.0,
             CordSpr = EveHairCord,
             RenderLayers = EveheadDirToRender3,
             CostumeNullpos = "evehair_cord3",
-            Mass = 30,
-            StartHeight = 4,
+            Mass = 79,
+            StartHeight = 3,
             PhysFunc = mod.HairLib.EveheavyHairPhys,
         },
     }, {modfolder = nil}) --resources
@@ -3172,15 +3172,14 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
                     if targetPlayer and targetPlayer.Ref then
                         local playerdata = targetPlayer.Ref:GetData()
                         local PSH = playerdata._PhysHair_HairStyle
-                        return PSH and PSH[self.HairLayer].StyleName == stylename
+                        return PSH and PSH[self.HairLayer] and PSH[self.HairLayer].StyleName == stylename
                     end
                 end,
             }
 
             self.StyleName = stylename
 
-
-            if favorited == stylename then
+            if favorited and favorited[self.HairLayer] and favorited[self.HairLayer].style == stylename then
                 smenu.FavoriteBtn = self
             end
 
@@ -3334,10 +3333,10 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             
             if not isAlreadyFavorite then
                 smenu.FavoriteBtn = btn
-                mod.HStyles.SetFavoriteStyle(Ptype, style)
+                mod.HStyles.SetFavoriteStyle(Ptype, style, btn.HairLayer, smenu.SetStyleMode)
             else
                 smenu.FavoriteBtn = nil
-                mod.HStyles.RemoveFavoriteStyle(Ptype)
+                mod.HStyles.RemoveFavoriteStyle(Ptype, btn.HairLayer)
             end
 
         end
@@ -3351,7 +3350,7 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
         local targetPlayer = smenu.TargetPlayer
         if targetPlayer and targetPlayer.Ref then
             local pdata = smenu.TargetPlayer.Ref:GetData()
-            local curStyle = pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle.StyleName
+            local curStyle = pdata._PhysHair_HairStyle and pdata._PhysHair_HairStyle[smenu.HairLayer] and pdata._PhysHair_HairStyle[smenu.HairLayer].StyleName
             if curStyle then
                 local menustyledata = BethHair.StyleMenu.CurrentStyleMenuData
                 for SkladName, entry in pairs(menustyledata.Entrys[menustyledata.SelectedEntrySklad]) do

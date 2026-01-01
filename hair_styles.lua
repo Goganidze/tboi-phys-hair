@@ -100,14 +100,20 @@ function mod.HairPreInit(_, player)
                 end
             end
         else
-            local firstname = HairStylesData.favorites[ptype] -- or pladat[1]
-            if firstname then
-                local stdata = HairStylesData.styles[firstname]
-                if stdata then
-                    mod.SetHairStyleData(player,ptype, stdata.data)
-                    --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+            local favorites = HairStylesData.favorites[ptype] -- or pladat[1]
+            if favorites then
+                for layer = 0, #favorites do
+                    local favData = favorites[layer]
+                    if favData then
+                        local stdata = HairStylesData.styles[favData.style]
+                        if stdata then
+                            --mod.SetHairStyleData(player,ptype, stdata.data)
+                            mod.HStyles.SetStyleToPlayer(player, favData.style, layer, favData.mode)
+                            --mod.HStyles.UpdateMainHairSprite(player, data, stdata)
+                        end
+                    end
                 end
-            end 
+            end
         end
     end
 end
@@ -684,12 +690,13 @@ function mod.HStyles.GetHairCostumeSpr(player)
 end
 
 
-function mod.HStyles.SetFavoriteStyle(Ptype, style_name)
+function mod.HStyles.SetFavoriteStyle(Ptype, style_name, hairLayer, styleMode)
     if Ptype and style_name then
         local stdata = HairStylesData.styles[style_name]
         if stdata then
             if stdata.ID == Ptype then
-                HairStylesData.favorites[Ptype] = style_name
+                HairStylesData.favorites[Ptype] = HairStylesData.favorites[Ptype] or {}
+                HairStylesData.favorites[Ptype][hairLayer] = {style=style_name, mode=styleMode}
             end
         end
     end
@@ -699,9 +706,9 @@ function mod.HStyles.GetFavoriteStyle(Ptype)
     return HairStylesData.favorites[Ptype]
 end
 
-function mod.HStyles.RemoveFavoriteStyle(Ptype)
-    if Ptype then
-        HairStylesData.favorites[Ptype] = nil
+function mod.HStyles.RemoveFavoriteStyle(Ptype, hairLayer)
+    if Ptype and HairStylesData.favorites[Ptype] then
+        HairStylesData.favorites[Ptype][hairLayer] = nil
     end
 end
 
