@@ -1097,7 +1097,7 @@ mod.HStyles.AddStyle("EveDef", PlayerType.PLAYER_EVE, {
         mod.HStyles.AddStyle("LilithSmolImp", PlayerType.PLAYER_LILITH, {
             TargetCostume = {ID = NullItemID.ID_LILITH, Type = ItemType.ITEM_NULL},
             --SyncWithCostumeBodyColor = true,
-            --SkinFolderSuffics = "gfx/characters/costumes/lilith_styles/smol imp/",
+            SkinFolderSuffics = "gfx/characters/costumes/lilith_styles/smol imp/",
             ReplaceCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair_notails.png",
             TailCostumeSheep = "gfx/characters/costumes/lilith_styles/smol imp/character_014_lilithhair.png",
             NullposRefSpr = GenSprite("gfx/characters/costumes/lilith_styles/smol imp/lilithhead.anm2"),
