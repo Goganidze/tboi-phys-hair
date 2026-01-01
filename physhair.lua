@@ -907,7 +907,6 @@ return function (mod)
                 else
                     EXAnim_HL:Render(playerPos)
                 end
-                print(EXAnim_HL:GetAnimation(), EXAnim_HL:GetOverlayAnimation(), "gsgs")
             end]]
 
             if isbeth[ptype] and mod.OdangoMode then

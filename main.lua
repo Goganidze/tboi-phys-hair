@@ -1,3 +1,4 @@
+
 --BethHair = RegisterMod("Vifaniia s fisikoi", 1)
 local backparam = {}
 if BethHair then
@@ -12,7 +13,7 @@ if BethHair then
 end
 
 
-local mod = RegisterMod("Vifaniia s fisikoi", 1) -- BethHair
+local mod = RegisterMod("Vifaniia s fisikoi 2", 1) -- BethHair
 BethHair = mod
 local BethHair = BethHair
 for i,k in pairs(backparam) do
@@ -21,7 +22,6 @@ end
 mod.BlockedChar = {}
 local Isaac = Isaac
 local game = Game()
-local Room 
 local Wtr = 20/13
 
 local maxcoord = 4
@@ -406,9 +406,9 @@ mod.HStyles.AddStyle("BethOneSideTail", PlayerType.PLAYER_BETHANY, {
         RenderLayers = { [3] = 3, [0] = 2, [1] = 3, [2] = 3 },
         CostumeNullpos = "bethshair_cord1",
         Length = 24,
-        Scretch = scretch * 1.0,
+        Scretch = scretch * 1.1,
         PhysFunc = mod.extraPhysFunc.PonyTailFunc,
-        --= Mass = 12,
+        Mass = 15.5,
         StartHeight = -1,
         --CS = {[0]=3,10,15}
     },

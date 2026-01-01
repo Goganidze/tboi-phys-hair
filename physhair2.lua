@@ -136,6 +136,19 @@ return function (mod)
         return tab
     end
 
+    local function formatCostumeDescsByItemID(costumemap, itemType)
+        local tab = {}
+        for i = 1, #costumemap do
+            local cost = costumemap[i]
+            local itemConf = cost:GetItemConfig()
+            if itemConf.Type == itemType then
+                tab[itemConf.ID] = costumemap[i]
+            end
+        end
+        return tab
+    end
+
+
     --function _HairCordData2.GetTargetCostume(playerType)
     --    if playerType then
     --        return {ID = PlayerTypeToTargetCostume[playerType], Type = ItemType.ITEM_NULL, pos = PlayerTypeToTargetCostumePos[playerType] or 0}
@@ -257,6 +270,7 @@ return function (mod)
             local hairContainer = sklad[hairData.layer or 0]
 
             hairContainer.HairInfo = TabDeepCopy(hairData.HairInfo)
+            hairContainer.layer = hairData.layer or 0
             local hairInfo = hairContainer.HairInfo
             --for i,k in pairs(hairContainer.HairInfo) do
             --    print(i,k)
@@ -323,11 +337,11 @@ return function (mod)
             end
 
             if hairInfo.ItemCostumeAlts then
-                _HairCordData2.UpdateItemCostumeAlts(player, hairContainer.HairInfo, costumedescs)
+                _HairCordData2.UpdateItemCostumeAlts(player, hairContainer.HairInfo, costumedescs, hairData.layer or 0)
             end
+            _HairCordData2.CheckAndRemoveItemCostumeAlts(player, sklad, costumedescs)
 
             _HairCordData2.UpdateTailsCordColor(player, sklad, player:GetBodyColor())
-
 
 
             Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.HAIR_POST_INIT, ptype, player, hairContainer)
@@ -722,6 +736,7 @@ return function (mod)
                     if isreflect then
                         reflectOffset = sklad.reflectOffset2 - sklad.reflectOffset
                         zeroPointPos = headpos + Vector(hairPos.X,-hairPos.Y)
+                        cordSpr.FlipX = not cordSpr.FlipX
                     else
                         zeroPointPos = headpos + hairPos
                     end
@@ -761,6 +776,9 @@ return function (mod)
                         --Isaac.DrawLine(f1,f2 , KColor(1,1,1,1), KColor(1,1,1,1), 1)
                     end
                     cord:Render()
+                    if isreflect then
+                        cordSpr.FlipX = not cordSpr.FlipX
+                    end
                 end
             end
         end
@@ -961,6 +979,7 @@ return function (mod)
                         reflectOffset = sklad.reflectOffset2 - sklad.reflectOffset
                         zeroPointPos = headpos + Vector(hairPos.X,-hairPos.Y)
                         --zeroPointRaf = headpos + hairPos
+                        cordSpr.FlipX = not cordSpr.FlipX
                     else
                         zeroPointPos = headpos + hairPos
                     end
@@ -1006,6 +1025,10 @@ return function (mod)
                     --Isaac.DrawLine(worldToScreen(player.Position), (tailData[0].p:GetPosition()),
                     --    KColor(1,1,1,1), KColor(1,1,1,1), 2)
                     cord:Render()
+
+                    if isreflect then
+                        cordSpr.FlipX = not cordSpr.FlipX
+                    end
                 end
 
                 local shadowCord = tailData.ShadowCordSpr
@@ -1147,7 +1170,7 @@ return function (mod)
                         local replacestr = hairdata.ReplaceCostumeSheep
 
                         if type(replacestr) == "table" then
-                            for i, str in ipairs(replacestr) do
+                            for i, str in pairs(replacestr) do
                                 local finalstr = str:sub(0, -5) .. bodyColorSuffix .. ".png"
                                 if not CheckPNGExists(finalstr, cacheNoHairColor) then
                                     finalstr = str:sub(0, -5) .. ".png"
@@ -1160,7 +1183,7 @@ return function (mod)
                             if not CheckPNGExists(finalstr, cacheNoHairColor) then
                                 finalstr = replacestr:sub(0, -5) .. ".png"
                             end
-                            for layerId = 0, cspr:GetLayerCount() do
+                            for layerId = 0, cspr:GetLayerCount()-1 do
                                 cspr:ReplaceSpritesheet(layerId, finalstr)
                                 hairdata.FinalCostumePath[layerId] = finalstr
                             end
@@ -1178,14 +1201,38 @@ return function (mod)
         end
     end
 
-    function _HairCordData2.UpdateItemCostumeAlts(player, hairdata, costumeDescs)
+    function _HairCordData2.UpdateItemCostumeAlts(player, hairdata, costumeDescs, hairLayer)
         local ItemCostumeAlts = hairdata.ItemCostumeAlts
+        local sklad = player:GetData().__PhysHair_HairSklad
+        sklad.OrigItemCostumeAlts = sklad.OrigItemCostumeAlts or {[0]={},[1]={}}
+        local OrigItemCostumeAlts = sklad.OrigItemCostumeAlts
+
+        --local resprites = {[0]={},[1]={}}
         for i, csd in pairs(costumeDescs) do
             local conf = csd:GetItemConfig()
             for itemAltsId = 1, #ItemCostumeAlts do
                 local itemAlt = ItemCostumeAlts[itemAltsId]
                 if conf.ID == itemAlt.ID and (not itemAlt.Type or itemAlt.Type == conf.Type) then
                     local cspr = csd:GetSprite()
+
+                    local OICA_type = not itemAlt.Type and 1 or itemAlt.Type > 1 and 1 or itemAlt.Type    --not itemAlt.Type and 1 or math.min(1,itemAlt.Type)
+                    --if not resprites[OICA_type] then
+                    --    resprites[OICA_type] = {}
+                    --end
+                    --resprites[OICA_type][itemAlt.ID] = true
+
+                    if not OrigItemCostumeAlts[OICA_type] then
+                        OrigItemCostumeAlts[OICA_type] = {}
+                    end
+
+                    if not OrigItemCostumeAlts[OICA_type][itemAlt.ID] then
+                        local t = {anm2 = cspr:GetFilename(), gfx = {}, hairLayer = hairLayer}
+                        for layerId = 0, cspr:GetLayerCount()-1 do
+                            t.gfx[layerId] = cspr:GetLayer(layerId):GetDefaultSpritesheetPath()
+                        end
+                        OrigItemCostumeAlts[OICA_type][itemAlt.ID] = t
+                    end
+
                     if itemAlt.anm2 then
                         cspr:Load(itemAlt.anm2, true)
                     end
@@ -1196,7 +1243,7 @@ return function (mod)
                             end
                         else 
                             local gfx = itemAlt.gfx
-                            for layerId = 0, cspr:GetLayerCount() do
+                            for layerId = 0, cspr:GetLayerCount()-1 do
                                 cspr:ReplaceSpritesheet(layerId, gfx)
                             end
                         end
@@ -1206,6 +1253,64 @@ return function (mod)
             end
         end
     end
+
+    function _HairCordData2.CheckAndRemoveItemCostumeAlts(player, hairSklad, costumeDescs)
+        hairSklad.OrigItemCostumeAlts = hairSklad.OrigItemCostumeAlts or {[0]={},[1]={}}
+        local OrigItemCostumeAlts = hairSklad.OrigItemCostumeAlts
+
+        local resprites = {[0]={},[1]={}}
+        for hairLayer = 0, #hairSklad do    --, hairContainer in pairs(hairSklad) do
+            local hairContainer = hairSklad[hairLayer]
+            --if type(i) == "number" then
+                local hairInfo = hairContainer.HairInfo
+                if hairInfo.ItemCostumeAlts then
+                    for j = 1, #hairInfo.ItemCostumeAlts do
+                        local itemAlt = hairInfo.ItemCostumeAlts[j]
+                        local OICA_type = not itemAlt.Type and 1 or itemAlt.Type > 1 and 1 or itemAlt.Type
+                        --if not repsrites[OICA_type][itemAlt.ID] then
+                            resprites[OICA_type][itemAlt.ID] = true
+                        --end
+                    end
+                end
+            --end
+        end
+
+        local formatedCostumeDescs0, formatedCostumeDescs1  --formatCostumeDescsByItemID(costumeDescs
+        for i, itemAlt in pairs(OrigItemCostumeAlts[0]) do
+            if not resprites[0][i] then
+                if not formatedCostumeDescs0 then
+                    formatedCostumeDescs0 = formatCostumeDescsByItemID(costumeDescs, 0)
+                end
+                local csd = formatedCostumeDescs0[i]
+                if csd then
+                    local cspr = csd:GetSprite()
+                    cspr:Load(itemAlt.anm2, true)
+                    for layerid, gfx in pairs(itemAlt.gfx) do
+                        cspr:ReplaceSpritesheet(layerid, gfx)
+                    end
+                    cspr:LoadGraphics()
+                end
+            end
+        end
+
+        for i, itemAlt in pairs(OrigItemCostumeAlts[1]) do
+            if not resprites[1][i] then
+                if not formatedCostumeDescs1 then
+                    formatedCostumeDescs1 = formatCostumeDescsByItemID(costumeDescs, 1)
+                end
+                local csd = formatedCostumeDescs1[i]
+                if csd then
+                    local cspr = csd:GetSprite()
+                    cspr:Load(itemAlt.anm2, true)
+                    for layerid, gfx in pairs(itemAlt.gfx) do
+                        cspr:ReplaceSpritesheet(layerid, gfx)
+                    end
+                    cspr:LoadGraphics()
+                end
+            end
+        end
+    end
+
 
     function _HairCordData2.UpdateTailsCordColor(player, sklad, bodyColor)
         local bodyColorSuffix = bodycolor[bodyColor] or ""
@@ -1270,6 +1375,44 @@ return function (mod)
 
         --_HairCordData2.UpdateHairsCordPoses(player, sklad)
     end
+
+
+    mod:AddCallback(ModCallbacks.MC_POST_PLAYER_REMOVE_COSTUME, function(_, itemConf, player)
+        local itemId,itemType = itemConf.ID, itemConf.Type
+
+        local sklad = player:GetData().__PhysHair_HairSklad
+        if sklad then
+            local OrigItemCostumeAlts = sklad.OrigItemCostumeAlts
+            if OrigItemCostumeAlts then
+                local OICA_type = math.min(1,itemType)
+                if OrigItemCostumeAlts[OICA_type][itemId] then
+                    _HairCordData2.CheckAndRemoveItemCostumeAlts(player, sklad, player:GetCostumeSpriteDescs())
+                end
+            end
+        end
+    end)
+
+    mod:AddCallback(ModCallbacks.MC_POST_PLAYER_ADD_COSTUME, function(_, itemConf, player)
+        local itemId,itemType = itemConf.ID, itemConf.Type
+
+        local sklad = player:GetData().__PhysHair_HairSklad
+        if sklad then
+            local costumeDescs = player:GetCostumeSpriteDescs()
+            for hairLayer = 0, #sklad do
+                local hairContainer = sklad[hairLayer]
+                local hairdata = hairContainer.HairInfo
+                
+                if hairdata.ItemCostumeAlts then
+                    for j=1, #hairdata.ItemCostumeAlts do
+                        local ItemAlts = hairdata.ItemCostumeAlts[j]
+                        if ItemAlts.ID == itemId and ItemAlts.Type == itemType then
+                            _HairCordData2.UpdateItemCostumeAlts(player, hairdata, costumeDescs, hairLayer)
+                        end
+                    end
+                end
+            end
+        end
+    end)
 
 
 
