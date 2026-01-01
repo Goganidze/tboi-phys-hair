@@ -3415,7 +3415,6 @@ function menuTab.DraggerGetValue(btn)
 			local full = btn.y - btn.DragerSize
 			
 			local preval = btn.dragCurPos.Y / full
-			print(preval, btn.ValueSize)
 			return preval --* btn.ValueSize
 		end
 	end
