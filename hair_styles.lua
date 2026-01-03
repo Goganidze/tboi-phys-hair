@@ -1,3 +1,4 @@
+---@type BethHair
 local mod = BethHair
 
 local Isaac = Isaac
@@ -892,8 +893,8 @@ function mod.HStyles.HairKeeper.update(_, ent)
 
         if not data.removedwall then
             data.removedwall = true
-            data.level = data.level or game:GetLevel()
-            local crds = data.level:GetCurrentRoomDesc()
+            --data.level = data.level or game:GetLevel()
+            --local crds = data.level:GetCurrentRoomDesc()
             --if crds.Flags & RoomDescriptor.FLAG_NO_WALLS == 0 then
             --    crds.Flags = crds.Flags | RoomDescriptor.FLAG_NO_WALLS
             --    data.removeFLAG_NO_WALLS = true
@@ -909,6 +910,18 @@ function mod.HStyles.HairKeeper.update(_, ent)
             --    local crds = data.level:GetCurrentRoomDesc()
             --    crds.Flags = crds.Flags - RoomDescriptor.FLAG_NO_WALLS
             --end
+        end
+        
+        if data.SillyBounce then
+            local t = math.sin(data.SillyBounce) * math.min(1, data.SillyBounce / 80)
+            spr:GetLayer(1):SetSize( Vector.One + Vector(t < -0.6 and (-0.6+t*0.1) or (t), -t ) )
+
+            data.SillyBounce = data.SillyBounce - 1
+            if data.SillyBounce <= 0 then
+                data.SillyBounce = nil
+                --spr.Scale = Vector.One
+                spr:GetLayer(1):SetSize(Vector.One)
+            end
         end
     else
         if data.HintAnimCooldown then
@@ -934,6 +947,21 @@ function mod.HStyles.HairKeeper.update(_, ent)
     ent.Velocity = (ent.TargetPosition - ent.Position) / 5
 end
 mod:AddCallback(ModCallbacks.MC_POST_SLOT_UPDATE, mod.HStyles.HairKeeper.update, mod.HStyles.HairKeeper.VAR)
+
+function mod.HStyles.HairKeeper.render(_, ent)
+    local data = ent:GetData()
+    local spr = ent:GetSprite()
+
+    if ent.Target then
+        if mod.WGA.IsMouseBtnTriggered(0) 
+        and Input.GetMousePosition(true):Distance(ent.Position + Vector(0,-40)) < 50 then
+            data.SillyBounce = not data.SillyBounce and (10) or data.SillyBounce + 10
+            sfx:Play(SoundEffect.SOUND_MEAT_JUMPS, 0.5, nil, nil, 1 + data.SillyBounce * 0.01)
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_SLOT_RENDER, mod.HStyles.HairKeeper.render, mod.HStyles.HairKeeper.VAR)
+
 
 ---@param ent EntitySlot
 function mod.HStyles.HairKeeper.preupdate(_, ent)

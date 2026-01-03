@@ -1,5 +1,5 @@
 <AnimatedActor>
-	<Info CreatedBy="Unknown" CreatedOn="08.12.2025 14:03:47" Version="34" Fps="30"/>
+	<Info CreatedBy="Unknown" CreatedOn="03.01.2026 14:37:42" Version="36" Fps="30"/>
 	<Content>
 		<Spritesheets>
 			<Spritesheet Path="hairstyles_window.png" Id="0"/>
@@ -541,6 +541,19 @@
 				<LayerAnimation LayerId="1" Visible="true">
 					<Frame XPosition="0" YPosition="0" XPivot="0" YPivot="10" XCrop="128" YCrop="0" Width="80" Height="20" XScale="-600" YScale="2000" Delay="1" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="false"/>
 				</LayerAnimation>
+			</LayerAnimations>
+			<NullAnimations/>
+			<Triggers/>
+		</Animation>
+		<Animation Name="detail2" FrameNum="1" Loop="false">
+			<RootAnimation>
+				<Frame XPosition="0" YPosition="0" XScale="100" YScale="100" Delay="1" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="false"/>
+			</RootAnimation>
+			<LayerAnimations>
+				<LayerAnimation LayerId="0" Visible="true">
+					<Frame XPosition="-12" YPosition="-24" XPivot="0" YPivot="0" XCrop="100" YCrop="0" Width="23" Height="50" XScale="100" YScale="100" Delay="1" Visible="true" RedTint="255" GreenTint="255" BlueTint="255" AlphaTint="255" RedOffset="0" GreenOffset="0" BlueOffset="0" Rotation="0" Interpolated="false"/>
+				</LayerAnimation>
+				<LayerAnimation LayerId="1" Visible="true"/>
 			</LayerAnimations>
 			<NullAnimations/>
 			<Triggers/>
