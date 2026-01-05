@@ -492,7 +492,7 @@ return function (mod)
 
                     --_HairCordData2.DefaultHairPhys(player, tailData, hairInfo, hairStartPos, headpos, player.SpriteScale.Y)
                     
-                    if tailData.PhysFunc then
+                    if tailData.PhysFunc then            --if not data._DisablePhys and tailData.PhysFunc then
                         tailData.PhysFunc(player, tailData, hairInfo, hairStartPos, headpos, player.SpriteScale.Y)
                     end
                 end
@@ -747,6 +747,7 @@ return function (mod)
                     end
                     local off = (zeroPointPos - firstpoint):Resized( tailData.SO or 0.15 )
                     zeroPoint:SetPosition(zeroPointPos + off)
+                    zeroPoint:SetColor(playerCol)
                     cord:Add(zeroPoint)
                     for i=0, #tailData do
                         local P = tailData[i]

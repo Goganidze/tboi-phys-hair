@@ -1254,7 +1254,7 @@ function BethHair.StyleMenu.PreWindowRender(_,pos, wind)
                 CharRotateBtnR.forceSel = 5
             elseif Input.IsButtonTriggered(Keyboard.KEY_F4, ControllerIndex) then
                 wga.DelayRender(function()
-                    wga.GetButton(smenu.name, "disчё").func(1)
+                    wga.GetButton(smenu.name, "accept").func(1)
                 end, wga.Callbacks.WINDOW_POST_RENDER)
 
             elseif Input.IsButtonPressed(Keyboard.KEY_H, ControllerIndex) then
@@ -1304,8 +1304,8 @@ function BethHair.StyleMenu.PostWindowRender(_,pos, wind)
     local sprs = smenu.spr
 
     sprs.Scisors:Render(pos + Vector(40,0))
-    sprs.Detail2_Shadow:Render(pos + Vector(224,27))
-    sprs.Detail2:Render(pos + Vector(225,25))
+    sprs.Detail2_Shadow:Render(pos + Vector(224,29))
+    sprs.Detail2:Render(pos + Vector(225,27))
 
     --[[if smenu.FavoriteBtn then
         local favBtn = smenu.FavoriteBtn
@@ -2356,6 +2356,9 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             BethHair.StyleMenu.CloseWindow()
         end, function (pos, visible)
             BethHair.StyleMenu.acceptspr:Render(pos)
+            if not accept.IsSelected and wga.ControlType == wga.enum.ControlType.CONTROLLER then
+                BethHair.StyleMenu.AddControllerBtnRender(ButtonAction.ACTION_MENUBACK, pos + Vector(accept.x, accept.y), Vector(.75,.75))
+            end
         end)
 
     local close
@@ -2373,28 +2376,30 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             if smenu.PrePlayerHairSklad then
                 local sklad = player:GetData().__PhysHair_HairSklad
                 for i=0, #smenu.PrePlayerHairSklad do
-                    BethHair.HStyles.SetStyleToPlayer(player, smenu.PrePlayerHairSklad[i].HairInfo.StyleName, i)
-                    sklad[i] = smenu.PrePlayerHairSklad[i]
-                    local hairContainer = sklad[i]
+                    if smenu.PrePlayerHairSklad[i] then
+                        BethHair.HStyles.SetStyleToPlayer(player, smenu.PrePlayerHairSklad[i].HairInfo.StyleName, i)
+                        sklad[i] = smenu.PrePlayerHairSklad[i]
+                        local hairContainer = sklad[i]
 
-                    local costumedescs = player:GetCostumeSpriteDescs()
-                    if hairContainer.HairInfo.TargetCostume then
-                        mod.HairLib.UpdateTargetCostume(player, hairContainer.HairInfo, costumedescs)
+                        local costumedescs = player:GetCostumeSpriteDescs()
+                        if hairContainer.HairInfo.TargetCostume then
+                            mod.HairLib.UpdateTargetCostume(player, hairContainer.HairInfo, costumedescs)
+                        end
+                        if hairContainer.HairInfo.ItemCostumeAlts then
+                            mod.HairLib.UpdateItemCostumeAlts(player, hairContainer.HairInfo, costumedescs, i)
+                        end
+                        mod.HairLib.CheckAndRemoveItemCostumeAlts(player, sklad, costumedescs)
+                        mod.HairLib.UpdateTailsCordColor(player, sklad, player:GetBodyColor())
+                        Isaac.RunCallbackWithParam(mod.HairLib.Callbacks.HAIR_POST_INIT, ptype, player, sklad.HairInfo)
                     end
-                    if hairContainer.HairInfo.ItemCostumeAlts then
-                        mod.HairLib.UpdateItemCostumeAlts(player, hairContainer.HairInfo, costumedescs, i)
-                    end
-                    mod.HairLib.CheckAndRemoveItemCostumeAlts(player, sklad, costumedescs)
-                    mod.HairLib.UpdateTailsCordColor(player, sklad, player:GetBodyColor())
-                    Isaac.RunCallbackWithParam(mod.HairLib.Callbacks.HAIR_POST_INIT, ptype, player, sklad.HairInfo)
                 end
             end
 
         end, function (pos, visible)
             BethHair.StyleMenu.closespr:Render(pos)
-            if not close.IsSelected and wga.ControlType == wga.enum.ControlType.CONTROLLER then
-                BethHair.StyleMenu.AddControllerBtnRender(ButtonAction.ACTION_MENUBACK, pos + Vector(close.x, close.y), Vector(.75,.75))
-            end
+            --if not close.IsSelected and wga.ControlType == wga.enum.ControlType.CONTROLLER then
+            --    BethHair.StyleMenu.AddControllerBtnRender(ButtonAction.ACTION_MENUBACK, pos + Vector(close.x, close.y), Vector(.75,.75))
+            --end
         end)
 
     function smenu.SetFavorite(btn)
@@ -2680,6 +2685,7 @@ local debugmultiplayer = false
 if debugmultiplayer and WORSTDEBUGMENU then
     local menu = WORSTDEBUGMENU.wma
     local winset = {name = "physhair_debugmultiplayer", size=Vector(40,40), pos = Vector(10,10)}
+    local ppose = {}
 
     BethHair.showwindow = function()
         BethHair.dmp_wind = WORSTDEBUGMENU.wma.ShowWindow(winset.name, winset.pos, winset.size)
@@ -2704,6 +2710,40 @@ if debugmultiplayer and WORSTDEBUGMENU then
                 player:SetControllerIndex(1)
             end
             pl:SetControllerIndex(0)
+            ppose[pl.Index] = nil
+            pl:GetData()._DisablePhys = nil
+        elseif Input.IsMouseBtnPressed(1) then
+            local mousepos = Input.GetMousePosition(true)
+            local pl = game:GetNearestPlayer(mousepos)
+            local spr = pl:GetSprite()
+            local index = pl.Index
+            
+            ppose[index] = {spr:GetAnimation(), spr:GetOverlayAnimation(), pl.Position, pl:GetHeadDirection(), spr:GetFrame(), spr:GetOverlayFrame()}
+            pl:GetData()._DisablePhys = true
+            pl.Velocity = Vector(0,0)
+        end
+
+        --[[for i=0, game:GetNumPlayers()-1 do
+            local p = Isaac.GetPlayer(i)
+            local pp = ppose[p.Index]
+            if pp then
+                p:GetSprite():Play(pp[1], true)
+                p:GetSprite():PlayOverlay(pp[2], true)
+                p.Position = pp[3]
+            end
+        end]]
+
+    end)
+
+    mod:AddCallback(ModCallbacks.MC_PRE_PLAYER_RENDER, function(_,p)
+        local pp = ppose[p.Index]
+        if pp then
+            p:GetSprite():Play(pp[1], true)
+            p:GetSprite():SetFrame(pp[5])
+            p:GetSprite():PlayOverlay(pp[2], true)
+            p:GetSprite():SetOverlayFrame(pp[6])
+            p.Position = pp[3]
+            p:SetHeadDirection(pp[4],2,true)
         end
     end)
 end
