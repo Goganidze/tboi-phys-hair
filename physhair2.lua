@@ -343,6 +343,8 @@ return function (mod)
 
             _HairCordData2.UpdateTailsCordColor(player, sklad, player:GetBodyColor())
 
+            
+
 
             Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.HAIR_POST_INIT, ptype, player, hairContainer)
         end
@@ -1156,7 +1158,9 @@ return function (mod)
                         
                         local cspr = csd:GetSprite()
                         if nullref then
+                            local preAnim = cspr:GetAnimation()
                             cspr:Load(nullref:GetFilename(), true)
+                            cspr:Play(preAnim)
                         end
                         
                         if not hairdata.OrigCostume or hairdata.OrigCostume.path ~= cspr:GetFilename() then
@@ -1413,6 +1417,32 @@ return function (mod)
                 end
             end
         end
+    end)
+
+    function _HairCordData2.PostRoomColorCheck()
+        for i=0, game:GetNumPlayers()-1 do
+            local p = Isaac.GetPlayer(i)
+            local bcolor = p:GetBodyColor()
+            if bcolor ~= -1 then
+                local costumedescs = p:GetCostumeSpriteDescs()
+                local sklad = p:GetData().__PhysHair_HairSklad
+                if sklad then
+                    for hairLayer = 0, #sklad do
+                        local hairContainer = sklad[hairLayer]
+                        local hairdata = hairContainer.HairInfo
+                        if hairdata.SyncWithCostumeBodyColor then
+                            _HairCordData2.UpdateTargetCostume(p, hairdata, costumedescs)
+                        end
+                    end
+                end
+            end
+        end
+    end
+    mod:AddCallback(ModCallbacks.MC_POST_NEW_ROOM, 
+    function()
+        Isaac.CreateTimer(function ()
+            _HairCordData2.PostRoomColorCheck()
+        end, 1, 1, false)
     end)
 
 
