@@ -1125,6 +1125,12 @@ return function (mod)
     end
     mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, _HairCordData2.PostFamiliarRenderHead)
 
+    _HairCordData2.DefCharacterLayers = {}
+    for i = 0, 14 do
+        _HairCordData2.DefCharacterLayers[i] = true
+    end
+    local DefCharacterLayers = _HairCordData2.DefCharacterLayers
+
     local loop = false
 
     ---@param player EntityPlayer

@@ -191,6 +191,8 @@ function mod.HStyles.SetStyleToPlayer(player, style_name, layer, StyleMode)
     end
 end
 
+local DefCharacterLayers = mod.HairLib.DefCharacterLayers
+
 local cacheSkinsColor = {}
 
 function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
@@ -224,7 +226,9 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
             end
 
             for i=0, spr:GetLayerCount()-1 do
-                spr:ReplaceSpritesheet(i,path)
+                if DefCharacterLayers[i] then
+                    spr:ReplaceSpritesheet(i,path)
+                end
             end
             spr:LoadGraphics()
         end
@@ -245,7 +249,9 @@ function mod.HStyles.UpdatePlayerSkin(player, data, stdata)
                 path = orig .. ".png"
             end
             for i=0, spr:GetLayerCount()-1 do
-                spr:ReplaceSpritesheet(i,path)
+                if DefCharacterLayers[i] then
+                    spr:ReplaceSpritesheet(i,path)
+                end
             end
             spr:LoadGraphics()
         end
