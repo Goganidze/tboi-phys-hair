@@ -262,7 +262,7 @@ return function (mod)
             data.__PhysHair_HairSklad = data.__PhysHair_HairSklad or {}
             local sklad = data.__PhysHair_HairSklad
 
-            Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.HAIR_PRE_INIT, ptype, player)
+            Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.HAIR_PRE_INIT, ptype, player, hairData)
 
             sklad[hairData.layer or 0] = {
 
@@ -1125,7 +1125,7 @@ return function (mod)
     end
     mod:AddCallback(ModCallbacks.MC_POST_FAMILIAR_RENDER, _HairCordData2.PostFamiliarRenderHead)
 
-
+    local loop = false
 
     ---@param player EntityPlayer
     ---@param costumeDescs CostumeSpriteDesc[]
@@ -1143,6 +1143,8 @@ return function (mod)
             local bodyColorSuffix = bodycolor[bodyColor] or ""
             --Isaac.RunCallbackWithParam(_HairCordData2.Callbacks.PRE_COLOR_CHANGE, player:GetPlayerType(), player, bodyColor, bodyColorSuffix)
 
+            local updatesomething = false
+
             local pos = 0
             local TargetCostumelayer = tarcost.CostumeLayer or 1
             local costumemap = formatCostumeMap(player:GetCostumeLayerMap())
@@ -1155,7 +1157,8 @@ return function (mod)
                     or TargetCostumelayer == 1 and not isBodyLayer
                     or TargetCostumelayer == 2 and isBodyLayer then
                     --if not tarcost.pos or tarcost.pos == pos then
-                        
+                        updatesomething = true
+
                         local cspr = csd:GetSprite()
                         if nullref then
                             local preAnim = cspr:GetAnimation()
@@ -1200,6 +1203,25 @@ return function (mod)
                     else
                         pos = pos + 1
                     end
+                end
+            end
+
+            if not updatesomething and tarcost.AddIfNot then
+                if tarcost.Type == ItemType.ITEM_NULL then
+                    player:AddNullCostume(tarcost.ID)
+                else
+                    local conf = Isaac.GetItemConfig()
+                    if tarcost.Type == ItemType.ITEM_PASSIVE or tarcost.Type == ItemType.ITEM_ACTIVE or tarcost.Type == ItemType.ITEM_FAMILIAR then
+                        player:AddCostume(conf:GetCollectible(tarcost.ID), tarcost.Type)
+                    elseif tarcost.Type == ItemType.ITEM_TRINKET then
+                        player:AddCostume(conf:GetTrinket(tarcost.ID), tarcost.Type)
+                    end
+                end
+
+                if not loop then
+                    loop = true
+                    _HairCordData2.UpdateTargetCostume(player, hairdata, player:GetCostumeSpriteDescs())
+                    loop = false
                 end
             end
 

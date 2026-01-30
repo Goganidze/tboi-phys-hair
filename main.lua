@@ -68,6 +68,14 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     end
 end
 
+mod.BaldHairCostumeID = Isaac.GetCostumeIdByPath("gfx/characters/physhair_baldhair.anm2")
+mod.BaldCharacters = {
+    [PlayerType.PLAYER_ISAAC]=true,
+    [PlayerType.PLAYER_BLUEBABY]=true,
+    [PlayerType.PLAYER_THELOST]=true,
+    [PlayerType.PLAYER_THEFORGOTTEN]=true
+}
+
 
 mod.HairLib = include("physhair2")
 
@@ -1431,6 +1439,10 @@ do
         return CurrentStyleMenuData.Entrys[EntrySklad]
     end
 
+    function BethHair.StyleMenu.GetEntryCount(EntrySklad)
+        return #CurrentStyleMenuData.Entrys[EntrySklad]
+    end
+
     ---@class BethHairStyleMenu.EntryData
     ---@field ImageCount integer
     ---@field EntrySklad string
@@ -2122,8 +2134,101 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
 
         local favorited = mod.HStyles.GetFavoriteStyle(ptype)
 
-        for i=1, #pstyles do
-            local stylename = pstyles[i]
+        if mod.BaldCharacters[ptype] then
+            local stylename = "DefaultBaldHair"
+            
+            local spr = GenSprite("gfx/editor/hairstyle_menu.anm2","button")
+            local styledt = stylesdata[stylename]
+            local styleexdt = styledt and styledt.extra
+            local hairgfx = styledt and styledt.data and styledt.data.TailCostumeSheep
+            local hairanm2 = styledt and styledt.data and styledt.data.NullposRefSpr and styledt.data.NullposRefSpr:GetFilename()
+            local hintText-- = wga.stringMultiline(text)
+            if styleexdt and styleexdt.menuHintText then
+                hintText = wga.stringMultiline(styleexdt.menuHintText, 150)
+            end
+            
+            local hairspr
+            if hairgfx then
+                if styleexdt then 
+                    if styleexdt.modfolder then
+                        hairgfx = styledt.extra.modfolder .. "/" .. hairgfx
+                    --elseif styleexdt.useDirectTailCostumeSheepForIcon then
+                        --hairgfx = hairgfx
+                    end
+                end
+
+                if not hairanm2 then
+                    hairanm2 = mod.HStyles.GetHairAnm2ByPlayerType(ptype)
+                end
+
+                hairspr = GenSprite(hairanm2 or "gfx/characters/character_001x_bethanyhead.anm2","HeadDown")
+                for lr=0, hairspr:GetLayerCount()-1 do
+                    hairspr:ReplaceSpritesheet(lr,hairgfx)
+                end
+                hairspr:LoadGraphics()
+                hairspr.Offset = hairsprOffset
+                hairspr.Scale = Vector(0.85, .85)
+            end
+
+            
+            local self
+            self = BethHair.StyleMenu.AddEntry{
+                ButtonName = "style" .. 1,
+                ImageCount = 3,
+                HairLayer = styleexdt and styleexdt.HairLayer or 0,
+                EntrySklad = EntrySklad,
+                BtnBackSpr = spr,
+                ButtonPressLogic = function (button)
+                    local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
+                    mod.HStyles.salon.ChangeHairStyle(player, stylename, smenu.SetStyleMode, self.HairLayer)
+                    
+                end,
+                ButtonRenderLogic = function (pos, visible)
+                    --spr:SetFrame(self.IsSelected and 1 or 0)
+                    --spr:Render(pos)
+
+                    if hairspr then
+                        smenuspr.HeadShadow:Render(pos)
+                        hairspr:Render(pos+v12)
+                    else
+                        wga.DrawText(1,stylename, pos.X, pos.Y, .5, .5)
+                    end
+                    if smenu.FavoriteBtn == self then
+                        local Rpos = pos + Vector(32, 3)
+                        smenu.spr.isFav:Render(Rpos)
+                    end
+                        --wga.RenderCustomButton2(pos, self)
+                end,
+                ButtonPreRenderLogic = function (pos, visible)
+                    if smenu.FavoriteBtn == self then
+                        self.ExtraImageCount = (self.ExtraImageCount or 0) + 1
+                    end
+                end,
+                HintText = hintText,
+                GreenLightCondition = function(btn)
+                    local targetPlayer = smenu.TargetPlayer
+                    if targetPlayer and targetPlayer.Ref then
+                        local playerdata = targetPlayer.Ref:GetData()
+                        local PSH = playerdata._PhysHair_HairStyle
+                        return PSH and PSH[self.HairLayer] and PSH[self.HairLayer].StyleName == stylename
+                    end
+                end,
+            }
+
+            self.StyleName = stylename
+
+            if favorited and favorited[self.HairLayer] and favorited[self.HairLayer].style == stylename then
+                smenu.FavoriteBtn = self
+            end
+
+            wga.SetPressDetectArea(self, Vector(38,40), Vector(43*4 + 20,43*6 - 33))
+            
+        end
+
+
+        for j=1, #pstyles do
+            local i = BethHair.StyleMenu.GetEntryCount(EntrySklad) + 1
+            local stylename = pstyles[j]
             
             local spr = GenSprite("gfx/editor/hairstyle_menu.anm2","button")
             local styledt = stylesdata[stylename]

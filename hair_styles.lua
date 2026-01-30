@@ -690,6 +690,14 @@ function mod.HStyles.GetHairCostumeSpr(player)
     end
 end
 
+--[[
+function mod.HStyles.RemoveAndAddNullCostume(_, player, hairData)
+    
+end
+mod:AddCallback(mod.HairLib.Callbacks.HAIR_PRE_INIT, mod.HStyles.RemoveAndAddNullCostume)
+]]
+
+
 
 function mod.HStyles.SetFavoriteStyle(Ptype, style_name, hairLayer, styleMode)
     if Ptype and style_name then
@@ -1419,28 +1427,36 @@ do
             end
         end
 
+
         if salon.Chranya and salon.Chranya.Ref then
             salon.Chranya.Ref:GetSprite():Play("scisor2_чик", true)
             sfx:Play(mod.HStyles.Sfx.scisors_swing, Options.SFXVolume * 2, 0, false, 1.0)
         end
-        if salon.CachedPhayerHairSpr:GetAnimation() == "" then
-            salon.CachedPhayerHairSpr:Play("HeadDown", true)
+
+        if salon.CachedPhayerHairSpr then
+
+            if salon.CachedPhayerHairSpr:GetAnimation() == "" then
+                salon.CachedPhayerHairSpr:Play("HeadDown", true)
+            end
+            
+            --local renderPos = salon.CachedPlayerHairData and salon.CachedPlayerHairData.RealHeadPos 
+            --    or (Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
+            local renderPos = salon.CachedPlayerHairData and salon.CachedPlayerHairData.RealHeadPos and (ScreenToWorld(salon.CachedPlayerHairData.RealHeadPos))
+                or (player.Position + player:GetFlyingOffset()/(1/Wtr))
+            
+            local rng = RNG(Isaac.GetFrameCount(), 35)
+            local prelist = mod.HStyles.Chooping and mod.HStyles.Chooping.list or {}
+            mod.HStyles.Chooping = {rng = rng, list = prelist, extralist = {}, RenderPos = renderPos, FloorYpos = Isaac.WorldToScreen(player.Position).Y,
+                RefSpr = salon.CachedPhayerHairSpr,
+                HPS = GenSprite("gfx/editor/parechmacher.anm2", "hair_piece"),
+                CHIK = GenSprite("gfx/editor/parechmacher.anm2", "чик"),
+                SWIG = GenSprite("gfx/editor/parechmacher.anm2", "свиг")
+            }
+            mod.HStyles.Chooping.SWIG.Scale = Vector(1.5, 1.5)
+
+        else
+            salon.DoChoopEffect = false
         end
-        
-        --local renderPos = salon.CachedPlayerHairData and salon.CachedPlayerHairData.RealHeadPos 
-        --    or (Isaac.WorldToScreen(player.Position) + player:GetFlyingOffset())
-        local renderPos = salon.CachedPlayerHairData and salon.CachedPlayerHairData.RealHeadPos and (ScreenToWorld(salon.CachedPlayerHairData.RealHeadPos))
-            or (player.Position + player:GetFlyingOffset()/(1/Wtr))
-        
-        local rng = RNG(Isaac.GetFrameCount(), 35)
-        local prelist = mod.HStyles.Chooping and mod.HStyles.Chooping.list or {}
-        mod.HStyles.Chooping = {rng = rng, list = prelist, extralist = {}, RenderPos = renderPos, FloorYpos = Isaac.WorldToScreen(player.Position).Y,
-            RefSpr = salon.CachedPhayerHairSpr,
-            HPS = GenSprite("gfx/editor/parechmacher.anm2", "hair_piece"),
-            CHIK = GenSprite("gfx/editor/parechmacher.anm2", "чик"),
-            SWIG = GenSprite("gfx/editor/parechmacher.anm2", "свиг")
-        }
-        mod.HStyles.Chooping.SWIG.Scale = Vector(1.5, 1.5)
         
         mod.HStyles.SetStyleToPlayer(player, stylename, hairlayer, StyleMode)
     end
@@ -2065,6 +2081,8 @@ function ExtraModCompat.ExtraHair()
             "gfx/characters/costumes/extrahair_bethany_01.png"},
         {"3402926130_eve", PlayerType.PLAYER_EVE, {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL}, 
             "gfx/characters/costumes/extrahair_eve_01.png"},
+        {"3402926130_eve2", PlayerType.PLAYER_EVE, {ID = NullItemID.ID_EVE, Type = ItemType.ITEM_NULL}, 
+            "gfx/characters/costumes/extrahair_eve_02.png"},
         --{"3402926130_isaac_1", PlayerType.PLAYER_ISAAC, {ID = NullItemID., Type = ItemType.ITEM_NULL}, 
         --    "gfx/characters/costumes/extrahair_isaac_01.png"},
         {"3402926130_judas", PlayerType.PLAYER_JUDAS, {ID = NullItemID.ID_JUDAS, Type = ItemType.ITEM_NULL}, 
@@ -2076,7 +2094,12 @@ function ExtraModCompat.ExtraHair()
         {"3402926130_maggy", PlayerType.PLAYER_MAGDALENE, {ID = NullItemID.ID_MAGDALENE, Type = ItemType.ITEM_NULL},
             "gfx/characters/costumes/extrahair_maggy_01.png"},
         
-
+        {"3402926130_isaac", PlayerType.PLAYER_ISAAC, {ID = mod.BaldHairCostumeID, Type = ItemType.ITEM_NULL, AddIfNot = true}, 
+            "gfx/characters/costumes/extrahair_isaac_01.png", "gfx/characters/extrahair_isaac_01.anm2"},
+        {"3402926130_isaac2", PlayerType.PLAYER_ISAAC, {ID = mod.BaldHairCostumeID, Type = ItemType.ITEM_NULL, AddIfNot = true}, 
+            "gfx/characters/costumes/extrahair_isaac_02.png", "gfx/characters/extrahair_isaac_02.anm2"},
+        {"3402926130_isaacb", PlayerType.PLAYER_ISAAC_B, {ID = NullItemID.ID_ISAAC_B, Type = ItemType.ITEM_NULL}, 
+            "gfx/characters/costumes/extrahair_tainted_isaac_01.png", "gfx/characters/extrahair_t_isaac_01.anm2"},
 
     }
     for i, k in pairs(hairList) do

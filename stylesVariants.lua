@@ -199,6 +199,28 @@ end
 
 
 
+
+mod.HStyles.AddStyle("DefaultBaldHair", -1, {
+        --HeadBackSpr = BethBBackHair,
+        TargetCostume = {ID = mod.BaldHairCostumeID, Type = ItemType.ITEM_NULL},
+        
+        ReplaceCostumeSheep = "gfx/characters/physhair_baldhair.png",
+        TailCostumeSheep = "gfx/characters/physhair_baldhair.png",
+        NullposRefSpr = GenSprite(mod.GamePath .. "mods/".. mod.Foldername ..  "/resources/gfx/characters/physhair_baldhair.anm2"),
+    },
+    {modfolder = defaultmodfolder}
+)
+
+
+
+
+
+
+
+
+
+
+
 --#region cords
 
 mod.HairCordSpr = Sprite()
