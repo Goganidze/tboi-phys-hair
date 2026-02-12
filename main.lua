@@ -2470,9 +2470,10 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
     close = wga.AddButton(smenu.name, "disчё", Vector(200,200),
     24, 24, GenSprite("gfx/editor/hairstyle_menu.anm2", "button16"),
         function (button)
+            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
+
             BethHair.StyleMenu.CloseWindow()
 
-            local player = smenu.TargetPlayer and smenu.TargetPlayer.Ref and smenu.TargetPlayer.Ref:ToPlayer() or Isaac.GetPlayer()
             --if smenu.PrevStyleName then
             --    BethHair.HStyles.SetStyleToPlayer(player, smenu.PrevStyleName, smenu.SetStyleMode)
             --else

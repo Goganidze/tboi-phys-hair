@@ -1038,8 +1038,9 @@ mod:AddCallback(ModCallbacks.MC_POST_SLOT_COLLISION, mod.HStyles.HairKeeper.coll
 function mod.HStyles.salon.NewRoom()
     salon.IsRoom = false
     local level = game:GetLevel()
+    local curIndex = level:GetCurrentRoomDesc().SafeGridIndex
     
-    if level and level:GetStartingRoomIndex() == level:GetCurrentRoomIndex() then
+    if level and level:GetStartingRoomIndex() == curIndex then
         local room = game:GetRoom()
 
         local useIndex = salon.EnterIndex
@@ -1087,6 +1088,8 @@ function mod.HStyles.salon.NewRoom()
         ef.SortingLayer = SortingLayer.SORTING_DOOR
         ef:Update()
 
+        salon.DoorEntity = EntityPtr(ef)
+
         local grid = room:GetGridEntityFromPos(salon.EnterPos)
         --if not grid then
         --    grid = room:GetGridEntityFromPos(salon.EnterPos)
@@ -1112,6 +1115,27 @@ function mod.HStyles.salon.NewRoom()
             --keep:GetSprite():Play("sleep", true)
         end
         salon.Chranya.Ref:GetSprite():Play("sleep", true)
+
+        local bhpd = BethHair.HairStylesData.playerdata
+
+        local closeDoor = true
+        for i = 0, game:GetNumPlayers()-1 do
+            local player = Isaac.GetPlayer(i)
+            local ptype = player:GetPlayerType()
+            if bhpd[ptype] then
+                closeDoor = false
+                break
+            end
+        end
+
+        if closeDoor then
+            salon.DoorState = 1
+            ef:GetSprite():Play("door_closed", true)
+            grid.CollisionClass = GridCollisionClass.COLLISION_WALL
+
+        else
+            salon.DoorState = 0
+        end
 
         --[[if room:HasWater() then
             salon.bg:SetCustomShader("shaders/water_v2_hairsalon")
@@ -1271,6 +1295,71 @@ function mod.HStyles.salon.ExitSalon()
         sfx:Play(mod.HStyles.Sfx.doorbell, Options.SFXVolume * 1.0, 5, false, 1.28)
     end
 end
+
+function mod.HStyles.salon.RoomUpdate()
+    if salon.IsRoom then
+
+        local forceExit = false
+        if game:IsGreedMode() then
+            local isClear = game:GetRoom():IsClear()
+
+            if not isClear then
+                forceExit = true
+            end
+        end
+
+
+        if game:GetFrameCount() % 10 == 0 or forceExit then
+            local bhpd = BethHair.HairStylesData.playerdata
+
+            local closeDoor = true
+            for i = 0, game:GetNumPlayers()-1 do
+                local player = Isaac.GetPlayer(i)
+                local ptype = player:GetPlayerType()
+                if bhpd[ptype] then
+                    closeDoor = false
+                    break
+                end
+            end
+            if forceExit then
+                closeDoor = true
+            end
+
+            if closeDoor then
+                if salon.DoorState == 0 then
+                    local ef = salon.DoorEntity and salon.DoorEntity.Ref
+                    if ef then
+                        ef:GetSprite():Play("door_closed", true)
+                    end
+                    salon.DoorState = 1
+                    local grid = game:GetRoom():GetGridEntityFromPos(salon.EnterPos)
+                    if grid then
+                        grid.CollisionClass = GridCollisionClass.COLLISION_WALL
+                    end
+
+                    if salon.Entered then
+                        mod.HStyles.salon.ExitSalon()
+                    end
+                end
+            else
+                if salon.DoorState == 1 then
+                    local ef = salon.DoorEntity and salon.DoorEntity.Ref
+                    if ef then
+                        ef:GetSprite():Play("door", true)
+                    end
+                    salon.DoorState = 0
+                    local grid = game:GetRoom():GetGridEntityFromPos(salon.EnterPos)
+                    if grid then
+                        grid.CollisionClass = GridCollisionClass.COLLISION_NONE
+                    end
+                end
+            end
+        end
+    end
+end
+mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.HStyles.salon.RoomUpdate)
+
+
 
 do
     local framecheck
