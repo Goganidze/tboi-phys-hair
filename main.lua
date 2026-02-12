@@ -68,6 +68,11 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     end
 end
 
+local defaultmodfolder = mod.GamePath .. "mods/" .. mod.Foldername .. "/resources"
+mod.defaultmodfolder = defaultmodfolder
+
+
+
 mod.BaldHairCostumeID = Isaac.GetCostumeIdByPath("gfx/characters/physhair_baldhair.anm2")
 mod.BaldCharacters = {
     [PlayerType.PLAYER_ISAAC]=true,
@@ -172,9 +177,6 @@ local JudasFexCordB = mod.JudasFexCordB
 
 --#endregion
 
-
-local defaultmodfolder = mod.GamePath .. "mods/" .. mod.Foldername .. "/resources"
-mod.defaultmodfolder = defaultmodfolder
 
 
 

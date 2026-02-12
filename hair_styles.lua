@@ -750,7 +750,9 @@ mod.HStyles.salon = {
     TopLeftRefIndexLongRoom = 233,
     BGEntVar = Isaac.GetEntityVariantByName("Фон парихмазерской"),
     Alpha = 0,
-    JustMask = GenSprite("gfx/editor/hairstyle_menu.anm2","justmask3")
+    JustMask = GenSprite("gfx/editor/hairstyle_menu.anm2","justmask3"),
+
+    PoleChance = 0.9
 }
 local salon = mod.HStyles.salon
 
@@ -1137,6 +1139,14 @@ function mod.HStyles.salon.NewRoom()
             salon.DoorState = 0
         end
 
+        local polechance = RNG(room:GetDecorationSeed() or 3639995205, 35):RandomFloat() > salon.PoleChance
+        if polechance then
+            local efSpr = ef:GetSprite()
+            efSpr:PlayOverlay("door_pole", true)
+            efSpr:GetLayer("mask"):SetCustomShader(mod.defaultmodfolder .. "/shaders/fountainHead_waterstream")
+            efSpr:GetLayer("mask"):SetColor(Color(1,1,1,1,0,0,0,0.1,0,0,100))
+        end
+
         --[[if room:HasWater() then
             salon.bg:SetCustomShader("shaders/water_v2_hairsalon")
             salon.bg.Color:SetColorize(1,1,1,.1)
@@ -1298,6 +1308,8 @@ end
 
 function mod.HStyles.salon.RoomUpdate()
     if salon.IsRoom then
+        local door = salon.DoorEntity and salon.DoorEntity.Ref
+        local doorspr = door and door:GetSprite()
 
         local forceExit = false
         if game:IsGreedMode() then
@@ -1327,9 +1339,8 @@ function mod.HStyles.salon.RoomUpdate()
 
             if closeDoor then
                 if salon.DoorState == 0 then
-                    local ef = salon.DoorEntity and salon.DoorEntity.Ref
-                    if ef then
-                        ef:GetSprite():Play("door_closed", true)
+                    if door then
+                        doorspr:Play("door_closed", true)
                     end
                     salon.DoorState = 1
                     local grid = game:GetRoom():GetGridEntityFromPos(salon.EnterPos)
@@ -1343,9 +1354,8 @@ function mod.HStyles.salon.RoomUpdate()
                 end
             else
                 if salon.DoorState == 1 then
-                    local ef = salon.DoorEntity and salon.DoorEntity.Ref
-                    if ef then
-                        ef:GetSprite():Play("door", true)
+                    if door then
+                        doorspr:Play("door", true)
                     end
                     salon.DoorState = 0
                     local grid = game:GetRoom():GetGridEntityFromPos(salon.EnterPos)
@@ -1353,6 +1363,16 @@ function mod.HStyles.salon.RoomUpdate()
                         grid.CollisionClass = GridCollisionClass.COLLISION_NONE
                     end
                 end
+            end
+        end
+
+        if door then
+            local layermask = doorspr:GetLayer("mask")
+            if layermask then
+                local orcol = doorspr.Color
+                local copycol = Color.Lerp(doorspr.Color, orcol, 0)
+                copycol:SetColorize(0.1,0,0, door.FrameCount+100)
+                layermask:SetColor(copycol)
             end
         end
     end
@@ -2773,4 +2793,8 @@ function epf.MenuPaperSwing(tab, start_pos, headpos)
 
         cur[1] = cur[1] + cur[2]
     end
+end
+
+if os.date and os.date("%w") == "7" then
+    salon.PoleChance = 0
 end
