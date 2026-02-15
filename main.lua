@@ -633,6 +633,8 @@ local JudasFexCordB = mod.JudasFexCordB
                         end
                     end
                 end
+            else
+                mod.HairPreInit(_, player)
             end
         end
     end
@@ -2517,8 +2519,9 @@ function BethHair.StyleMenu.GenWindowBtns2(ptype)
             local style =  btn.StyleName
             local Ptype = targetPlayer.Ref:ToPlayer():GetPlayerType()
 
-            local isAlreadyFavorite = BethHair.HStyles.GetFavoriteStyle(Ptype) == style
-            
+            local isAlreadyFavorite = BethHair.HStyles.GetFavoriteStyle(Ptype, btn.HairLayer) -- == style
+            isAlreadyFavorite = isAlreadyFavorite and isAlreadyFavorite.style == style
+
             if not isAlreadyFavorite then
                 smenu.FavoriteBtn = btn
                 mod.HStyles.SetFavoriteStyle(Ptype, style, btn.HairLayer, smenu.SetStyleMode)

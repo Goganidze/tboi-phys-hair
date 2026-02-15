@@ -118,7 +118,7 @@ function mod.HairPreInit(_, player)
         end
     end
 end
-mod:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, mod.HairPreInit)
+--mod:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, mod.HairPreInit)
 
 function mod.PlayerTypeChecker(_, player)
     local data = player:GetData()
@@ -717,8 +717,10 @@ function mod.HStyles.SetFavoriteStyle(Ptype, style_name, hairLayer, styleMode)
     end
 end
 
-function mod.HStyles.GetFavoriteStyle(Ptype)
-    return HairStylesData.favorites[Ptype]
+function mod.HStyles.GetFavoriteStyle(Ptype, hairLayer)
+    return hairLayer
+        and (HairStylesData.favorites[Ptype] and HairStylesData.favorites[Ptype][hairLayer])
+        or HairStylesData.favorites[Ptype]
 end
 
 function mod.HStyles.RemoveFavoriteStyle(Ptype, hairLayer)
