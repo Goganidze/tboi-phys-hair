@@ -597,7 +597,6 @@ local JudasFexCordB = mod.JudasFexCordB
                     --player:GetData()._PhysHair_HairStyle = savePlayerData.HairStyle
                 end
                 local savedPlayerHairInfo = mod.SavePlayerHairInfo and mod.SavePlayerHairInfo[tostring(unickyID)]
-
                 if savedPlayerHairInfo then
                     --player:GetData().__PhysHair_HairSklad = DeepCopyHairInfoDecode(savedPlayerHairInfo)
                     local hairinfoset = DeepCopyHairInfoDecode(savedPlayerHairInfo)
@@ -632,6 +631,8 @@ local JudasFexCordB = mod.JudasFexCordB
                             mod.HStyles.UpdatePlayerSkin(player, data, stdata)
                         end
                     end
+                else
+                    mod.HairPreInit(_, player)
                 end
             else
                 mod.HairPreInit(_, player)

@@ -65,7 +65,7 @@ void main(void)
 		//fragColor = vec4(0.0, 0.0, 0.0, 0.001*testfragColor.a);
 
 
-		vec2 lineCoord = (_waterTL + vec2(0.5 + rod,  mod(-proc * 0.1, 48.0))) / TextureSizeOut;
+		vec2 lineCoord = (_waterTL + vec2(0.5 + rod,  mod(-proc * 0.11, 48.0))) / TextureSizeOut;
 		vec4 lineCol = Color0 * texture(Texture0, PixelationAmountOut > 0.0 ? lineCoord - mod(lineCoord, pa) + pa * 0.5 : lineCoord);
 
 		lineCol.rgb = lineCol.rgb - vec3(shade, shade*0.5,shade*0.5);
