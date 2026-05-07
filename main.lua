@@ -576,9 +576,13 @@ local JudasFexCordB = mod.JudasFexCordB
         end
 
         data.favorites = favcoded
+
+        data.ReturnActiveCam = mod.FORCEACTIVECAMSAVE
+        mod.FORCEACTIVECAMSAVE = nil
        
         mod:SaveData( json.encode(data) )
     end
+    mod.updateSaveData = updateSaveData
 
     function mod.PlayerPostInit(_, player)
         local data = player:GetData()
@@ -726,6 +730,9 @@ local JudasFexCordB = mod.JudasFexCordB
             end
 
             mod.HairStylesData.favorites = favuncoded or mod.HairStylesData.favorites
+            if savedata.ReturnActiveCam then
+                Options.CameraStyle = savedata.ReturnActiveCam and CameraStyle.ACTIVE_CAM_ON
+            end
         
         else
             --[[mod.BlockedChar[PlayerType.PLAYER_BETHANY] = true

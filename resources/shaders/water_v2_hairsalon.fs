@@ -4,7 +4,7 @@
 
 varying lowp vec4 Color0;
 varying vec2 TexCoord0;
-varying float Time0;
+//varying float Time0;
 //varying vec3 ColorMul0;
 //varying vec2 CurrentDir0;
 //varying lowp vec2 TextureSize0;

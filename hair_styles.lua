@@ -1145,7 +1145,7 @@ function mod.HStyles.salon.NewRoom()
         if polechance then
             local efSpr = ef:GetSprite()
             efSpr:PlayOverlay("door_pole", true)
-            efSpr:GetLayer("mask"):SetCustomShader(mod.defaultmodfolder .. "/shaders/fountainHead_waterstream")
+            efSpr:GetLayer("mask"):SetCustomShader("shaders/PhysHairwaterstream")
             efSpr:GetLayer("mask"):SetColor(Color(1,1,1,1,0,0,0,0.1,0,0,100))
         end
 
@@ -1258,7 +1258,7 @@ function mod.HStyles.salon.EnterSalon()
     end
 end
 
-function mod.HStyles.salon.ExitSalon()
+function mod.HStyles.salon.ExitSalon(Immediately)
     if Isaac.GetPlayer() then
         for i = 0, game:GetNumPlayers()-1 do
             local player = Isaac.GetPlayer(i)
@@ -1284,9 +1284,13 @@ function mod.HStyles.salon.ExitSalon()
         --Options.CameraStyle = salon.ReturnSettings.CameraStyle
 
         local returnCameraStyle = salon.ReturnSettings.CameraStyle
-        Isaac.CreateTimer(function ()
+        if Immediately then
             Options.CameraStyle = returnCameraStyle
-        end, 15, 1, true)
+        else
+            Isaac.CreateTimer(function ()
+                Options.CameraStyle = returnCameraStyle
+            end, 15, 1, true)
+        end
 
         --if salon.ReturnSettings.NoWall then
         --    local crds = game:GetLevel():GetCurrentRoomDesc()
@@ -1305,6 +1309,13 @@ function mod.HStyles.salon.ExitSalon()
         salon.ReturnSettings = {}
 
         sfx:Play(mod.HStyles.Sfx.doorbell, Options.SFXVolume * 1.0, 5, false, 1.28)
+    else
+        salon.Entered = false
+        if salon.ReturnSettings.CameraStyle then
+            Options.CameraStyle = salon.ReturnSettings.CameraStyle
+        end
+
+        salon.ReturnSettings = {}
     end
 end
 
@@ -1380,6 +1391,34 @@ function mod.HStyles.salon.RoomUpdate()
     end
 end
 mod:AddCallback(ModCallbacks.MC_POST_UPDATE, mod.HStyles.salon.RoomUpdate)
+
+
+mod:AddCallback(ModCallbacks.MC_MAIN_MENU_RENDER, function ()
+    if salon.Entered or salon.ReturnSettings and salon.ReturnSettings.CameraStyle then
+        mod.HStyles.salon.ExitSalon(true)
+    end
+end)
+local checkShutdown = false
+mod:AddCallback(ModCallbacks.MC_PRE_GAME_EXIT, function ()
+    if salon.Entered or salon.ReturnSettings and salon.ReturnSettings.CameraStyle then
+        local preActiveCam = Options.CameraStyle
+        mod.HStyles.salon.ExitSalon(true)
+        if preActiveCam ~= Options.CameraStyle and Options.CameraStyle == CameraStyle.ACTIVE_CAM_ON then
+            checkShutdown = true
+        end
+    end
+end)
+
+mod:AddCallback(ModCallbacks.MC_PRE_MOD_UNLOAD, function (_, modUnloaded, ShuttingDown)
+    if modUnloaded and modUnloaded.Name ~= mod.Name then return end
+    if ShuttingDown and checkShutdown then
+        mod.FORCEACTIVECAMSAVE = true
+        mod.updateSaveData()
+    end
+    if salon.Entered or salon.ReturnSettings and salon.ReturnSettings.CameraStyle then
+        mod.HStyles.salon.ExitSalon(true)
+    end
+end)
 
 
 
