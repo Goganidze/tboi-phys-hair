@@ -49,7 +49,7 @@ end
 
 for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     local node = XMLData.GetEntryById(XMLNode.MOD, i)
-    if node and node.name == "[RGON] Small Hairstyle Pack" then
+    if node and node.name and node.name:find"Small Hairstyle Pack" then
         mod.Foldername = node.realdirectory or node.directory
         mod.FullPath = node.fulldirectory:gsub("\\Repentogon", "")
         

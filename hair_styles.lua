@@ -2039,6 +2039,23 @@ local function GetStr(str)
     end
 end
 
+local CheclPngSpr = GenSprite("gfx/editor/checkfile.anm2","1")
+
+local function PngExistsCheck(path)
+
+    -- Guantol починил Renderer.LoadImage и оно теперрь не принимает полные пути. К сожалению, Renderer.LoadImage не принимает относительные пути, начинающиеся из папки игры, так как рабочая папка ргона это папка ргона. И тут даже нечего репортить, так как тут нету багов
+    --local res = pcall(Renderer.LoadImage, path)
+    --return res
+
+    CheclPngSpr:ReplaceSpritesheet(0, path, true)
+    local layer0 = CheclPngSpr:GetLayer(0)
+    local res, img = pcall(layer0.GetSpritesheet, layer0)
+
+    return res == true and img
+end
+
+
+
 local function FindOriginal(resources, path, costumepath, playerid, nullid, CostumeSheep, anm2)
     local hairpath = resources .. "/" .. path
 
@@ -2076,7 +2093,8 @@ end
 
 local function FindResprites(modfoldername, resources, path, costumepath, playerid, nullid, CostumeSheep, anm2, modd)
     local hairpath = mod.GamePath .. "mods/" .. modfoldername .. path
-    local res = pcall(Renderer.LoadImage, hairpath)
+    local res = PngExistsCheck(hairpath)  -- pcall(Renderer.LoadImage, hairpath)
+
     if res then
         local fullCostumeSheep = mod.GamePath .. "mods/" .. modfoldername .. "/" .. resources .. "/" .. CostumeSheep
         --if playerid == 36 then
@@ -2279,6 +2297,10 @@ end
 --#endregion extracompat
 
 
+
+ExtraModCompat.RespritesLoadQuery = {}
+
+
 for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
     local mod = XMLData.GetEntryById(XMLNode.MOD, i)
     if mod then
@@ -2320,6 +2342,12 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 
                 mod.HStyles.AddStyle("edenstandarthair_"..i, PlayerType.PLAYER_EDEN, tab)
             end]]
+
+
+            ExtraModCompat.RespritesLoadQuery[#ExtraModCompat.RespritesLoadQuery+1] = {dir, mod}
+
+            --[=[
+
 
             -- бетон
             FindResprites(dir, "resources-dlc3",
@@ -2424,6 +2452,8 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
                 --end
             end
 
+            ]=]
+
             if mod.id == "3402926130" then
                 ExtraModCompat.ExtraHair()
             end
@@ -2433,7 +2463,237 @@ for i=0, XMLData.GetNumEntries(XMLNode.MOD) do
 end
 
 
+if coroutine and not Isaac.IsInGame() then
+    mod.RepsiteLoadCoroutine = coroutine.create(function()
 
+        for i=1, #ExtraModCompat.RespritesLoadQuery do
+            local t = ExtraModCompat.RespritesLoadQuery[i]
+            local dir, mod = t[1], t[2]
+            
+            -- бетон
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png",
+                "/resources-dlc3/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
+                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
+                mod
+            )
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_001x_bethshair.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
+                "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
+                mod
+            )
+
+            --ева
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_005_evehead.png",
+                "/resources-dlc3/gfx/characters/costumes/",
+                PlayerType.PLAYER_EVE,  NullItemID.ID_EVE, 
+                "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
+                mod
+            )
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_005_evehead.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_EVE,  NullItemID.ID_EVE, 
+                "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
+                mod
+            )
+
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_018b_bethshair.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY_B,  NullItemID.ID_BETHANY_B, 
+                "gfx/characters/costumes/character_018b_bethshair.png", "gfx/characters/character_b16_bethany.anm2",
+                mod
+            )
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_018b_bethshair.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_BETHANY_B,  NullItemID.ID_BETHANY_B, 
+                "gfx/characters/costumes/character_018b_bethshair.png", "gfx/characters/character_b16_bethany.anm2",
+                mod
+            )
+            
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_004_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS,  NullItemID.ID_JUDAS, 
+                "gfx/characters/costumes/character_004_judasfez.png", "gfx/characters/character_004_judasfez.anm2",
+                mod
+            )
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_004_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS,  NullItemID.ID_JUDAS, 
+                "gfx/characters/costumes/character_004_judasfez.png", "gfx/characters/character_004_judasfez.anm2",
+                mod
+            )
+
+            FindResprites(dir, "resources",
+                "/resources/gfx/characters/costumes/character_004b_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS_B,  NullItemID.ID_JUDAS_B, 
+                "gfx/characters/costumes/character_004b_judasfez.png", "gfx/characters/character_b04_judas.anm2",
+                mod
+            )
+            FindResprites(dir, "resources-dlc3",
+                "/resources-dlc3/gfx/characters/costumes/character_004b_judasfez.png",
+                "/resources/gfx/characters/costumes/",
+                PlayerType.PLAYER_JUDAS_B,  NullItemID.ID_JUDAS_B, 
+                "gfx/characters/costumes/character_004b_judasfez.png", "gfx/characters/character_b04_judas.anm2",
+                mod
+            )
+
+
+            
+            for ptype in pairs(PlayeeTypeToHairPath) do
+                --if PlayeeTypeToHairPath[ptype] then
+                    local hairpath = PlayeeTypeToHairPath[ptype]
+
+                    FindResprites(dir, "resources-dlc3",
+                        "/resources-dlc3/" .. hairpath,
+                        "/resources-dlc3/gfx/characters/costumes/",
+                        ptype,  PlayerTypeToTargetCostume[ptype], 
+                        hairpath, PlayeeTypeToHairAnm2[ptype],
+                        mod
+                    )
+
+                    FindResprites(dir, "resources",
+                        "/resources/" .. hairpath,
+                        "/resources/gfx/characters/costumes/",
+                        ptype,  PlayerTypeToTargetCostume[ptype], 
+                        hairpath, PlayeeTypeToHairAnm2[ptype],
+                        mod
+                    )
+                --end
+            end
+            coroutine.yield()
+        end
+    end)
+
+    mod:AddCallback(ModCallbacks.MC_MAIN_MENU_RENDER, function()
+        if mod.RepsiteLoadCoroutine then
+            coroutine.resume(mod.RepsiteLoadCoroutine)
+            if coroutine.status(mod.RepsiteLoadCoroutine) == "dead" then
+                mod.RepsiteLoadCoroutine = nil
+            end
+        end
+    end)
+else
+
+    for i=1, #ExtraModCompat.RespritesLoadQuery do
+        local t = ExtraModCompat.RespritesLoadQuery[i]
+        local dir, mod = t[1], t[2]
+
+        -- бетон
+        FindResprites(dir, "resources-dlc3",
+            "/resources-dlc3/gfx/characters/costumes/character_001x_bethshair.png",
+            "/resources-dlc3/gfx/characters/costumes/",
+            PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
+            "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
+            mod
+        )
+        FindResprites(dir, "resources",
+            "/resources/gfx/characters/costumes/character_001x_bethshair.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_BETHANY,  NullItemID.ID_BETHANY, 
+            "gfx/characters/costumes/character_001x_bethshair.png", "gfx/characters/character_001x_bethanyhead.anm2",
+            mod
+        )
+
+        --ева
+        FindResprites(dir, "resources-dlc3",
+            "/resources-dlc3/gfx/characters/costumes/character_005_evehead.png",
+            "/resources-dlc3/gfx/characters/costumes/",
+            PlayerType.PLAYER_EVE,  NullItemID.ID_EVE, 
+            "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
+            mod
+        )
+        FindResprites(dir, "resources",
+            "/resources/gfx/characters/costumes/character_005_evehead.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_EVE,  NullItemID.ID_EVE, 
+            "gfx/characters/costumes/character_005_evehead.png", "gfx/characters/character_005_evehead.anm2",
+            mod
+        )
+
+
+        FindResprites(dir, "resources",
+            "/resources/gfx/characters/costumes/character_018b_bethshair.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_BETHANY_B,  NullItemID.ID_BETHANY_B, 
+            "gfx/characters/costumes/character_018b_bethshair.png", "gfx/characters/character_b16_bethany.anm2",
+            mod
+        )
+        FindResprites(dir, "resources-dlc3",
+            "/resources-dlc3/gfx/characters/costumes/character_018b_bethshair.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_BETHANY_B,  NullItemID.ID_BETHANY_B, 
+            "gfx/characters/costumes/character_018b_bethshair.png", "gfx/characters/character_b16_bethany.anm2",
+            mod
+        )
+        
+
+        FindResprites(dir, "resources",
+            "/resources/gfx/characters/costumes/character_004_judasfez.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_JUDAS,  NullItemID.ID_JUDAS, 
+            "gfx/characters/costumes/character_004_judasfez.png", "gfx/characters/character_004_judasfez.anm2",
+            mod
+        )
+        FindResprites(dir, "resources-dlc3",
+            "/resources-dlc3/gfx/characters/costumes/character_004_judasfez.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_JUDAS,  NullItemID.ID_JUDAS, 
+            "gfx/characters/costumes/character_004_judasfez.png", "gfx/characters/character_004_judasfez.anm2",
+            mod
+        )
+
+        FindResprites(dir, "resources",
+            "/resources/gfx/characters/costumes/character_004b_judasfez.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_JUDAS_B,  NullItemID.ID_JUDAS_B, 
+            "gfx/characters/costumes/character_004b_judasfez.png", "gfx/characters/character_b04_judas.anm2",
+            mod
+        )
+        FindResprites(dir, "resources-dlc3",
+            "/resources-dlc3/gfx/characters/costumes/character_004b_judasfez.png",
+            "/resources/gfx/characters/costumes/",
+            PlayerType.PLAYER_JUDAS_B,  NullItemID.ID_JUDAS_B, 
+            "gfx/characters/costumes/character_004b_judasfez.png", "gfx/characters/character_b04_judas.anm2",
+            mod
+        )
+
+
+        
+        for ptype in pairs(PlayeeTypeToHairPath) do
+            --if PlayeeTypeToHairPath[ptype] then
+                local hairpath = PlayeeTypeToHairPath[ptype]
+
+                FindResprites(dir, "resources-dlc3",
+                    "/resources-dlc3/" .. hairpath,
+                    "/resources-dlc3/gfx/characters/costumes/",
+                    ptype,  PlayerTypeToTargetCostume[ptype], 
+                    hairpath, PlayeeTypeToHairAnm2[ptype],
+                    mod
+                )
+
+                FindResprites(dir, "resources",
+                    "/resources/" .. hairpath,
+                    "/resources/gfx/characters/costumes/",
+                    ptype,  PlayerTypeToTargetCostume[ptype], 
+                    hairpath, PlayeeTypeToHairAnm2[ptype],
+                    mod
+                )
+            --end
+        end
+    end
+end
 
 
 
